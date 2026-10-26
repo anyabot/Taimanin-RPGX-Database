@@ -21,6 +21,7 @@ export default function App() {
           </div>
           <nav className="hub-bar__nav" aria-label="Primary">
             <NavLink to="/units">Units</NavLink>
+            <NavLink to="/buffs">Buffs</NavLink>
             <NavLink to="/runes">Runes</NavLink>
             {import.meta.env.DEV && <NavLink to="/lab">Decoder lab</NavLink>}
           </nav>

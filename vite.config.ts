@@ -27,6 +27,22 @@ function cdnCache(): Plugin {
             res.statusCode = r.status;
             return res.end(Buffer.from(await r.arrayBuffer()));
           }
+          // Range reads (src/unity/remote.ts): from the cached file when there
+          // is one, else passed through uncached so dev behaves like the CDN.
+          const range = /^bytes=(\d+)-(\d+)$/.exec(req.headers.range || "");
+          if (range) {
+            const [start, end] = [Number(range[1]), Number(range[2])];
+            res.setHeader("Access-Control-Allow-Origin", "*");
+            if (fs.existsSync(file)) {
+              const size = fs.statSync(file).size;
+              res.statusCode = 206;
+              res.setHeader("Content-Range", `bytes ${start}-${Math.min(end, size - 1)}/${size}`);
+              return fs.createReadStream(file, { start, end: Math.min(end, size - 1) }).pipe(res);
+            }
+            const r = await fetch(CDN + rel.split("/").map(encodeURIComponent).join("/"), { headers: { Range: req.headers.range! } });
+            res.statusCode = r.status;
+            return res.end(Buffer.from(await r.arrayBuffer()));
+          }
           if (!fs.existsSync(file)) {
             // CloudFront occasionally drops a connection: retry before failing,
             // and write via a temp file so parallel requests never see half a bundle.

@@ -5,6 +5,7 @@ import type { RGBAImage } from "./texture";
 import { Catalog, type CatalogSnapshot } from "./catalog";
 import { fetchBundle } from "./fetch";
 import type { WorkerRequest } from "./decoder.worker";
+import { RangeBundle, RangeMissing } from "./remote";
 
 type Pending = { resolve: (v: any) => void; reject: (e: Error) => void };
 type DistributiveOmit<T, K extends keyof any> = T extends unknown ? Omit<T, K> : never;
@@ -47,6 +48,7 @@ export class Assets {
   readonly catalog: Catalog;
   private decoder = new Decoder();
   private opening = new Map<string, Promise<void>>();
+  private remotes = new Map<string, Promise<RangeBundle>>();
 
   constructor(snapshot: CatalogSnapshot) {
     this.catalog = new Catalog(snapshot);
@@ -66,6 +68,27 @@ export class Assets {
         this.decoder.call<boolean>({ op: "open", key: stem, bytes }, [bytes.buffer]).then(() => undefined));
       p.catch(() => this.opening.delete(stem));
       this.opening.set(stem, p);
+    }
+    return p;
+  }
+
+  /** A big bundle read in pieces (remote.ts). Same stale-hash recovery as
+   *  fetchBundle: a 403 re-checks the catalogs once. */
+  remote(stem: string): Promise<RangeBundle> {
+    let p = this.remotes.get(stem);
+    if (!p) {
+      p = (async () => {
+        const url = this.catalog.url(stem);
+        if (url) {
+          try { return await RangeBundle.open(url); } catch (err) { if (!(err instanceof RangeMissing)) throw err; }
+        }
+        await this.catalog.refresh(true);
+        const fresh = this.catalog.url(stem);
+        if (!fresh || fresh === url) throw new RangeMissing(`bundle ${stem} is not on the CDN`);
+        return RangeBundle.open(fresh);
+      })();
+      p.catch(() => this.remotes.delete(stem));
+      this.remotes.set(stem, p);
     }
     return p;
   }

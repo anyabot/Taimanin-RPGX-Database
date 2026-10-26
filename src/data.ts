@@ -27,6 +27,8 @@ export interface UnitIndexEntry {
   stats: Record<StatKey, number>;
   /** character family: other versions of the same character share it */
   family: string;
+  /** acquisition tags: Standard, Pickup, Limited, Festival, Collab, Raid event, ... */
+  obtain: string[];
 }
 
 export type StatKey = "hp" | "sp" | "atk" | "def" | "spd" | "luck";
@@ -60,7 +62,22 @@ export interface Voice {
   clip: string | null;
 }
 
-export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats"> {
+/** One way to get a unit (tools/web_export/tables.py acquisition()). */
+export interface ObtainEntry {
+  kind: "gacha" | "spark" | "event" | "exchange" | "mission";
+  type?: string;
+  title: Text | null;
+  start?: string | null;
+  end?: string | null;
+  need?: number;
+  archive?: boolean;
+  /** only in the REVIEW tree: part of the next update */
+  upcoming?: boolean;
+}
+
+export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain"> {
+  obtain: ObtainEntry[];
+  standardPool: boolean;
   root: string;
   rarityLabel: string;
   profile: Text | null;

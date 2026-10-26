@@ -7,18 +7,21 @@ import { searchParamsAdapter } from "@altterisk/game-hub/filters";
 import { tabParam } from "@altterisk/game-hub";
 import {
   RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
-  type UnitIndexEntry,
+  type UnitIndexEntry, type ObtainEntry,
 } from "../data";
 import { toImageData } from "../unity/client";
 import { EffectList, ElementIcon, RarityIcon } from "../components";
+import type { SceneDoc } from "../adv";
 
 const TABS = [
   { id: "stats", label: "Stats" },
   { id: "skills", label: "Skills" },
   { id: "leader", label: "Leader & abilities" },
   { id: "voices", label: "Voices" },
+  { id: "obtain", label: "Obtain" },
   { id: "profile", label: "Profile" },
   { id: "art", label: "Art" },
+  { id: "scenes", label: "Scenes" },
 ];
 
 const SLOT_LABEL: Record<Skill["slot"], string> = { attack: "Normal attack", skill1: "Skill 1", skill2: "Skill 2", ultimate: "Ultimate" };
@@ -74,8 +77,10 @@ export default function UnitDetail() {
         {tab === "skills" && <SkillsTab unit={unit} form={form} />}
         {tab === "leader" && <LeaderTab unit={unit} />}
         {tab === "voices" && <VoicesTab unit={unit} />}
+        {tab === "obtain" && <ObtainTab unit={unit} />}
         {tab === "profile" && <ProfileTab unit={unit} />}
         {tab === "art" && <ArtTab unit={unit} />}
+        {tab === "scenes" && <ScenesTab unit={unit} />}
       </TabPanel>
     </div>
   );
@@ -238,6 +243,59 @@ function VoicesTab({ unit }: { unit: Unit }) {
   );
 }
 
+const KIND_LABEL: Record<ObtainEntry["kind"], string> = {
+  gacha: "Gacha", spark: "Spark reward", event: "Event", exchange: "Exchange shop", mission: "Mission reward",
+};
+
+function period(e: ObtainEntry) {
+  if (e.start && e.end) return `${e.start} – ${e.end}`;
+  if (e.end) return `until ${e.end}`;
+  if (e.start) return `from ${e.start}`;
+  return "";
+}
+
+/** How the unit is obtained: featured banners, events, exchanges, missions. */
+function ObtainTab({ unit }: { unit: Unit }) {
+  const lang = useLang();
+  const groups = useMemo(() => {
+    const m = new Map<string, ObtainEntry[]>();
+    for (const e of unit.obtain) m.set(e.kind, [...(m.get(e.kind) || []), e]);
+    return [...m.entries()];
+  }, [unit]);
+  return (
+    <>
+      <Panel title="Availability">
+        <MetaChips>
+          {unit.limited && <MetaChip value="Limited" title="The game's own limited flag" />}
+          {unit.standardPool && <MetaChip value="Standard gacha pool" title="In the lineup of the permanent banners" />}
+          {!unit.limited && !unit.standardPool && <MetaChip value="Not in the standard pool" />}
+          {unit.release && <MetaChip label="Released" value={unit.release} />}
+        </MetaChips>
+      </Panel>
+      {groups.map(([kind, list]) => (
+        <Panel key={kind} title={KIND_LABEL[kind as ObtainEntry["kind"]] ?? kind} note={`${list.length}`}>
+          <ul className="obtain-list">
+            {list.map((e, i) => (
+              <li key={i}>
+                {e.type && <span className={`obtain-type t-${e.type.replace(/\s+/g, "-")}`}>{e.type}</span>}
+                <span className="obtain-title">
+                  {tr(e.title, lang) || (kind === "spark" ? `Spark reward${e.need ? ` at ${e.need} pulls` : ""}` : KIND_LABEL[e.kind])}
+                  {e.archive && <span className="muted"> (archive)</span>}
+                  {e.upcoming && <span className="obtain-upcoming" title="From the next update's data (REVIEW server), not live yet">Upcoming</span>}
+                </span>
+                {period(e) && <span className="obtain-period muted">{period(e)}</span>}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ))}
+      {!groups.length && <p className="muted">No acquisition source found in the master data (older banners are pruned from it).</p>}
+      <p className="muted small">Banners are listed where this unit was a rate-up; dates come from the game's master data.
+        "Upcoming" entries come from the next update's data and are not live yet.</p>
+    </>
+  );
+}
+
 function ProfileTab({ unit }: { unit: Unit }) {
   const lang = useLang();
   return (
@@ -282,13 +340,16 @@ function ArtTab({ unit }: { unit: Unit }) {
       {assets && !stems.length && <p className="muted">No art bundles found for this unit.</p>}
       <div className="art-grid">
         {stems.map((s) => (
-          <ArtImage key={s} stem={s} openable={!!urls[s]}
+          <ArtImage key={s} stem={s} openable={!!urls[s]} url={urls[s]}
             onReady={(url) => setUrls((m) => ({ ...m, [s]: url }))}
             onOpen={() => { const i = loaded.indexOf(s); if (i >= 0) setOpen(i); }} />
         ))}
       </div>
       <Lightbox
-        items={loaded.map((s, i) => ({ srcs: [urls[s]], alt: `${unit.id} art ${i + 1}` }))}
+        items={loaded.map((s, i) => ({
+          srcs: [urls[s]], alt: `${unit.id} art ${i + 1}`,
+          label: <a className="hub-btn art-download" href={urls[s]} download={artFileName(s)} onClick={(e) => e.stopPropagation()}>Download PNG</a>,
+        }))}
         index={open}
         onIndex={setOpen}
         onClose={() => setOpen(null)}
@@ -297,8 +358,15 @@ function ArtTab({ unit }: { unit: Unit }) {
   );
 }
 
-function ArtImage({ stem, openable, onReady, onOpen }: {
-  stem: string; openable: boolean; onReady: (url: string) => void; onOpen: () => void;
+/** "r18_image_chr_xl_assets_image_chr_xl_uni_00001_r18_l_2.png" -> "uni_00001_r18_l_2_xl.png":
+ *  l, xl and ldiff reuse the same file names for different pictures. */
+function artFileName(stem: string) {
+  const m = /image_chr_(l|xl|ldiff)_(uni_.+)\.png$/.exec(stem);
+  return m ? `${m[2]}_${m[1]}.png` : `${stem}.png`;
+}
+
+function ArtImage({ stem, openable, url, onReady, onOpen }: {
+  stem: string; openable: boolean; url?: string; onReady: (url: string) => void; onOpen: () => void;
 }) {
   const { assets } = useAssets();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -331,6 +399,11 @@ function ArtImage({ stem, openable, onReady, onOpen }: {
     <figure className="art-item">
       <canvas ref={canvas} className={`art-canvas${openable ? " art-ready" : ""}`} onClick={() => openable && onOpen()}
         role={openable ? "button" : undefined} aria-label={openable ? "Open full screen" : undefined} />
+      {url && !state && (
+        <figcaption className="art-actions">
+          <a className="hub-btn art-download" href={url} download={artFileName(stem)}>Download</a>
+        </figcaption>
+      )}
       {state && (
         <figcaption>
           {state}
@@ -339,4 +412,28 @@ function ArtImage({ stem, openable, onReady, onOpen }: {
       )}
     </figure>
   );
+}
+
+/** The unit's H-scenes, by the trust level that unlocks them. Each opens in
+ *  the scene player, which loads everything from the game CDN on demand. */
+function ScenesTab({ unit }: { unit: Unit }) {
+  if (!unit.scenes.length) return <p className="muted">This unit has no scenes.</p>;
+  return (
+    <Panel title="Scenes" note="Played in the browser from the game's own files; each scene loads when opened.">
+      <ol className="scene-list">
+        {unit.scenes.map((group, g) => group.map((sid, k) => (
+          <li key={sid}>
+            <span className="scene-unlock muted">{unit.trust[g] ? `Trust ${unit.trust[g]}` : `Scene ${g + 1}`}{group.length > 1 ? ` · part ${k + 1}` : ""}</span>
+            <SceneLink sid={sid} unitId={unit.id} />
+          </li>
+        )))}
+      </ol>
+    </Panel>
+  );
+}
+
+function SceneLink({ sid, unitId }: { sid: string; unitId: string }) {
+  const { data, error } = useData<SceneDoc>(`scenes/${sid}`);
+  if (error) return <span className="muted">{sid} (not available)</span>;
+  return <Link to={`/scenes/${sid}?unit=${unitId}`} lang="ja">{data?.title || sid}</Link>;
 }

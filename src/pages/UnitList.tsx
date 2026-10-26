@@ -8,6 +8,14 @@ import { ElementIcon, RarityIcon } from "../components";
 import { ELEMENTS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 
 const PAGE = 72;
+const SOURCES = [
+  { value: "Standard", label: "Standard pool" }, { value: "Pickup", label: "Pickup gacha" },
+  { value: "Limited", label: "Limited gacha" }, { value: "Festival", label: "Festival gacha" },
+  { value: "Collab", label: "Collab gacha" }, { value: "Kessen", label: "Kessen" },
+  { value: "Story event", label: "Story event" }, { value: "Raid event", label: "Raid event" },
+  { value: "Map event", label: "Map event" }, { value: "exchange", label: "Exchange shop" },
+  { value: "spark", label: "Spark reward" }, { value: "mission", label: "Mission reward" },
+];
 const SORTS = [
   { value: "release", label: "Newest" },
   { value: "rarity", label: "Rarity" },
@@ -29,6 +37,7 @@ export default function UnitList() {
   const rarityF = csv("rarity");
   const elementF = csv("element");
   const traitF = csv("trait");
+  const sourceF = csv("source");
   const showUpcoming = params.get("upcoming") === "1";
   const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(params);
@@ -48,6 +57,7 @@ export default function UnitList() {
       (!rarityF.length || rarityF.includes(String(u.rarity))) &&
       (!elementF.length || (u.element && elementF.includes(u.element))) &&
       (!traitF.length || traitF.some((t) => u.traits.includes(t))) &&
+      (!sourceF.length || sourceF.some((t) => u.obtain.includes(t))) &&
       (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja])));
     const by: Record<string, (a: UnitIndexEntry, b: UnitIndexEntry) => number> = {
       release: (a, b) => (b.release || "").localeCompare(a.release || "") || b.id.localeCompare(a.id),
@@ -56,10 +66,10 @@ export default function UnitList() {
     };
     const cmp = by[sort] || ((a: UnitIndexEntry, b: UnitIndexEntry) => (b.stats[sort as "atk"] || 0) - (a.stats[sort as "atk"] || 0));
     return [...list].sort(cmp);
-  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), showUpcoming]);
+  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), sourceF.join(), showUpcoming]);
 
   const pages = Math.max(1, Math.ceil(shown.length / PAGE));
-  const active = rarityF.length + elementF.length + traitF.length + (showUpcoming ? 1 : 0);
+  const active = rarityF.length + elementF.length + traitF.length + sourceF.length + (showUpcoming ? 1 : 0);
   const upcomingCount = useMemo(() => (units || []).filter(isUpcoming).length, [units]);
 
   return (
@@ -84,6 +94,8 @@ export default function UnitList() {
             selected={elementF} onToggle={(v) => toggle("element", elementF, v)} />
           <CheckboxGroup title="Trait" options={traits.map((t) => ({ value: t, label: t }))}
             selected={traitF} onToggle={(v) => toggle("trait", traitF, v)} />
+          <CheckboxGroup title="Source" options={SOURCES.filter((s) => units?.some((u) => u.obtain.includes(s.value)))}
+            selected={sourceF} onToggle={(v) => toggle("source", sourceF, v)} />
           {upcomingCount > 0 && (
             <CheckboxGroup title="Release" options={[{ value: "1", label: `Upcoming (${upcomingCount})` }]}
               selected={showUpcoming ? ["1"] : []} onToggle={() => setParam("upcoming", showUpcoming ? null : "1")} />

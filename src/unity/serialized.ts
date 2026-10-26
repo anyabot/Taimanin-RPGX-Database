@@ -250,10 +250,14 @@ function readValue(node: TypeNode, r: Reader): unknown {
 
 /** Read an object through its embedded type tree. */
 export function readObject<T = Record<string, any>>(sf: SerializedFile, obj: ObjectInfo): T {
+  return readObjectBytes<T>(sf, obj, sf.bytes.subarray(obj.byteStart, obj.byteStart + obj.byteSize));
+}
+
+/** Same, from the object's own bytes (a file read in pieces, remote.ts). */
+export function readObjectBytes<T = Record<string, any>>(sf: SerializedFile, obj: ObjectInfo, bytes: Uint8Array): T {
   const node = obj.type.node;
   if (!node) throw new Error("bundle has no type tree");
-  const r = new Reader(sf.bytes.subarray(obj.byteStart, obj.byteStart + obj.byteSize), sf.little);
-  return readValue(node, r) as T;
+  return readValue(node, new Reader(bytes, sf.little)) as T;
 }
 
 /** Cheap m_Name peek: every named asset starts with an aligned string. */
