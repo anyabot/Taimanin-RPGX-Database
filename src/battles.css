@@ -22,3 +22,8 @@
 .quest-card:hover { border-color: var(--hub-accent, #7aa2ff); }
 .quest-card-title { font-weight: 600; }
 .quest-card .muted { font-size: 12px; }
+.event-info { display: grid; gap: 8px; }
+.event-info h4 { margin: 4px 0; font-size: 13px; }
+.event-info p { margin: 0; }
+.luck-rewards summary, .event-info summary { cursor: pointer; font-size: 13px; font-weight: 600; margin: 4px 0; }
+.boss-point { margin-right: 10px; }

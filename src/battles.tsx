@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Panel, SegmentedButtons, TabPanel, UrlTabs } from "@altterisk/game-hub";
 import {
   ENEMY_ICONS, iconUrl, tr, useLang, type BattleBoss, type BattleEnemy, type BattleQuest, type Battles,
-  type QuestDrop,
+  type BattleEvent, type LuckTier, type QuestDrop,
 } from "./data";
 import { EffectList, ElementIcon } from "./components";
 import { BundleImage } from "./bundleImage";
@@ -55,6 +55,7 @@ export function BattleBody({ data, partTitle, order }: {
 
   return (
     <>
+      {data.event && <Panel title="Event"><EventInfo ev={data.event} /></Panel>}
       {data.bosses.length > 0 && (
         <Panel title="Raid bosses"><RaidBosses bosses={data.bosses} data={data} stageOf={stageOf} /></Panel>
       )}
@@ -130,6 +131,70 @@ function Stage({ quests, data, partTitle }: { quests: BattleQuest[]; data: Battl
         </p>
       ) : null}
       <Drops drops={q.drops} />
+      {q.luckRewards?.length ? <LuckRewards tiers={q.luckRewards} /> : null}
+    </div>
+  );
+}
+
+/** A stage's luck rewards, folded away. */
+function LuckRewards({ tiers }: { tiers: LuckTier[] }) {
+  return (
+    <details className="luck-rewards">
+      <summary>Luck rewards ({tiers.length} tiers)</summary>
+      <LuckTiers tiers={tiers} />
+    </details>
+  );
+}
+
+/** A running event: dates, bonus units, reward shop, box gacha, lap rewards. */
+function EventInfo({ ev }: { ev: BattleEvent }) {
+  return (
+    <div className="event-info">
+      <p className="small">{ev.start} – {ev.end}{ev.exchangeEnd ? ` · exchange until ${ev.exchangeEnd}` : ""}</p>
+      {ev.bonus.length > 0 && (
+        <div>
+          <h4>Bonus units</h4>
+          <ul className="drop-list">{ev.bonus.map((b, i) => (
+            <DropLine key={i} d={{ ...b, rate: undefined }} note={`luck +${b.luckRate.toLocaleString()}%`} />
+          ))}</ul>
+          <p className="muted small">Each bonus unit in the team adds the listed % of its own Luck.</p>
+        </div>
+      )}
+      {ev.shop && ev.shop.length > 0 && (
+        <div>
+          <h4>Reward shop</h4>
+          <ul className="drop-list">{ev.shop.map((r, i) => (
+            <DropLine key={i} d={r} note={`${r.cost.toLocaleString()} pt${r.max > 1 ? ` · ×${r.max}` : ""}`} />
+          ))}</ul>
+        </div>
+      )}
+      {ev.gacha && <BoxGacha gacha={ev.gacha} />}
+      {ev.laps && ev.laps.length > 0 && (
+        <details>
+          <summary>Lap rewards ({ev.laps.length})</summary>
+          <ul className="drop-list">{ev.laps.map((r, i) => <DropLine key={i} d={r} note={`lap ${r.lap}`} />)}</ul>
+        </details>
+      )}
+    </div>
+  );
+}
+
+function BoxGacha({ gacha }: { gacha: NonNullable<BattleEvent["gacha"]> }) {
+  const [box, setBox] = useState(String(gacha.boxes[0]?.box ?? 1));
+  const b = gacha.boxes.find((x) => String(x.box) === box) ?? gacha.boxes[0];
+  if (!b) return null;
+  const total = b.items.reduce((n, x) => n + x.max, 0);
+  return (
+    <div>
+      <h4>Box gacha{gacha.start ? ` (${gacha.start} – ${gacha.end})` : ""}</h4>
+      {gacha.boxes.length > 1 && (
+        <SegmentedButtons label="Box" selected={[box]} onToggle={setBox}
+          options={gacha.boxes.map((x) => ({ value: String(x.box), label: `Box ${x.box}` }))} />
+      )}
+      <ul className="drop-list">{b.items.map((r, i) => (
+        <DropLine key={i} d={r} note={`${r.max} in box${r.main ? " · headline" : ""}`} />
+      ))}</ul>
+      <p className="muted small">{total.toLocaleString()} draws empty the box.</p>
     </div>
   );
 }
@@ -160,7 +225,7 @@ function DropBlock({ title, list }: { title: string; list: QuestDrop[] }) {
   );
 }
 
-export function DropLine({ d, showGroup }: { d: QuestDrop; showGroup?: boolean }) {
+export function DropLine({ d, showGroup, note }: { d: QuestDrop; showGroup?: boolean; note?: string }) {
   const lang = useLang();
   const name = d.type === "gold" ? "Gold" : d.type === "jewel" ? "Jewels" : tr(d.name ?? null, lang) || d.id;
   const icon = d.type === "item" && d.icon
@@ -169,15 +234,15 @@ export function DropLine({ d, showGroup }: { d: QuestDrop; showGroup?: boolean }
       : <span className="drop-icon" />;
   const nameEl = d.type === "unit" && d.unit ? <Link to={`/units/${d.unit}`}>{name}</Link> : name;
   const extra = [
-    showGroup && (d.frame !== undefined ? `frame ${d.frame}` : d.group !== undefined ? `group ${d.group}` : null),
+    showGroup && (d.frame !== undefined ? `frame ${d.frame}` : d.group ? `group ${d.group}` : null),
     d.range && `rank ${d.range[0].toLocaleString()}–${d.range[1].toLocaleString()}`,
   ].filter(Boolean).join(" · ");
   return (
     <li title={d.id}>
       {icon}
-      <span lang="ja">{nameEl} ×{d.num.toLocaleString()}
+      <span lang="ja">{nameEl}{d.type === "unit" && d.num === 1 ? "" : ` ×${d.num.toLocaleString()}`}
         {extra && <span className="drop-group"> · {extra}</span>}</span>
-      <span className="drop-rate">{d.rate !== undefined ? pct(d.rate) : ""}</span>
+      <span className="drop-rate">{note ?? (d.rate !== undefined ? pct(d.rate) : "")}</span>
     </li>
   );
 }
@@ -255,6 +320,7 @@ function BossCard({ e, data, stageOf }: { e: BattleBoss; data: Battles; stageOf:
   const tabs = useMemo(() => [
     { id: "skills", label: "Skills" }, { id: "ai", label: "AI" },
     ...(e.rewards && Object.keys(e.rewards).length ? [{ id: "rewards", label: "Rewards" }] : []),
+    ...(e.luckRewards?.length ? [{ id: "luck", label: "Luck rewards" }] : []),
   ], [e]);
   const [tab, setTab] = useState("skills");
   const idBase = `boss-${e.id}`;
@@ -280,13 +346,18 @@ function BossCard({ e, data, stageOf }: { e: BattleBoss; data: Battles; stageOf:
           )}
         </div>
       )}
+      {e.points && e.points.length > 0 && (
+        <div className="boss-facts small"><span className="muted">Bonus points:</span>{" "}
+          {e.points.map((p, i) => <span key={i} className="boss-point" lang="ja">{tr(p.text, lang)} +{p.points}</span>)}</div>
+      )}
       {e.rules && e.rules.length > 0 && <ul className="stage-rules boss-rules">{e.rules.map((r, i) => <li key={i}>{r}</li>)}</ul>}
       <div className="enemy-detail">
         <EnemyStats e={e} />
         <UrlTabs tabs={tabs} active={tab} onChange={setTab} idBase={idBase} label="Boss details" />
         <TabPanel tab={tab} idBase={idBase}>
           {tab === "skills" ? <EnemySkills e={e} data={data} />
-            : tab === "ai" ? <Behaviour e={e} data={data} /> : <BossRewards rewards={e.rewards!} />}
+            : tab === "ai" ? <Behaviour e={e} data={data} />
+              : tab === "luck" ? <LuckTiers tiers={e.luckRewards!} /> : <BossRewards rewards={e.rewards!} />}
         </TabPanel>
       </div>
     </div>
@@ -302,6 +373,20 @@ function BossRewards({ rewards }: { rewards: NonNullable<BattleBoss["rewards"]> 
     <div className="drops">
       {REWARD_KINDS.filter(([k]) => rewards[k]?.length).map(([k, title]) => <DropBlock key={k} title={title} list={rewards[k]!} />)}
       <p className="muted small">Rates as listed in the client (out of 10,000) within each group; the roll happens on the server.</p>
+    </div>
+  );
+}
+
+/** Rewards by the team's total luck (and for raid bosses, by contribution). */
+function LuckTiers({ tiers }: { tiers: LuckTier[] }) {
+  const range = (r: [number, number]) => r[1] >= 99999 ? `${r[0].toLocaleString()}+` : `${r[0].toLocaleString()}–${r[1].toLocaleString()}`;
+  return (
+    <div className="drops">
+      {tiers.map((t, i) => (
+        <DropBlock key={i} list={t.drops}
+          title={`Luck ${range(t.luck)}${t.contribution ? ` · contribution ${range(t.contribution)}` : ""}`} />
+      ))}
+      <p className="muted small">Total luck of the team, bonus units included; rates as listed (out of 10,000).</p>
     </div>
   );
 }
