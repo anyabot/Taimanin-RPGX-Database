@@ -9,7 +9,8 @@ import {
   RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
   type UnitIndexEntry, type ObtainEntry,
 } from "../data";
-import { ArtGallery } from "../art";
+import { ArtGallery, SceneStills } from "../art";
+import { BundleImage } from "../bundleImage";
 import { EffectList, ElementIcon, RarityIcon } from "../components";
 import type { SceneDoc } from "../adv";
 import { AbilityPanel, BloomTab } from "./growth";
@@ -120,6 +121,7 @@ function RelatedUnits({ id }: { id: string }) {
 function StatsTab({ form }: { form: UnitForm }) {
   const [lv, setLv] = useState(form.levelMax);
   return (
+    <>
     <Panel title={`${form.rarityLabel} form`} note={`Max level ${form.levelMax}. Values between Lv1 and max are interpolated.`}>
       <LevelControl label="Level" value={lv} min={1} max={form.levelMax} onChange={setLv} marks={[1, form.levelMax]} />
       <table className="hub-table stat-table">
@@ -136,6 +138,44 @@ function StatsTab({ form }: { form: UnitForm }) {
           <tr><th scope="row">SP charge</th><td colSpan={3}>{form.spCharge}</td></tr>
         </tbody>
       </table>
+    </Panel>
+    <GrowthPanel form={form} lv={lv} />
+    </>
+  );
+}
+
+const ITEM_ICONS = "image_item_s_assets_all";
+
+/** EXP and gold from Lv 1 to the chosen level (GameSupport.GetUnitExpLevel: one row per level),
+ *  and the items that evolve the form, where the data lists them. */
+function GrowthPanel({ form, lv }: { form: UnitForm; lv: number }) {
+  const { data: growth } = useData<Growth>("growth");
+  const lang = useLang();
+  if (!growth) return null;
+  const t = growth.levels[String(form.rarity)];
+  let exp = 0, gold = 0;
+  for (let l = 2; l <= lv; l++) exp += t?.exp[String(l)] ?? 0;
+  for (let l = 1; l < lv; l++) gold += t?.gold[String(l)] ?? 0;
+  return (
+    <Panel title="Growth" note="Totals from Lv 1, as listed per level in the client.">
+      <p>Lv 1 → {lv}: <b>{exp.toLocaleString()}</b> EXP · <b>{gold.toLocaleString()}</b> gold</p>
+      {form.evolve && (
+        <>
+          <h4 className="growth-head">Evolve to the next form</h4>
+          <ul className="bloom-mats">
+            {form.evolve.map(([item, num]) => {
+              const it = growth.items[item];
+              return (
+                <li key={item} title={item}>
+                  <BundleImage stem={ITEM_ICONS} name={`${it?.icon ?? item}_s`} width={40} height={40} className="item-icon" />
+                  <span lang="ja">{tr(it?.name ?? null, lang) || item}</span>
+                  <b>×{num.toLocaleString()}</b>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
     </Panel>
   );
 }
@@ -299,6 +339,7 @@ function ProfileTab({ unit }: { unit: Unit }) {
         {unit.illustrator && <><dt>Illustrator</dt><dd>{unit.illustrator}</dd></>}
         {unit.voiceActor && <><dt>Voice</dt><dd>{unit.voiceActor}</dd></>}
         {unit.trust.length > 0 && <><dt>Scene unlocks</dt><dd>Trust {unit.trust.join(", ")}</dd></>}
+        {unit.skin && <><dt>Skin</dt><dd lang="ja">{tr(unit.skin.name, lang) || unit.skin.item} (Live2D)</dd></>}
       </dl>
     </Panel>
   );
@@ -347,6 +388,7 @@ function ScenesTab({ unit }: { unit: Unit }) {
           <li key={sid}>
             <span className="scene-unlock muted">{unit.trust[g] ? `Trust ${unit.trust[g]}` : `Scene ${g + 1}`}{group.length > 1 ? ` · part ${k + 1}` : ""}</span>
             <SceneLink sid={sid} unitId={unit.id} />
+            {k === 0 && <SceneStills names={unit.stills?.[g]} />}
           </li>
         )))}
       </ol>

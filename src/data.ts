@@ -53,6 +53,8 @@ export interface UnitForm {
   stats: Record<StatKey, [number, number]>;
   spCharge: number;
   skills: string[];
+  /** items that evolve this form into the next (UnitEvolutionItems), where the data lists them */
+  evolve?: [string, number][];
 }
 
 export interface Voice {
@@ -99,11 +101,24 @@ export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain"
   voices: Voice[];
   trust: number[];
   scenes: string[][];
+  /** per scene, its CG stills (textures in the character's advstill bundle) */
+  stills?: string[][];
+  /** a Live2D skin, sold as an item */
+  skin?: { item: string; name: Text | null; resource: string };
   art: { graphicId: string; graphicNum: number; r18GraphicId: string; r18GraphicNum: number; spineId: string };
 }
 
 /** public/data/growth.json (tables.py export_growth): tables all units share. */
 export interface Growth {
+  /** by rarity: EXP for each level (per level, not cumulative) and gold for each level-up */
+  levels: Record<string, { exp: Record<string, number>; gold: Record<string, number> }>;
+  /** rune enhance gold (rarity -> next level -> gold), refine costs, evolution items (list -> items) */
+  rune: {
+    enhance: Record<string, Record<string, number>>;
+    refine: { rarity: number; category: number; refine_chip_id: string; main_chip_cost: number; sub_chip_cost: number;
+      main_refine_cost: number; sub_refine_cost: number }[];
+    evolve: Record<string, [string, number][]>;
+  };
   abilityExp: Record<string, number>;
   bloom: {
     points: Record<string, number[]>; gold: Record<string, number[]>;
@@ -216,6 +231,9 @@ export interface RunePiece {
   subCount: [number, number];
   refinable: boolean;
   icon: string;
+  /** growth.json rune.evolve key, and the piece it evolves into */
+  evolve?: string;
+  evolvesTo?: string;
 }
 /** A decoded set-bonus line (eEquipComboBonus, see tables.py export_runes). */
 export interface RuneBonusLine { text: string; icon?: string }
@@ -288,4 +306,6 @@ export interface DispatchSection {
 export interface ArenaCard {
   id: string; name: Text | null; title: Text | null; union: string | null; rarity: number;
   illustrator: string | null; voiceActor: string | null; scenes: string[]; sale: string | null;
+  /** per scene, its CG stills (textures in the card's advstill bundle) */
+  stills?: string[][];
 }
