@@ -111,7 +111,9 @@ export interface BattleEnemy {
   name: Text | null; element: string | null; level: number; hp: number; atk: number; def: number; spd: number;
   icon: string | null; skills: string[];
 }
-export interface BattleBoss extends BattleEnemy { id: number; difficulty: number; stage: number }
+/** One scripted rule of a raid boss (from its gimmick rows); skill = index into its skills. */
+export interface BossRule { phase: number | null; when: string; do: string; skill: number | null }
+export interface BattleBoss extends BattleEnemy { id: number; difficulty: number; stage: number; ai?: BossRule[] }
 export interface BattleQuest { id: number; difficulty: number; stage: number; scripts: string[]; waves: [string, number][][] }
 export interface Battles {
   quests: BattleQuest[]; enemies: Record<string, BattleEnemy>; bosses: BattleBoss[]; skills: Record<string, BattleSkill>;

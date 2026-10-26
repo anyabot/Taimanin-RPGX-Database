@@ -145,6 +145,32 @@ function EnemyCard({ e, data, label, open }: { e: BattleBoss; data: Battles; lab
         </div>
       </div>
       {open && <EnemyDetail e={e} data={data} />}
+      {open && <BossBehaviour e={e} data={data} />}
+    </div>
+  );
+}
+
+/** How the boss picks its skills: the game's default, then its scripted rules by phase. */
+function BossBehaviour({ e, data }: { e: BattleBoss; data: Battles }) {
+  const lang = useLang();
+  const rules = e.ai ?? [];
+  const skillName = (i: number) => tr(data.skills[e.skills[i]]?.name, lang) || `Skill ${i + 1}`;
+  const phases = [...new Set(rules.map((r) => r.phase))].sort((a, b) => (a ?? 0) - (b ?? 0));
+  return (
+    <div className="boss-ai">
+      <h3>Behaviour</h3>
+      <p className="muted small">{rules.length ? "Otherwise it uses" : "It uses"} the last skill in its list that it has SP for.</p>
+      {phases.map((ph) => (
+        <div key={ph ?? "any"} className="boss-ai-phase">
+          {ph !== null && <div className="boss-ai-head">Phase {ph}</div>}
+          <ul>
+            {rules.filter((r) => r.phase === ph).map((r, i) => (
+              <li key={i}><span className="boss-ai-when">{r.when}</span>: {r.do}
+                {r.skill !== null && <> <b lang="ja">{skillName(r.skill)}</b></>}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }
