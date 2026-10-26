@@ -238,3 +238,6 @@ html.adv-theater-open { overflow: hidden; }
 .boss-ai li { padding: 1px 0; }
 .boss-ai-head { font-weight: 700; font-size: 12px; opacity: .85; margin-top: 4px; }
 .boss-ai-when { font-variant-numeric: tabular-nums; }
+.boss-ai-top { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.boss-ai-top .hub-segmented, .boss-ai-top [role=group] { margin-bottom: 0 !important; }
+.boss-flow { width: 100%; border-radius: 8px; margin: 6px 0; overflow: hidden; }

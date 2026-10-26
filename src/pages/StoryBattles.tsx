@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Breadcrumbs, LoadState, Panel, SegmentedButtons } from "@altterisk/game-hub";
 import {
@@ -9,6 +9,8 @@ import { BundleImage } from "../bundleImage";
 import { StoryBanner } from "./StoryList";
 
 const BOSS_ICONS = "image_bos_s_assets_all";
+// reactflow + dagre only load when a boss flowchart is shown
+const BossFlow = lazy(() => import("../bossFlow"));
 const DIFFICULTY = ["", "Normal", "Hard", "Very hard", "Extreme", "Nightmare"];
 const RAID_DIFFICULTY = ["", "Beginner", "Intermediate", "Advanced", "Expert", "Master"];
 
@@ -154,13 +156,27 @@ function EnemyCard({ e, data, label, open }: { e: BattleBoss; data: Battles; lab
 function BossBehaviour({ e, data }: { e: BattleBoss; data: Battles }) {
   const lang = useLang();
   const rules = e.ai ?? [];
-  const skillName = (i: number) => tr(data.skills[e.skills[i]]?.name, lang) || `Skill ${i + 1}`;
+  const skillName = useCallback((i: number) => tr(data.skills[e.skills[i]]?.name, lang) || `Skill ${i + 1}`,
+    [data, e, lang]);
+  const [view, setView] = useState("flow");
   const phases = [...new Set(rules.map((r) => r.phase))].sort((a, b) => (a ?? 0) - (b ?? 0));
   return (
     <div className="boss-ai">
-      <h3>Behaviour</h3>
-      <p className="muted small">{rules.length ? "Otherwise it uses" : "It uses"} the last skill in its list that it has SP for.</p>
-      {phases.map((ph) => (
+      <div className="boss-ai-top">
+        <h3>Behaviour</h3>
+        {rules.length > 0 && (
+          <SegmentedButtons label="View" selected={[view]} onToggle={setView}
+            options={[{ value: "flow", label: "Flowchart" }, { value: "list", label: "List" }]} />
+        )}
+      </div>
+      <p className="muted small">{rules.length ? "Otherwise it uses" : "It uses"} the last skill in its list that it has SP for.
+        {rules.length > 0 && view === "flow" && " The order of the checks within a phase is not verified yet."}</p>
+      {rules.length > 0 && view === "flow" && (
+        <Suspense fallback={<p className="muted small">Loading flowchart…</p>}>
+          <BossFlow rules={rules} skillName={skillName} />
+        </Suspense>
+      )}
+      {view === "list" && phases.map((ph) => (
         <div key={ph ?? "any"} className="boss-ai-phase">
           {ph !== null && <div className="boss-ai-head">Phase {ph}</div>}
           <ul>
