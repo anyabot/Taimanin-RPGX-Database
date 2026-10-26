@@ -98,6 +98,11 @@ await step("story", async () => {
   await cdp.goto(`${SITE}/#/story?section=event`, `document.querySelectorAll(".story-card").length > 0`);
   return { cards: await cdp.eval(`return document.querySelectorAll(".story-card").length`), noHScroll: await noHScroll() };
 }, false);
+await step("story-battles", async () => {
+  await cdp.goto(`${SITE}/#/story/battles/er004`, `document.querySelectorAll(".enemy-card").length > 0`);
+  await waitFor(() => cdp.eval(`return document.querySelectorAll(".enemy-icon img").length > 0`), 30000, "enemy icons");
+  return { bosses: await cdp.eval(`return document.querySelectorAll(".enemy-card").length`), noHScroll: await noHScroll() };
+}, false);
 await step("runes", async () => {
   await cdp.goto(`${SITE}/#/runes`, `document.querySelectorAll(".rune-sets > *").length > 0`);
   await cdp.eval(`document.querySelectorAll(".rune-sets details").forEach((d, i) => { if (i < 2) d.open = true })`);
@@ -110,6 +115,7 @@ for (const [name, url, ready] of [
   [`phone-unit-${UNIT}-skills`, `/#/units/${UNIT}?tab=skills`, `document.querySelector(".unit-page")?.innerText.length > 200`],
   [`phone-unit-${UNIT}-voices`, `/#/units/${UNIT}?tab=voices`, `document.querySelector(".unit-page")?.innerText.length > 200`],
   ["phone-buffs", `/#/buffs?cat=debuff`, `document.querySelectorAll(".buff-table tbody tr").length > 0`],
+  ["phone-battles", `/#/story/battles/es001`, `document.querySelectorAll(".enemy-chip").length > 0`],
   ["phone-story", `/#/story`, `document.querySelectorAll(".story-card").length > 0`],
   ["phone-runes", `/#/runes`, `document.querySelectorAll(".rune-sets > *").length > 0`],
 ]) {

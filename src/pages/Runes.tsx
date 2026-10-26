@@ -3,17 +3,31 @@ import { useSearchParams } from "react-router-dom";
 import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
-import { RARITY, tr, useData, useLang, type RuneEffect, type RuneSet } from "../data";
+import { RARITY, RUNE_ICONS, tr, useData, useLang, type RuneEffect, type RuneSet } from "../data";
+import { BundleImage } from "../bundleImage";
 
 const fmtRange = ([a, b]: [number, number]) => (a === b ? `${a}` : `${a}–${b}`);
+const ui = (name: string) => `${import.meta.env.BASE_URL}ui/${name}.webp`;
+
+/** One effect as a skill-style line: stat icon, stat, value range over the
+ *  enhancement levels. The game's own wording is the tooltip. */
+function EffectLine({ e }: { e: RuneEffect }) {
+  const lang = useLang();
+  const text = e.stat ? `${e.stat} +${fmtRange(e.range)}${e.flat ? "" : "%"}` : `${tr(e.description, lang)} ${fmtRange(e.range)}`;
+  return (
+    <li title={tr(e.description, lang)}>
+      {e.icon ? <img src={ui(`Battle_status_icon_${e.icon}`)} alt="" width={22} height={22} /> : <span className="effect-dot" />}
+      <span>{text}</span>
+    </li>
+  );
+}
 
 function Effects({ title, list }: { title: string; list: RuneEffect[] }) {
-  const lang = useLang();
   if (!list.length) return null;
   return (
     <div className="rune-effects">
       <h4>{title}</h4>
-      <ul>{list.map((e, i) => <li key={i}>{tr(e.description, lang)} <span className="muted">{fmtRange(e.range)}</span></li>)}</ul>
+      <ul className="effect-list">{list.map((e, i) => <EffectLine key={i} e={e} />)}</ul>
     </div>
   );
 }
@@ -30,11 +44,19 @@ function Tier({ set }: { set: RuneSet }) {
         <span className="muted">slots {[...new Set(set.pieces.map((x) => x.slotLabel))].join("")}</span>
       </h3>
       <dl className="rune-bonus">
-        {Object.entries(set.bonus).map(([n, b]) => <div key={n}><dt>{n}-piece</dt><dd>{tr(b, lang)}</dd></div>)}
+        {Object.entries(set.bonus).map(([n, b]) => <div key={n}><dt>{n}-piece</dt><dd lang="ja">{tr(b, lang)}</dd></div>)}
       </dl>
+      <div className="rune-pieces">
+        {set.pieces.map((x) => (
+          <div key={x.id} className="rune-piece" title={tr(x.name, lang)}>
+            <BundleImage stem={RUNE_ICONS} name={`${x.icon}_s`} width={56} height={56} className="rune-icon" />
+            <span className="rune-slot">{x.slotLabel}{x.main.length > 1 && <span className="muted small"> · main stat: one of</span>}</span>
+            <ul className="effect-list">{x.main.map((e, i) => <EffectLine key={i} e={e} />)}</ul>
+          </div>
+        ))}
+      </div>
       <details>
-        <summary>Main and sub effects (sub effects {p.subCount.join("–")})</summary>
-        <Effects title="Main effect" list={p.main} />
+        <summary>Sub effects ({p.subCount.join("–")} per piece, rolled from these)</summary>
         <Effects title="Sub effects" list={p.sub} />
       </details>
     </section>

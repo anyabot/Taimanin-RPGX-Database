@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { LoadState, PageHeader, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
-import { tr, useData, useLang, type StoryGroup, type StorySection } from "../data";
+import { tr, useData, useLang, type BundleRef, type StoryGroup, type StorySection } from "../data";
+import { BundleImage } from "../bundleImage";
 
 const KIND_NOUN: Record<string, string> = {
   main: "Chapter", event: "Event", raid: "Raid", map: "Map event", special: "Special", tutorial: "Tutorial",
@@ -44,16 +45,27 @@ export default function StoryList() {
   );
 }
 
+/** The game's banner for a chapter (its own bundle) or an event (image_banner_t). */
+export function StoryBanner({ banner, large }: { banner: BundleRef; large?: boolean }) {
+  return <BundleImage stem={banner.bundle} name={banner.name} className={`story-banner${large ? " large" : ""}`} />;
+}
+
 function StoryCard({ g, kind, lang, open }: { g: StoryGroup; kind: string; lang: "en" | "ja"; open: boolean }) {
   const title = tr(g.title, lang);
   const noun = `${KIND_NOUN[kind] ?? "Story"} ${g.num}`;
   return (
     <details className="story-card" open={open}>
       <summary>
+        {g.banner && <StoryBanner banner={g.banner} />}
         <span className="story-num muted">{noun}</span>
         <span className="story-title" lang={g.title?.en && lang === "en" ? "en" : "ja"}>{title || noun}</span>
         <span className="story-count muted">{g.parts.length} part{g.parts.length === 1 ? "" : "s"}</span>
       </summary>
+      {g.battles && (
+        <Link className="hub-btn story-battles" to={`/story/battles/${g.id}`}>
+          Battles · {g.battles.quests} quests{g.battles.bosses ? ` · ${g.battles.bosses} raid bosses` : ""}
+        </Link>
+      )}
       <ol className="story-parts">
         {g.parts.map((p) => (
           <li key={p.id}>

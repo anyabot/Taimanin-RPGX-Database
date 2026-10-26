@@ -189,3 +189,37 @@ html.adv-theater-open { overflow: hidden; }
 .story-parts { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
 .story-parts a { text-decoration: none; }
 .scene-sub { font-size: 14px; font-weight: 500; }
+.bundle-image { display: inline-block; position: relative; overflow: hidden; background: var(--hub-surface-2, #ffffff0d); border-radius: 6px; vertical-align: middle; }
+.bundle-image > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.bundle-image.failed { background: none; }
+.story-banner { display: block; width: 100%; aspect-ratio: 308 / 112; margin: -10px -12px 8px; width: calc(100% + 24px); border-radius: 10px 10px 0 0; }
+.story-banner.large { margin: 0; width: min(100%, 420px); border-radius: 10px; flex: none; }
+.story-battles { display: inline-block; margin: 8px 0 2px; font-size: 13px; text-decoration: none; }
+.battles-head { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: 8px 0 16px; }
+.battles-head h1 { margin: 0 0 4px; font-size: 22px; }
+.quest-list { display: grid; gap: 10px; }
+.quest { border: 1px solid var(--hub-border, #2a2e3b); border-radius: 8px; padding: 8px 10px; }
+.quest-head { display: flex; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+.quest-diff { font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 6px; background: #f7768e33; }
+.wave { display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: start; margin-top: 6px; }
+.wave-no { font-size: 12px; padding-top: 12px; }
+.wave-enemies { display: flex; flex-wrap: wrap; gap: 6px; }
+.enemy-chip { border: 1px solid var(--hub-border, #2a2e3b); border-radius: 8px; background: var(--hub-surface-2, #ffffff08); }
+.enemy-chip.open { flex-basis: 100%; }
+.enemy-chip-head { display: flex; gap: 8px; align-items: center; padding: 4px 8px 4px 4px; background: none; border: 0; color: inherit; cursor: pointer; text-align: left; font: inherit; }
+.enemy-chip-text { display: grid; }
+.enemy-name { font-weight: 600; font-size: 13px; }
+.enemy-meta { font-size: 11px; display: flex; gap: 4px; align-items: center; }
+.enemy-icon { border-radius: 6px; flex: none; }
+.enemy-detail { padding: 6px 10px 10px; display: grid; gap: 8px; }
+.enemy-stats { display: flex; gap: 14px; flex-wrap: wrap; margin: 0; }
+.enemy-stats div { display: grid; } .enemy-stats dt { font-size: 11px; opacity: .7; } .enemy-stats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.enemy-skill-name { font-size: 12px; font-weight: 700; opacity: .9; }
+.boss-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
+.enemy-card { border: 1px solid var(--hub-border, #2a2e3b); border-radius: 10px; padding: 8px; }
+.enemy-card-head { display: flex; gap: 10px; align-items: center; }
+.rune-pieces { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); margin: 6px 0 8px; align-items: start; }
+.rune-piece { display: grid; grid-template-columns: 56px 1fr; grid-template-rows: auto 1fr; gap: 2px 8px; align-items: start; padding: 6px; border: 1px solid var(--hub-border, #2a2e3b); border-radius: 8px; }
+.rune-piece .rune-icon { grid-row: 1 / 3; border-radius: 8px; }
+.rune-slot { font-weight: 700; font-size: 14px; }
+.rune-piece .effect-list li { font-size: 12px; }

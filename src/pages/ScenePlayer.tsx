@@ -68,6 +68,7 @@ export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "st
             {at > 0 && <Link className="hub-btn" to={sceneLink(siblings[at - 1])}>‹ Previous {story ? "part" : "scene"}</Link>}
             <span className="muted">{story ? "Part" : "Scene"} {at + 1} of {siblings.length}{unit && ` · ${tr(unit.title, lang)}`}</span>
             {at >= 0 && at < siblings.length - 1 && <Link className="hub-btn" to={sceneLink(siblings[at + 1])}>Next {story ? "part" : "scene"} ›</Link>}
+            {story?.g.battles && <Link className="hub-btn" to={`/story/battles/${story.g.id}`}>Battles</Link>}
           </div>
         )}
       </div>
