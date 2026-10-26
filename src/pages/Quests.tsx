@@ -4,6 +4,7 @@ import { Breadcrumbs, LoadState, PageHeader, SearchBox, SegmentedButtons } from 
 import { textMatch } from "@altterisk/game-hub/filters";
 import { tr, useData, useLang, type Battles, type QuestGroup, type QuestSection } from "../data";
 import { BattleBody } from "../battles";
+import { DispatchView } from "./Dispatch";
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -19,7 +20,8 @@ export default function QuestList() {
     if (v) next.set(k, v); else next.delete(k);
     setParams(next, { replace: true });
   };
-  const sec = index?.find((s) => s.key === section) ?? index?.[0];
+  const dispatch = section === "dispatch";
+  const sec = dispatch ? undefined : index?.find((s) => s.key === section) ?? index?.[0];
   const groups = useMemo(() => (sec?.groups ?? []).filter((g) =>
     !q || textMatch(q, [g.id, g.title?.ja, g.title?.en, g.label?.ja, g.note])), [sec, q]);
 
@@ -27,15 +29,19 @@ export default function QuestList() {
   return (
     <div className="story-page">
       <PageHeader title="Quests"
-        subtitle="Arena towers, daily quests and mini events: stages, enemies, rules and drops from the game's own data." />
-      <SegmentedButtons label="Section" selected={[sec?.key ?? ""]}
-        options={index.map((s) => ({ value: s.key, label: `${s.label} (${s.groups.length})` }))}
+        subtitle="Arena towers, daily quests, mini events and dispatch: stages, enemies, rules and drops from the game's own data." />
+      <SegmentedButtons label="Section" selected={[dispatch ? "dispatch" : sec?.key ?? ""]}
+        options={[...index.map((s) => ({ value: s.key, label: `${s.label} (${s.groups.length})` })), { value: "dispatch", label: "Dispatch" }]}
         onToggle={(v) => { const next = new URLSearchParams(params); next.set("section", v); setParams(next, { replace: true }); }} />
-      <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search titles" />
-      <div className="quest-groups">
-        {groups.map((g) => <QuestCard key={g.id} g={g} lang={lang} />)}
-        {!groups.length && <p className="muted">No titles match.</p>}
-      </div>
+      {dispatch ? <DispatchView /> : (
+        <>
+          <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search titles" />
+          <div className="quest-groups">
+            {groups.map((g) => <QuestCard key={g.id} g={g} lang={lang} />)}
+            {!groups.length && <p className="muted">No titles match.</p>}
+          </div>
+        </>
+      )}
     </div>
   );
 }
