@@ -1,0 +1,1 @@
+{"id":"exu10011","name":{"ja":"イベントメダル シーズン11"},"description":{"ja":"対象の交換所で報酬と交換できる特別なアイテム\n有効期限：2026/02/28 10:59:59まで"},"type":"global","icon":"exu10011","sellGold":0,"sources":[{"page":"story/battles/em057","title":{"ja":"マップ57"},"kinds":["drop","luck reward"]},{"page":null,"title":null,"kinds":["exchange"],"start":"2024-11-16","end":"2026-01-16","costs":[["exu10010",10]]}]}

@@ -1,0 +1,1 @@
+{"id":"bat09023","name":{"ja":"バラライカの葉巻"},"description":{"ja":"味方全体のデバフを1つ解除する"},"type":"battle","icon":"bat09023","sellGold":10,"battleLimit":1,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2022-07-31","end":"2022-08-31","costs":[["exu00032",25]]}]}

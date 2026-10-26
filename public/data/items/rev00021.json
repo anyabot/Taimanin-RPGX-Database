@@ -1,0 +1,1 @@
+{"id":"rev00021","name":{"ja":"輝煌の雫"},"description":{"ja":"装備シリーズ「輝煌」の覚醒に使用できるアイテム"},"type":"rune_evolution","icon":"rev00021","sellGold":0,"sources":[{"page":"story/battles/c022","title":{"ja":"奪われた石切兼光"},"kinds":["raid reward"]},{"page":null,"title":null,"kinds":["exchange"],"start":"2023-04-14","end":"2030-01-01","costs":[["rev90000",1]]}],"uses":{"runeEvolve":6}}

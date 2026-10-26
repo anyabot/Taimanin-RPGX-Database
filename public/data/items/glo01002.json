@@ -1,0 +1,1 @@
+{"id":"glo01002","name":{"ja":"魔界牛のブロック"},"description":{"ja":"売却すると多くのゴールドが入手できる"},"type":"global","icon":"glo01002","sellGold":50000,"sources":[{"page":"quests/daily-6","title":{"ja":"ゴールドクエスト"},"kinds":["drop","luck drop","rare drop"]}]}

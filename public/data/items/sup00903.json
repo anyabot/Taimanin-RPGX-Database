@@ -1,0 +1,1 @@
+{"id":"sup00903","name":{"ja":"ユニットスキルの書(秘伝)"},"description":{"ja":"[&Tbl_Unit_name_uni05003_1]のスキルLvを100%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup00903","sellGold":0,"effect":{"category":"skillup","value":100},"statusCost":5000}

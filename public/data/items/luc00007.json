@@ -1,0 +1,1 @@
+{"id":"luc00007","name":{"ja":"超人開運の神楽鈴(SR)"},"description":{"ja":"超人の初期レアリティが「SR」ユニットのラックを10アップさせるアイテム"},"type":"luckup","icon":"luc00007","sellGold":0,"effect":{"category":"luckup","value":10},"statusCost":0,"sources":[{"page":"quests/tower-2","title":{"ja":"超人アリーナ"},"kinds":["first clear"]}]}

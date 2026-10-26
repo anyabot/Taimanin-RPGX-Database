@@ -1,0 +1,1 @@
+{"id":"tup00009","name":{"ja":"キャンディアップル"},"description":{"ja":"ユニットの信頼度を2アップさせるアイテム"},"type":"trustup","icon":"tup00009","sellGold":100,"effect":{"category":"trustup","value":2},"statusCost":0}

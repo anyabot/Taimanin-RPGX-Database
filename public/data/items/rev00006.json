@@ -1,0 +1,1 @@
+{"id":"rev00006","name":{"ja":"不動の雫"},"description":{"ja":"装備シリーズ「不動」の覚醒に使用できるアイテム"},"type":"rune_evolution","icon":"rev00006","sellGold":0,"sources":[{"page":"story/battles/c008","title":{"ja":"イン・ザ・ダーク"},"kinds":["raid reward"]},{"page":null,"title":null,"kinds":["exchange"],"start":"2023-04-14","end":"2030-01-01","costs":[["rev90000",1]]}],"uses":{"runeEvolve":6}}

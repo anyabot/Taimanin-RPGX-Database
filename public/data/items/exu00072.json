@@ -1,0 +1,1 @@
+{"id":"exu00072","name":{"ja":"ユニットスキルの書交換チケット"},"description":{"ja":"対象の交換所でユニットスキルの書(秘伝)と交換できる特別なチケット\n交換期限：2024/10/31 09:59:59まで"},"type":"global","icon":"exu00072","sellGold":0,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2024-09-16","end":"2024-10-31","costs":[["exu00071",1500],["exu00071",300]]}]}

@@ -1,0 +1,1 @@
+{"id":"luc00010","name":{"ja":"自然開運の神楽鈴(SR)"},"description":{"ja":"自然の初期レアリティが「SR」ユニットのラックを10アップさせるアイテム"},"type":"luckup","icon":"luc00010","sellGold":0,"effect":{"category":"luckup","value":10},"statusCost":0,"sources":[{"page":"quests/tower-5","title":{"ja":"自然アリーナ"},"kinds":["first clear"]}]}

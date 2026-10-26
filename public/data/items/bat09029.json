@@ -1,0 +1,1 @@
+{"id":"bat09029","name":{"ja":"釘打ち銃"},"description":{"ja":"敵全体のDEFを3ターンの間、中ダウンする"},"type":"battle","icon":"bat09029","sellGold":10,"battleLimit":1,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2024-08-16","end":"2024-09-16","costs":[["exu00065",25]]}]}

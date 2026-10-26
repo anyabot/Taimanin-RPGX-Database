@@ -1,0 +1,1 @@
+{"id":"evo01002","name":{"ja":"奴隷の至宝"},"description":{"ja":"「オーガ奴隷」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01002","sellGold":0,"sources":[{"page":"quests/mini-1002","title":{"ja":"決戦“オーガ奴隷”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07005"],"bloom":["07005"]}}

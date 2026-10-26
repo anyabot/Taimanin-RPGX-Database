@@ -1,0 +1,1 @@
+{"id":"evo01019","name":{"ja":"令嬢の至宝"},"description":{"ja":"「ミランダ・クローゼット」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01019","sellGold":0,"sources":[{"page":"quests/mini-1019","title":{"ja":"決戦“邪眼令嬢ミランダ”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07019"],"bloom":["07019"]}}

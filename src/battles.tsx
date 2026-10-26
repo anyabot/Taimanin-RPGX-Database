@@ -232,7 +232,8 @@ export function DropLine({ d, showGroup, note }: { d: QuestDrop; showGroup?: boo
     ? <BundleImage stem={ITEM_ICONS} name={`${d.icon}_s`} width={32} height={32} className="drop-icon" />
     : d.type === "unit" && d.unit ? <img src={iconUrl(d.unit)} alt="" width={32} height={32} className="drop-icon" />
       : <span className="drop-icon" />;
-  const nameEl = d.type === "unit" && d.unit ? <Link to={`/units/${d.unit}`}>{name}</Link> : name;
+  const nameEl = d.type === "unit" && d.unit ? <Link to={`/units/${d.unit}`}>{name}</Link>
+    : d.type === "item" ? <Link to={`/items/${d.id}`}>{name}</Link> : name;
   const extra = [
     showGroup && (d.frame !== undefined ? `frame ${d.frame}` : d.group ? `group ${d.group}` : null),
     d.range && `rank ${d.range[0].toLocaleString()}–${d.range[1].toLocaleString()}`,

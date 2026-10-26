@@ -1,0 +1,1 @@
+{"id":"bat09034","name":{"ja":"ダッチのショットガン"},"description":{"ja":"3ターンの間、敵全体の受けるダメージが超特大増加する"},"type":"battle","icon":"bat09034","sellGold":10,"battleLimit":3,"sources":[{"page":"story/battles/em055","title":{"ja":"マップ55"},"kinds":["drop"]}]}
