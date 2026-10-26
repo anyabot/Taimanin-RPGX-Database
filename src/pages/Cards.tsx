@@ -4,7 +4,7 @@ import { Breadcrumbs, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons 
 import { textMatch } from "@altterisk/game-hub/filters";
 import { RARITY, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
 import { RarityIcon } from "../components";
-import { ArtGallery } from "../art";
+import { ArtGallery, SceneStills } from "../art";
 import type { SceneDoc } from "../adv";
 
 const UNIONS = ["Taimanin", "UFS", "Demon"];
@@ -86,7 +86,10 @@ export function CardDetail() {
       {card.scenes.length > 0 && (
         <Panel title="Scenes" note="Played in the browser from the game's own files; each scene loads when opened.">
           <ol className="scene-list">
-            {card.scenes.map((sid, i) => <li key={sid}><span className="scene-unlock muted">Scene {i + 1}</span> <SceneLink sid={sid} /></li>)}
+            {card.scenes.map((sid, i) => (
+              <li key={sid}><span className="scene-unlock muted">Scene {i + 1}</span> <SceneLink sid={sid} />
+                <SceneStills names={card.stills?.[i]} /></li>
+            ))}
           </ol>
         </Panel>
       )}

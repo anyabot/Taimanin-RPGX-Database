@@ -4,6 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import { Lightbox } from "@altterisk/game-hub";
 import { useAssets } from "./data";
 import { toImageData } from "./unity/client";
+import { BundleImage } from "./bundleImage";
+import "./art.css";
+
+/** "chr_0001_1a_r18" -> its bundle, r18_image_advstill_assets_image_advstill_chr_0001
+ *  (kar_c00005_1a_r18 -> ..._kar_c00005; non-R18 stills drop the r18_ prefix). */
+export function stillStem(name: string): string {
+  const who = /^(chr_\d+|kar_c\d+)/.exec(name)?.[1] ?? name;
+  return `${name.endsWith("_r18") ? "r18_" : ""}image_advstill_assets_image_advstill_${who}`;
+}
+
+/** A scene's CG stills as thumbnails, decoded when they scroll into view. */
+export function SceneStills({ names }: { names?: string[] }) {
+  if (!names?.length) return null;
+  return (
+    <span className="scene-stills">
+      {names.map((n) => <BundleImage key={n} stem={stillStem(n)} name={n} width={128} height={72} className="scene-still" alt="" />)}
+    </span>
+  );
+}
 
 /** One texture bundle per stem, decoded when shown. */
 export function ArtGallery({ stems, alt, fileName = (s) => `${s}.png` }: {

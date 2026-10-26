@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
-import { RARITY, RUNE_ICONS, tr, useData, useLang, type RuneEffect, type RuneSet } from "../data";
+import { RARITY, RUNE_ICONS, tr, useData, useLang, type Growth, type RuneEffect, type RuneSet } from "../data";
 import { BundleImage } from "../bundleImage";
 
 const fmtRange = ([a, b]: [number, number]) => (a === b ? `${a}` : `${a}–${b}`);
@@ -90,6 +90,7 @@ function Tier({ set }: { set: RuneSet }) {
             <BundleImage stem={RUNE_ICONS} name={`${x.icon}_s`} width={40} height={40} className="rune-icon" />
             <span className="rune-slot">{x.slotLabel}{x.main.length > 1 && <span className="muted small"> · one of</span>}</span>
             <ul className="effect-list">{collapse(x.main).map((e, i) => <EffectLine key={i} e={e} />)}</ul>
+            {x.evolve && <Evolve list={x.evolve} />}
           </div>
         ))}
       </div>
@@ -98,6 +99,60 @@ function Tier({ set }: { set: RuneSet }) {
         <Effects title="" list={p.sub} />
       </details>
     </section>
+  );
+}
+
+const ITEM_ICONS = "image_item_s_assets_all";
+
+/** The items that evolve a piece into the next tier (RuneEvolutionItems). */
+function Evolve({ list }: { list: string }) {
+  const { data: growth } = useData<Growth>("growth");
+  const lang = useLang();
+  const items = growth?.rune.evolve[list];
+  if (!items) return null;
+  return (
+    <div className="rune-evolve small"><span className="muted">Evolve:</span>{" "}
+      {items.map(([id, n]) => (
+        <span key={id} className="rune-evolve-item" title={tr(growth!.items[id]?.name ?? null, lang) || id}>
+          <BundleImage stem={ITEM_ICONS} name={`${growth!.items[id]?.icon ?? id}_s`} width={20} height={20} /> ×{n.toLocaleString()}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// refine cost category = the rune effect's stat code (tables.py RUNE_PARAM)
+const REFINE_STAT: Record<number, string> = {
+  0: "—", 1: "HP", 3: "ATK", 5: "DEF", 7: "SPD", 11: "Crit rate", 31: "Sleep res.", 32: "Paralysis res.", 33: "Poison res.",
+  34: "Burn res.", 35: "Curse res.", 36: "Seal res.", 37: "Darkness res.", 38: "Confusion res.", 39: "Petrification res.",
+};
+
+/** Enhance gold by rarity and level, and refine costs, as listed in the client. */
+function Costs() {
+  const { data: growth } = useData<Growth>("growth");
+  const lang = useLang();
+  if (!growth) return null;
+  const enh = Object.entries(growth.rune.enhance);
+  const levels = [...new Set(enh.flatMap(([, m]) => Object.keys(m)))].sort((a, b) => Number(a) - Number(b));
+  return (
+    <details className="rune-costs">
+      <summary>Enhance and refine costs</summary>
+      <div className="hub-table-wrap"><table className="hub-table">
+        <thead><tr><th>Enhance gold</th>{levels.map((l) => <th key={l}>→ +{Number(l) - 1}</th>)}</tr></thead>
+        <tbody>{enh.map(([r, m]) => (
+          <tr key={r}><th scope="row"><RarityIcon rarity={Number(r)} height={14} /></th>
+            {levels.map((l) => <td key={l}>{m[l]?.toLocaleString() ?? ""}</td>)}</tr>
+        ))}</tbody>
+      </table></div>
+      <div className="hub-table-wrap"><table className="hub-table">
+        <thead><tr><th>Refine</th><th>Stat</th><th>Chip</th><th>Chips (main / sub)</th><th>Cost (main / sub)</th></tr></thead>
+        <tbody>{growth.rune.refine.map((r, i) => (
+          <tr key={i}><th scope="row"><RarityIcon rarity={r.rarity} height={14} /></th><td>{REFINE_STAT[r.category] ?? r.category}</td>
+            <td lang="ja">{r.refine_chip_id ? tr(growth.items[r.refine_chip_id]?.name ?? null, lang) || r.refine_chip_id : "—"}</td>
+            <td>{r.main_chip_cost} / {r.sub_chip_cost}</td><td>{r.main_refine_cost} / {r.sub_refine_cost}</td></tr>
+        ))}</tbody>
+      </table></div>
+    </details>
   );
 }
 
@@ -150,6 +205,7 @@ export default function Runes() {
       />
       <CheckboxGroup title="Rarity" options={[1, 2, 3, 4, 5].map((r) => ({ value: String(r), label: <RarityIcon rarity={r} height={16} /> }))}
         selected={rarityF} onToggle={(v) => setParam("rarity", (rarityF.includes(v) ? rarityF.filter((x) => x !== v) : [...rarityF, v]).join(","))} />
+      <Costs />
       <LoadState loading={loading} error={error} />
       {sets && !families.length && <EmptyState title="No rune sets match" />}
       <div className="rune-sets">
