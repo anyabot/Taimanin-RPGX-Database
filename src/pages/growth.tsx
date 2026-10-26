@@ -73,7 +73,7 @@ export function BloomTab({ unit, form }: { unit: Unit; form: UnitForm }) {
           onChange={(v) => { setBloomLv(v); setLevels({}); }} />
         <p className="bloom-points"><b>{fmt(points - used)}</b> / {fmt(points)} points left
           <button className="hub-button bloom-reset" onClick={() => setLevels({})}>Reset</button></p>
-        <table className="hub-table bloom-table">
+        <div className="bloom-scroll"><table className="hub-table bloom-table">
           <thead><tr><th>Stat</th><th>Value</th><th>Level</th><th>Points</th><th>Bonuses at</th></tr></thead>
           <tbody>
             {BLOOM_STATS.map(([s, key, label]) => {
@@ -91,16 +91,17 @@ export function BloomTab({ unit, form }: { unit: Unit; form: UnitForm }) {
                       disabled={lv >= MAX_STAT_LV || !next || used + next.cost > points}>+</button>
                   </td>
                   <td>{fmt(cost(s, lv))}{next && <span className="muted small"> (next {next.cost}, +{next.gain})</span>}</td>
-                  <td className="bloom-bonus">
+                  <td className="bloom-bonus"><div>
                     {bonus.filter((x) => x.stat === s).map((x, i) => (
                       <span key={i} className={`bloom-chip${lv >= x.level ? " on" : ""}`}>Lv {x.level}: {BONUS_LABEL[x.bonus] ?? `stat ${x.bonus}`} +{x.value}</span>
                     ))}
-                  </td>
+                    {!bonus.some((x) => x.stat === s) && <span className="muted small">none</span>}
+                  </div></td>
                 </tr>
               );
             })}
           </tbody>
-        </table>
+        </table></div>
         <p>Bonus: CRI +{bonusTotal(6)}, SP gain +{bonusTotal(7)}</p>
       </Panel>
       <Panel title={`Cost to Bloom Lv ${bloomLv}`}>
