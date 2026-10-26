@@ -1,0 +1,5 @@
+node_modules
+dist
+.cdn-cache
+test/golden/bundles
+test/e2e/out
