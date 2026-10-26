@@ -53,7 +53,7 @@ for (const c of CASES) {
         const sp = s.querySelector(".adv-spine");
         return { imgs: [...s.querySelectorAll("img")].map(i => i.className + ":" + (i.naturalWidth > 0)),
           spine: sp && !sp.hidden ? "shown" : "-", note: s.querySelector(".adv-note")?.innerText || "",
-          text: (s.querySelector(".adv-line")?.innerText || "").slice(0, 30), count: document.querySelector(".adv-count")?.innerText,
+          text: (document.querySelector(".adv-line")?.innerText || "").slice(0, 30), count: document.querySelector(".adv-count")?.innerText,
           missing: document.querySelector(".scene-player > p.small")?.innerText || "" }`);
       await cdp.shot(path.join(OUT, `${c.scene}_${beat}.png`), false);
       console.log(`ok   ${c.scene} beat ${beat} (script ready in ${loaded} ms)`, JSON.stringify(info));

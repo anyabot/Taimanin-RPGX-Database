@@ -85,6 +85,36 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   const voice = useRef<HTMLAudioElement | null>(null);
   const bgm = useRef<{ name: string; el: HTMLAudioElement } | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+  // Theater: the browser's fullscreen where an element can have it, else a
+  // fixed full-window overlay (iPhone Safari has no element fullscreen).
+  const [theater, setTheater] = useState(false);
+  const toggleTheater = () => {
+    const el = playerRef.current;
+    if (!el) return;
+    if (theater) {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      setTheater(false);
+      return;
+    }
+    setTheater(true);
+    if (el.requestFullscreen) {
+      el.requestFullscreen({ navigationUI: "hide" }).then(() => {
+        // Phones: prefer landscape while fullscreen (Android allows it, iOS ignores it).
+        (screen.orientation as any)?.lock?.("landscape").catch(() => {});
+      }, () => {});
+    }
+  };
+  useEffect(() => {
+    const onChange = () => { if (!document.fullscreenElement) setTheater(false); };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  useEffect(() => {
+    if (!theater) return;
+    document.documentElement.classList.add("adv-theater-open");
+    return () => document.documentElement.classList.remove("adv-theater-open");
+  }, [theater]);
   const b = beats[Math.min(i, beats.length - 1)];
 
   const go = (n: number) => setI(Math.max(0, Math.min(beats.length - 1, n)));
@@ -176,16 +206,20 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
       else if (e.key === "Home") go(0);
       else if (e.key === "End") go(beats.length - 1);
       else if (e.key.toLowerCase() === "h") setHideText((v) => !v);
+      else if (e.key.toLowerCase() === "f") toggleTheater();
+      else if (e.key === "Escape" && theater && !document.fullscreenElement) setTheater(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const textOn = b.textBox && !hideText && (b.text || b.name);
+  const textOn = b.textBox && !hideText && !!(b.text || b.name);
   return (
-    <div className="scene-player">
-      <div ref={stageRef} className={`adv-stage${fx.quake ? ` quake-${fx.quake % 2}` : ""}`} onClick={forward}
-        role="button" tabIndex={0} aria-label="Next line">
+    <div ref={playerRef} className={`scene-player${theater ? " theater" : ""}`}>
+      {/* The frame holds the stage and the dialogue: over the picture on wide
+          screens, under it on narrow ones (container query on .scene-player). */}
+      <div className="adv-frame" onClick={forward} role="button" tabIndex={0} aria-label="Next line">
+      <div ref={stageRef} className={`adv-stage${fx.quake ? ` quake-${fx.quake % 2}` : ""}`}>
         {shown.bg && <img className="adv-bg" src={shown.bg} alt="" />}
         {shown.actors.map((a) => <img key={a.slot} className={`adv-actor x-${a.x}`} src={a.url} alt="" />)}
         {/* The 960x720 CG frame, pillarboxed over everything below it. */}
@@ -193,15 +227,19 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
         {fx.flash > 0 && <div key={fx.flash} className="adv-flash" />}
         {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} />}
         {busy && <div className="adv-busy" aria-live="polite" translate="no">Loading…</div>}
-        {textOn && (
-          // Keyed per line: page translators (Chrome, Edge) swap text nodes for
-          // their own elements, so React's in-place update of the old node
-          // would never show. A fresh element per line gets translated anew.
-          <div key={i} className="adv-text" lang="ja">
-            {b.name && <div className="adv-name">{b.name}</div>}
-            <div className="adv-line">{b.text}</div>
-          </div>
-        )}
+      </div>
+        {/* The box stays mounted (an empty one holds its place under the picture);
+            its content is keyed per line: page translators (Chrome, Edge) swap
+            text nodes for their own elements, so React's in-place update of the
+            old node would never show. A fresh element per line is translated anew. */}
+        <div className={`adv-text${textOn ? "" : " off"}`} lang="ja">
+          {textOn && (
+            <div key={i}>
+              {b.name && <div className="adv-name">{b.name}</div>}
+              <div className="adv-line">{b.text}</div>
+            </div>
+          )}
+        </div>
       </div>
       <div className="adv-controls" translate="no">
         <button className="hub-btn" onClick={() => go(i - 1)} disabled={i === 0} aria-label="Previous line">‹</button>
@@ -212,13 +250,15 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
         <button className="hub-btn" aria-pressed={auto} onClick={() => setAuto((v) => !v)}>{auto ? "Auto ■" : "Auto ▶"}</button>
         <button className="hub-btn" aria-pressed={muted} onClick={() => setMuted((v) => !v)}>{muted ? "Sound off" : "Sound on"}</button>
         <button className="hub-btn" aria-pressed={hideText} onClick={() => setHideText((v) => !v)}>{hideText ? "Show text" : "Hide text"}</button>
+        <button className="hub-btn" aria-pressed={theater} onClick={toggleTheater}
+          title="Fill the screen with the scene (Esc to leave)">{theater ? "Exit theater" : "Theater"}</button>
         {Object.keys(doc.spine).length > 0 && (
           <button className="hub-btn" aria-pressed={animate} onClick={() => setAnimate((v) => !v)}
             title="Play the animated CGs, or show the still images instead">{animate ? "Animation on" : "Animation off"}</button>
         )}
       </div>
-      {missing.length > 0 && <p className="muted small" translate="no">Not available for this line: {missing.join(", ")}</p>}
-      <p className="muted small">Click the picture, or press → / Space, to advance; ← goes back; H hides the text.
+      {missing.length > 0 && <p className="muted small adv-missing" translate="no">Not available for this line: {missing.join(", ")}</p>}
+      <p className="muted small adv-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; F for theater.
         Dialogue is the game's Japanese text (your browser's page translation works on it).</p>
     </div>
   );
