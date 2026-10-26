@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
-import { tr, unitName, useAssets, useData, useLang, type Unit } from "../data";
+import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Actor, type Beat, type SceneDoc } from "../adv";
 import { SceneArt, loadScript, type SeIndex } from "../sceneArt";
 import { SpineStage, spineRuntime } from "../spine";
@@ -9,15 +9,24 @@ import { SpineStage, spineRuntime } from "../spine";
 const MUTE_KEY = "taimanin.scene.muted";
 const SPINE_KEY = "taimanin.scene.spine";
 
-/** A unit H-scene played in the browser: script, CGs, actors, BGM, SE and
- *  voice all come from the game CDN when the scene is opened. */
-export default function ScenePlayer() {
+/** A scene played in the browser: a unit H-scene (#/scenes/:id) or a story
+ *  part (#/story/:id). Script, CGs, actors, BGM, SE and voice all come from
+ *  the game CDN when it is opened. */
+export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "story" }) {
   const { id = "" } = useParams();
   const [params] = useSearchParams();
-  const unitId = params.get("unit");
-  const { data: doc, loading, error } = useData<SceneDoc>(`scenes/${id}`);
+  const unitId = source === "unit" ? params.get("unit") : null;
+  const { data: doc, loading, error } = useData<SceneDoc>(`${source === "story" ? "stories" : "scenes"}/${id}`);
   const { data: se } = useData<SeIndex>("adv_se");
   const { data: unit } = useData<Unit>(unitId ? `units/${unitId}` : null);
+  const { data: stories } = useData<StorySection[]>(source === "story" ? "stories/index" : null);
+  const story = useMemo(() => {
+    for (const sec of stories ?? []) for (const g of sec.groups) {
+      const part = g.parts.find((p) => p.id === id);
+      if (part) return { sec, g, part };
+    }
+    return null;
+  }, [stories, id]);
   const { assets, error: assetsError } = useAssets();
   const lang = useLang();
   const [script, setScript] = useState<{ id: string; beats: Beat[] } | null>(null);
@@ -35,24 +44,31 @@ export default function ScenePlayer() {
   }, [assets, doc]);
 
   const art = useMemo(() => (assets && doc ? new SceneArt(assets, doc, se ?? null) : null), [assets, doc, se]);
-  const siblings = useMemo(() => unit?.scenes.flat() ?? [], [unit]);
+  const siblings = useMemo(() => (story ? story.g.parts.map((p) => p.id) : unit?.scenes.flat() ?? []), [unit, story]);
   const at = siblings.indexOf(id);
-  const sceneLink = (sid: string) => `/scenes/${sid}${unitId ? `?unit=${unitId}` : ""}`;
+  const sceneLink = (sid: string) => source === "story" ? `/story/${sid}` : `/scenes/${sid}${unitId ? `?unit=${unitId}` : ""}`;
+  const heading = story ? [story.part.section, story.part.title].filter(Boolean).join(" · ") || id : doc?.title || id;
+  const groupTitle = story ? tr(story.g.title, lang) || story.g.id : "";
 
   return (
     <div className="scene-page">
-      <Breadcrumbs items={[
+      <Breadcrumbs items={story ? [
+        { label: "Story", href: `#/story?section=${story.sec.key}` },
+        { label: groupTitle, href: `#/story?section=${story.sec.key}&open=${story.g.id}` },
+        { label: heading },
+      ] : [
         { label: "Units", href: "#/units" },
         ...(unit ? [{ label: unitName(unit, lang), href: `#/units/${unit.id}?tab=scenes` }] : []),
         { label: doc?.title || id },
       ]} />
       <div className="scene-head">
-        <h1 lang="ja">{doc?.title || id}</h1>
+        <h1 lang="ja">{story ? <>{groupTitle} <span className="muted scene-sub">{heading}</span></> : heading}</h1>
         {siblings.length > 1 && (
           <div className="scene-siblings">
-            {at > 0 && <Link className="hub-btn" to={sceneLink(siblings[at - 1])}>‹ Previous scene</Link>}
-            <span className="muted">Scene {at + 1} of {siblings.length}{unit && ` · ${tr(unit.title, lang)}`}</span>
-            {at >= 0 && at < siblings.length - 1 && <Link className="hub-btn" to={sceneLink(siblings[at + 1])}>Next scene ›</Link>}
+            {at > 0 && <Link className="hub-btn" to={sceneLink(siblings[at - 1])}>‹ Previous {story ? "part" : "scene"}</Link>}
+            <span className="muted">{story ? "Part" : "Scene"} {at + 1} of {siblings.length}{unit && ` · ${tr(unit.title, lang)}`}</span>
+            {at >= 0 && at < siblings.length - 1 && <Link className="hub-btn" to={sceneLink(siblings[at + 1])}>Next {story ? "part" : "scene"} ›</Link>}
+            {story?.g.battles && <Link className="hub-btn" to={`/story/battles/${story.g.id}`}>Battles</Link>}
           </div>
         )}
       </div>

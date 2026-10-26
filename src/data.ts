@@ -95,7 +95,35 @@ export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain"
   art: { graphicId: string; graphicNum: number; r18GraphicId: string; r18GraphicNum: number; spineId: string };
 }
 
-export interface RuneEffect { description: Text | null; range: [number, number] }
+/** public/data/stories/index.json (tools/web_export/stories.py). */
+export interface StoryPart { id: string; section: string | null; title: string | null }
+/** A texture in a game bundle: a bundle of its own, or a named one in an atlas bundle. */
+export interface BundleRef { bundle: string; name?: string }
+export interface StoryGroup {
+  id: string; num: number; title: Text | null; parts: StoryPart[];
+  banner?: BundleRef;
+  battles?: { quests: number; enemies: number; bosses: number };
+}
+
+/** public/data/stories/battles/<group>.json (tools/web_export/battles.py). */
+export interface BattleSkill { name: Text | null; effects: Effect[] }
+export interface BattleEnemy {
+  name: Text | null; element: string | null; level: number; hp: number; atk: number; def: number; spd: number;
+  icon: string | null; skills: string[];
+}
+export interface BattleBoss extends BattleEnemy { id: number; difficulty: number; stage: number }
+export interface BattleQuest { id: number; difficulty: number; stage: number; scripts: string[]; waves: [string, number][][] }
+export interface Battles {
+  quests: BattleQuest[]; enemies: Record<string, BattleEnemy>; bosses: BattleBoss[]; skills: Record<string, BattleSkill>;
+}
+/** Enemy and boss icons: ene_0001 / bos_0262 -> <icon>_s in image_ene_s. */
+export const ENEMY_ICONS = "image_ene_s_assets_all";
+export interface StorySection { key: string; label: string; groups: StoryGroup[] }
+
+/** stat / icon / flat: decoded from the effect's param (tools/web_export/tables.py RUNE_PARAM). */
+export interface RuneEffect { description: Text | null; range: [number, number]; stat?: string; icon?: string; flat?: boolean }
+/** Rune piece icons: <piece.icon>_s (100x100) in image_rune_s. */
+export const RUNE_ICONS = "image_rune_s_assets_all";
 export interface RunePiece {
   id: string;
   name: Text | null;

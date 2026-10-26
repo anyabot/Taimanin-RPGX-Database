@@ -12,6 +12,8 @@ export interface SceneDoc {
   id: string;
   title: string | null;
   script: { bundle: string; pathId: string };
+  /** direct-download folder of the voice clips, e.g. "Adv/Voice_r18/chr_0001_1" */
+  voice?: string;
   /** <EV> group -> layers [sprite, x, y, w, h, alpha]: centre offsets on the 960x720 frame, y up */
   ev: Record<string, [string, number, number, number, number, number][]>;
   /** <ACTOR> name -> pieces [sprite, x, y, w, h]: centre offsets on the 1280x760 actor canvas, y up */
@@ -88,6 +90,12 @@ export function beats(ops: Op[]): Beat[] {
         break;
       }
       case "ACTOR_OUT": s.actors = s.actors.filter((x) => x.slot !== (a[0] || "0")); break;
+      // <ACTOR_FRONT> slot: draw that actor over the others (actors draw in list order)
+      case "ACTOR_FRONT": {
+        const front = s.actors.find((x) => x.slot === (a[0] || "0"));
+        if (front) s.actors = [...s.actors.filter((x) => x !== front), front];
+        break;
+      }
       case "VOICE_PLAY": s.voice = a[0] || null; break;
       case "SE_PLAY": if (a[0]) s.se.push(a[0]); break;
       case "BGM_PLAY": s.bgm = a[0] || null; break;

@@ -18,6 +18,10 @@ const CASES = process.argv[2]
     { scene: "chr_5006_3_r18", unit: "", beats: [40, 90, 140] },        // Spine, variants _01.._05
     { scene: "chr_1075_3_r18", unit: "", beats: [40, 90] },             // Spine on another unit's atlas
     { scene: "chr_5007_3_r18", unit: "", beats: [40, 90, 140] },        // Spine variants named like the atlas
+    { scene: "chr_0203_1", unit: "", beats: [3, 10] },                  // non-R18 unit scene (adv_assets_all, Adv/Voice)
+    { story: "c001_s01a", beats: [0, 8, 30] },                          // main story: BG + face-composed actors
+    { story: "es001_s01a", beats: [5, 20] },                            // story event
+    { story: "er059_s01a", beats: [5, 15] },                            // raid event
   ];
 
 const cdp = await launch();
@@ -40,7 +44,9 @@ let failed = 0;
 for (const c of CASES) {
   const t0 = Date.now();
   try {
-    await cdp.goto(`${SITE}/#/scenes/${c.scene}${c.unit ? `?unit=${c.unit}` : ""}`, `!!document.querySelector(".app")`);
+    const route = c.story ? `story/${c.story}` : `scenes/${c.scene}${c.unit ? `?unit=${c.unit}` : ""}`;
+    c.scene ??= c.story;
+    await cdp.goto(`${SITE}/#/${route}`, `!!document.querySelector(".app")`);
     await waitFor(() => cdp.eval(`return !!document.querySelector(".adv-stage") || /error|not/i.test(document.querySelector(".scene-page")?.innerText || "")`), 60000, "stage");
     const loaded = Date.now() - t0;
     for (const beat of c.beats) {

@@ -35,7 +35,17 @@ function serve(file: string) {
   }) as typeof fetch;
   return bytes;
 }
-afterAll(() => { globalThis.fetch = realFetch; });
+afterAll(() => { globalThis.fetch = realFetch; delete (globalThis as any).caches; });
+
+// Cache Storage stand-in that, like the real Cache API, ignores the URL fragment.
+const store = new Map<string, Uint8Array>();
+(globalThis as any).caches = {
+  delete: async () => true,
+  open: async () => ({
+    match: async (k: string) => { const v = store.get(k.split("#")[0]); return v ? new Response(v.slice()) : undefined; },
+    put: async (k: string, r: Response) => { store.set(k.split("#")[0], new Uint8Array(await r.arrayBuffer())); },
+  }),
+};
 
 describe.skipIf(!scenario)("RangeBundle", () => {
   it("reads one scenario script like the whole-file decoder, fetching a small part", async () => {
@@ -50,6 +60,20 @@ describe.skipIf(!scenario)("RangeBundle", () => {
     await expect(rb.text(e.pathId, "chr_0001_2_r18")).rejects.toThrow(/not chr_0001_2_r18/);
     expect(served).toBeLessThan(bytes.length / 10);
     console.log(`script: ${served} of ${bytes.length} bytes fetched`);
+  });
+
+  it.skipIf(!advAll)("reads several assets in turn from cached blocks (keys must not collide)", async () => {
+    const bytes = serve(advAll!);
+    const ab = new AssetBundle(bytes);
+    const texts = ab.list([ClassID.TextAsset]).slice(0, 40);
+    let rb = await RangeBundle.open("https://cdn.test/adv_all_cached.bundle");
+    for (const e of texts.slice(0, 20)) expect(rb.has(e.pathId)).toBe(true);
+    // a second "visit": a fresh reader that must take every block from the cache
+    rb = await RangeBundle.open("https://cdn.test/adv_all_cached.bundle");
+    for (const e of texts.slice(0, 20)) {
+      const t = await rb.text(e.pathId, e.name);
+      expect(t).toBe(new TextDecoder().decode(ab.text(e.pathId)));
+    }
   });
 
   it.skipIf(!advAll)("reads an ADV sound effect out of adv_assets_all", async () => {
