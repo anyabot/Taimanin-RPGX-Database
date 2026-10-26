@@ -37,7 +37,8 @@
 .stat-table { width: 100%; max-width: 520px; }
 .stat-table td, .stat-table th { text-align: right; }
 .stat-table th[scope="row"] { text-align: left; }
-.skill-list, .rune-sets { display: grid; gap: 12px; }
+.skill-list { display: grid; gap: 12px; }
+.rune-sets { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr)); align-items: start; }
 .skill-detail, .profile-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .skill-effects code { font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
 .ability-levels { padding-left: 20px; }
@@ -59,7 +60,10 @@
 
 /* runes */
 .rune-bonus { display: grid; gap: 4px; margin: 0 0 8px; }
-.rune-bonus div { display: grid; grid-template-columns: 70px 1fr; gap: 8px; }
+.rune-bonus > div { display: grid; grid-template-columns: 62px 1fr; gap: 8px; align-items: start; }
+.rune-bonus dt { font-weight: 700; font-size: 12px; padding-top: 3px; }
+.rune-bonus .effect-list { margin: 0; }
+.rune-bonus .effect-list li { font-size: 13px; }
 .rune-bonus dd { margin: 0; overflow-wrap: anywhere; }
 .rune-effects h4 { margin: 8px 0 4px; font-size: 13px; }
 .rune-effects ul { margin: 0; padding-left: 18px; font-size: 13px; }
@@ -218,8 +222,8 @@ html.adv-theater-open { overflow: hidden; }
 .boss-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); }
 .enemy-card { border: 1px solid var(--hub-border, #2a2e3b); border-radius: 10px; padding: 8px; }
 .enemy-card-head { display: flex; gap: 10px; align-items: center; }
-.rune-pieces { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); margin: 6px 0 8px; align-items: start; }
-.rune-piece { display: grid; grid-template-columns: 56px 1fr; grid-template-rows: auto 1fr; gap: 2px 8px; align-items: start; padding: 6px; border: 1px solid var(--hub-border, #2a2e3b); border-radius: 8px; }
+.rune-pieces { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 165px), 1fr)); margin: 8px 0; align-items: start; }
+.rune-piece { display: grid; grid-template-columns: 40px 1fr; grid-template-rows: auto 1fr; gap: 2px 8px; align-items: start; padding: 6px; border: 1px solid var(--hub-border, #2a2e3b); border-radius: 8px; }
 .rune-piece .rune-icon { grid-row: 1 / 3; border-radius: 8px; }
 .rune-slot { font-weight: 700; font-size: 14px; }
 .rune-piece .effect-list li { font-size: 12px; }
@@ -241,3 +245,8 @@ html.adv-theater-open { overflow: hidden; }
 .boss-ai-top { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .boss-ai-top .hub-segmented, .boss-ai-top [role=group] { margin-bottom: 0 !important; }
 .boss-flow { width: 100%; border-radius: 8px; margin: 6px 0; overflow: hidden; }
+
+.rune-family .hub-segmented, .rune-family [role=group] { margin-bottom: 8px; flex-wrap: wrap; }
+.rune-tier h3 { margin: 0 0 6px; }
+.rune-piece .effect-list li { font-size: 11.5px; }
+.rune-piece .effect-list li img { width: 18px; height: 18px; }

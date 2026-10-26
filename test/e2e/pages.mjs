@@ -112,6 +112,7 @@ await step("raid-behaviour", async () => {
 }, false);
 await step("runes", async () => {
   await cdp.goto(`${SITE}/#/runes`, `document.querySelectorAll(".rune-sets > *").length > 0`);
+  await waitFor(() => cdp.eval(`return document.querySelectorAll(".rune-icon img").length >= 6`), 30000, "rune icons");
   await cdp.eval(`document.querySelectorAll(".rune-sets details").forEach((d, i) => { if (i < 2) d.open = true })`);
   return { sets: await cdp.eval(`return document.querySelectorAll(".rune-sets > *").length`) };
 }, false);

@@ -140,7 +140,12 @@ export interface RunePiece {
   refinable: boolean;
   icon: string;
 }
-export interface RuneSet { id: number; family: string; name: Text | null; bonus: Record<string, Text | null>; pieces: RunePiece[] }
+/** A decoded set-bonus line (eEquipComboBonus, see tables.py export_runes). */
+export interface RuneBonusLine { text: string; icon?: string }
+export interface RuneSet {
+  id: number; family: string; name: Text | null; bonus: Record<string, Text | null>;
+  bonusFx?: Record<string, RuneBonusLine[]>; pieces: RunePiece[];
+}
 
 const base = import.meta.env.BASE_URL;
 export const loader = createJsonLoader({ urls: (name) => [`${base}data/${name}.json`] });
