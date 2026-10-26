@@ -24,6 +24,7 @@ export default function App() {
             <NavLink to="/buffs">Buffs</NavLink>
             <NavLink to="/story">Story</NavLink>
             <NavLink to="/quests">Quests</NavLink>
+            <NavLink to="/cards">Cards</NavLink>
             <NavLink to="/runes">Runes</NavLink>
             {import.meta.env.DEV && <NavLink to="/lab">Decoder lab</NavLink>}
           </nav>

@@ -271,3 +271,21 @@ export function useAssets() {
   useEffect(() => { getAssets().then(setA, setError); }, []);
   return { assets: a, error };
 }
+
+/** public/data/dispatch.json (tools/web_export/quests.py export_dispatch). */
+export interface DispatchMission {
+  id: number; time: string; unitExp: number; gold: number; trust: number;
+  /** great-success chance, out of 10000 */
+  great: number;
+  /** base rewards; luck bonus rows (each with the total luck it needs); the great-success table */
+  drops: Partial<Record<"base" | "luck" | "great", (QuestDrop & { luck?: number; featured?: boolean })[]>>;
+}
+export interface DispatchSection {
+  section: number; title: Text | null; kind: string; days: string[] | null; missions: DispatchMission[];
+}
+
+/** public/data/cards.json (tools/web_export/cards.py): Arena cards. */
+export interface ArenaCard {
+  id: string; name: Text | null; title: Text | null; union: string | null; rarity: number;
+  illustrator: string | null; voiceActor: string | null; scenes: string[]; sale: string | null;
+}
