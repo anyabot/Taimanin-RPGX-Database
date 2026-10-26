@@ -8,8 +8,10 @@ import { DIRECT_ROOT } from "./unity/catalog";
 
 export interface Text { ja: string; en?: string }
 
-/** A decoded effect line (tools/web_export/effects.py); icon names a Battle_status_icon_*. */
-export interface Effect { text: string; icon?: string }
+/** A decoded effect line (tools/web_export/effects.py); icon names a Battle_status_icon_*.
+ *  `when` marks a conditional part of the skill: one of its variants ("2+ Oni
+ *  allies", "25% chance") or its extra action at the end of the turn. */
+export interface Effect { text: string; icon?: string; when?: string }
 
 export interface UnitIndexEntry {
   id: string;

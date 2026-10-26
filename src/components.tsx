@@ -20,14 +20,28 @@ export function ElementIcon({ element, size = 20 }: { element: string | null; si
 
 export function EffectList({ effects }: { effects: Effect[] }) {
   if (!effects.length) return null;
+  // Effects that share a `when` (a variant of the skill, or its extra action)
+  // are listed together under that condition.
+  const groups: { when?: string; items: Effect[] }[] = [];
+  for (const e of effects) {
+    const last = groups[groups.length - 1];
+    if (last && last.when === e.when) last.items.push(e);
+    else groups.push({ when: e.when, items: [e] });
+  }
+  const items = (list: Effect[]) => list.map((e, i) => (
+    <li key={i}>
+      {e.icon ? <img src={ui(`Battle_status_icon_${e.icon}`)} alt="" width={22} height={22} /> : <span className="effect-dot" />}
+      <span>{e.text}</span>
+    </li>
+  ));
   return (
-    <ul className="effect-list">
-      {effects.map((e, i) => (
-        <li key={i}>
-          {e.icon ? <img src={ui(`Battle_status_icon_${e.icon}`)} alt="" width={22} height={22} /> : <span className="effect-dot" />}
-          <span>{e.text}</span>
-        </li>
-      ))}
-    </ul>
+    <div className="effect-groups">
+      {groups.map((g, i) => g.when ? (
+        <div key={i} className="effect-group">
+          <div className="effect-when">{g.when}</div>
+          <ul className="effect-list">{items(g.items)}</ul>
+        </div>
+      ) : <ul key={i} className="effect-list">{items(g.items)}</ul>)}
+    </div>
   );
 }
