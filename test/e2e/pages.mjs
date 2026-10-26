@@ -39,7 +39,7 @@ await step("units-filtered", async () => {
   await cdp.goto(`${SITE}/#/units?rarity=6&element=Superhuman&q=akiyama&f=1`, `document.querySelectorAll(".unit-card").length > 0 || /No units match/.test(document.body.innerText)`);
   return { cards: await cdp.eval(`return document.querySelectorAll(".unit-card").length`) };
 });
-for (const tab of ["stats", "skills", "leader", "voices", "profile"]) {
+for (const tab of ["stats", "skills", "leader", "voices", "obtain", "profile", "scenes"]) {
   await step(`unit-${UNIT}-${tab}`, async () => {
     await cdp.goto(`${SITE}/#/units/${UNIT}?tab=${tab}`, `!!document.querySelector(".unit-page [role=tabpanel], .unit-page .hub-panel, .unit-page section")`);
     await waitFor(() => cdp.eval(`return document.querySelector(".unit-page").innerText.length > 200`), 10000, "content");
@@ -64,7 +64,7 @@ await step(`unit-${UNIT}-voice-play`, async () => {
 });
 await step(`unit-${UNIT}-art`, async () => {
   await cdp.goto(`${SITE}/#/units/${UNIT}?tab=art`, `document.querySelectorAll(".art-canvas").length > 0`);
-  await waitFor(() => cdp.eval(`return [...document.querySelectorAll(".art-item")].every(f => !f.querySelector("figcaption"))`), 120000, "art decode");
+  await waitFor(() => cdp.eval(`return [...document.querySelectorAll(".art-item")].every(f => !f.querySelector("figcaption:not(.art-actions)"))`), 120000, "art decode");
   return cdp.eval(`return [...document.querySelectorAll(".art-canvas")].map(c => c.width + "x" + c.height)`);
 });
 await step(`unit-${UNIT}-gallery`, async () => {
@@ -74,6 +74,26 @@ await step(`unit-${UNIT}-gallery`, async () => {
   const next = await cdp.eval(`const b = [...document.querySelectorAll(".hub-lightbox button")].find(b => /next/i.test(b.getAttribute("aria-label") || b.textContent)); if (b) b.click(); await new Promise(r => setTimeout(r, 500)); return document.querySelector(".hub-lightbox .hub-lightbox__img")?.naturalWidth || 0`);
   return { opened, nextWidth: next };
 });
+await step("buffs", async () => {
+  await cdp.goto(`${SITE}/#/buffs`, `document.querySelectorAll(".buff-table tbody tr").length > 0`);
+  return { rows: await cdp.eval(`return document.querySelectorAll(".buff-table tbody tr").length`), first: await cdp.eval(`return document.querySelector(".buff-table tbody tr")?.innerText.replace(/\s+/g, " ").slice(0, 80)`) };
+}, false);
+await step("buffs-receiver-faction", async () => {
+  await cdp.goto(`${SITE}/#/buffs?cat=stat&k=Crit%20rate&to=tr:Taimanin`, `document.querySelectorAll(".buff-table tbody tr").length > 0`);
+  const targets = await cdp.eval(`return [...new Set([...document.querySelectorAll(".buff-target")].map(td => td.firstChild.textContent))]`);
+  if (targets.join() !== "Taimanin allies") throw new Error("receiver filter leaked: " + targets.join());
+  return { rows: await cdp.eval(`return document.querySelectorAll(".buff-table tbody tr").length`), noHScroll: await noHScroll() };
+}, false);
+await step("buffs-split-and-upcoming", async () => {
+  // "All allies: ATK +75% (Spiritual allies: +105%)" must rank under Spiritual with its faction value
+  await cdp.goto(`${SITE}/#/buffs?cat=stat&k=ATK&to=el:Spiritual`, `document.querySelectorAll(".buff-table tbody tr").length > 0`);
+  const split = await cdp.eval(`return [...document.querySelectorAll(".buff-target")].some(td => /all allies \+/.test(td.innerText))`);
+  if (!split) throw new Error("no split all-allies/faction row under Spiritual");
+  const count = () => cdp.eval(`return [...document.querySelectorAll(".hub-filter-chip, button")].find(b => /Include upcoming/.test(b.textContent))?.getAttribute("aria-pressed") ?? "missing"`);
+  const before = await count();
+  await cdp.goto(`${SITE}/#/buffs?upcoming=1`, `document.querySelectorAll(".buff-table tbody tr").length > 0`);
+  return { split, upcomingChipPressed: [before, await count()] };
+}, false);
 await step("runes", async () => {
   await cdp.goto(`${SITE}/#/runes`, `document.querySelectorAll(".rune-sets > *").length > 0`);
   await cdp.eval(`document.querySelectorAll(".rune-sets details").forEach((d, i) => { if (i < 2) d.open = true })`);
@@ -85,6 +105,7 @@ for (const [name, url, ready] of [
   ["phone-units", `/#/units`, `document.querySelectorAll(".unit-card").length > 0`],
   [`phone-unit-${UNIT}-skills`, `/#/units/${UNIT}?tab=skills`, `document.querySelector(".unit-page")?.innerText.length > 200`],
   [`phone-unit-${UNIT}-voices`, `/#/units/${UNIT}?tab=voices`, `document.querySelector(".unit-page")?.innerText.length > 200`],
+  ["phone-buffs", `/#/buffs?cat=debuff`, `document.querySelectorAll(".buff-table tbody tr").length > 0`],
   ["phone-runes", `/#/runes`, `document.querySelectorAll(".rune-sets > *").length > 0`],
 ]) {
   await step(name, async () => {

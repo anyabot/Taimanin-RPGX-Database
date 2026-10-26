@@ -6,6 +6,8 @@ import AgeGate from "./AgeGate";
 import UnitList from "./pages/UnitList";
 import UnitDetail from "./pages/UnitDetail";
 import Runes from "./pages/Runes";
+import Buffs from "./pages/Buffs";
+import ScenePlayer from "./pages/ScenePlayer";
 import DecoderLab from "./pages/DecoderLab";
 import "@altterisk/game-hub/hub.css";
 import "@altterisk/game-hub/base.css";
@@ -21,7 +23,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route index element={<Navigate to="/units" replace />} />
           <Route path="units" element={<UnitList />} />
           <Route path="units/:id" element={<UnitDetail />} />
+          <Route path="scenes/:id" element={<ScenePlayer />} />
           <Route path="runes" element={<Runes />} />
+          <Route path="buffs" element={<Buffs />} />
           {import.meta.env.DEV && <Route path="lab" element={<DecoderLab />} />}
         </Route>
       </Routes>
