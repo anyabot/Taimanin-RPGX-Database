@@ -150,6 +150,9 @@ export interface BattleBoss extends BattleEnemy {
   appearsIn?: number[];
   challenge?: { start: string | null; ticket: QuestDrop; perDay: number };
   rules?: string[];
+  /** running raid events: luck / contribution rewards, and bonus-point conditions (the game's text) */
+  luckRewards?: LuckTier[];
+  points?: { text: Text; points: number }[];
 }
 export interface BattleQuest {
   id: number; section: number; difficulty: number; scripts: string[]; waves: [string, number][][];
@@ -164,6 +167,19 @@ export interface BattleQuest {
   stageTitle?: Text | null;
   /** main story: chance (out of 10000) that clearing finds a raid boss */
   raidChance?: number;
+  /** running events: rewards by the team's total luck */
+  luckRewards?: LuckTier[];
+}
+/** A luck range (and for raid bosses a contribution range) and its rewards. */
+export interface LuckTier { luck: [number, number]; contribution?: [number, number]; drops: QuestDrop[] }
+/** A running event's extras (battles.py events()). */
+export interface BattleEvent {
+  kind: "story" | "raid" | "marble"; start: string | null; end: string | null; exchangeEnd?: string | null;
+  /** bonus units: luckRate as listed (the unit adds luckRate % of its own Luck) */
+  bonus: (QuestDrop & { luckRate: number; start: string | null; end: string | null })[];
+  shop?: (QuestDrop & { cost: number; max: number })[];
+  gacha?: { start: string | null; end: string | null; boxes: { box: number; items: (QuestDrop & { max: number; main?: boolean })[] }[] };
+  laps?: (QuestDrop & { lap: number })[];
 }
 export interface Battles {
   quests: BattleQuest[]; enemies: Record<string, BattleEnemy>; bosses: BattleBoss[]; skills: Record<string, BattleSkill>;
@@ -171,6 +187,7 @@ export interface Battles {
   raidRates?: Record<string, number[]>;
   /** quests.py: the noun for one stage ("Floor") */
   stage?: string;
+  event?: BattleEvent;
 }
 /** public/data/quests/index.json (tools/web_export/quests.py). */
 export interface QuestGroup {
