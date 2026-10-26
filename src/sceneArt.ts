@@ -152,10 +152,11 @@ export class SceneArt {
     });
   }
 
-  /** Scene voices are direct downloads, one folder per scene. */
+  /** Scene voices are direct downloads, one folder per scene (the exporter
+   *  names it: Adv/Voice_r18/<scene> for R18 scripts, Adv/Voice/<scene> else). */
   voiceUrl(name: string) {
-    const scene = this.doc.id.replace(/_r18$/, "");
-    return `${DIRECT_ROOT}/Adv/Voice_r18/${scene}/${name}.ogg`;
+    const folder = this.doc.voice ?? `Adv/Voice_r18/${this.doc.id.replace(/_r18$/, "")}`;
+    return `${DIRECT_ROOT}/${folder}/${name}.ogg`;
   }
 
   /** Everything a beat shows, for prefetching. Errors are left to the beat. */
@@ -176,9 +177,12 @@ export async function loadScript(assets: Assets, doc: SceneDoc): Promise<string>
     return await rb.text(pathId, doc.id);
   } catch (err) {
     console.warn("range read failed, fetching the whole scenario bundle", err);
+    // A scene's script and its pairList share the name: skip the JSON one.
     const list = await assets.list(bundle);
-    const e = list.find((x) => x.classId === ClassID.TextAsset && x.name === doc.id);
-    if (!e) throw new Error(`script ${doc.id} not in ${bundle}`);
-    return new TextDecoder().decode(await assets.text(bundle, e.pathId));
+    for (const e of list.filter((x) => x.classId === ClassID.TextAsset && x.name === doc.id)) {
+      const text = new TextDecoder().decode(await assets.text(bundle, e.pathId));
+      if (!text.trimStart().startsWith("{")) return text;
+    }
+    throw new Error(`script ${doc.id} not in ${bundle}`);
   }
 }

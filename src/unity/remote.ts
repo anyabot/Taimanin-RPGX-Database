@@ -8,7 +8,8 @@
 // file's metadata, the AssetBundle container (to find the asset by name) and
 // the block(s) holding the asset itself: a few hundred KB the first time,
 // ~50 KB per further asset. Fetched blocks are kept in Cache Storage keyed by
-// the hashed URL plus block index, so they never go stale.
+// the hashed URL plus a ?block=<i> query (not a #fragment: the Cache API drops
+// fragments), so they never go stale.
 //
 // Assets are addressed by path id: these bundles' m_Container keys are hashes,
 // not names, so finding a name would mean reading every object. The exporter
@@ -22,7 +23,9 @@ import { readBundleHeader, type BundleHeader, type BundleNode } from "./bundle";
 import { lz4Block } from "./lz4";
 import { readSerializedFile, readObjectBytes, type ObjectInfo, type SerializedFile } from "./serialized";
 
-const CACHE = "taimanin-blocks-v1";
+// v1 keyed blocks as `${url}#block${i}`: the Cache API ignores the fragment,
+// so every block of a bundle shared one entry. v2 uses a query parameter.
+const CACHE = "taimanin-blocks-v2";
 
 function decompress(data: Uint8Array, size: number, flags: number): Uint8Array {
   switch (flags & 0x3f) {
@@ -107,7 +110,7 @@ export class RangeBundle {
 
   private async fetchRun(run: { b: BundleHeader["blocks"][number]; i: number }[]): Promise<Uint8Array[]> {
     const cache = await openCache();
-    const key = (i: number) => `${this.url}#block${i}`;
+    const key = (i: number) => `${this.url}?block=${i}`;
     const cached = await Promise.all(run.map(async ({ i }) => {
       const hit = await cache?.match(key(i)).catch(() => undefined);
       return hit ? new Uint8Array(await hit.arrayBuffer()) : null;
@@ -165,8 +168,12 @@ export class RangeBundle {
   }
 }
 
+let dropOld: Promise<unknown> | null = null;
 async function openCache(): Promise<Cache | null> {
-  try { return await caches.open(CACHE); } catch { return null; }
+  try {
+    dropOld ??= caches.delete("taimanin-blocks-v1").catch(() => false);
+    return await caches.open(CACHE);
+  } catch { return null; }
 }
 
 /** [start, end) of a file. `whole` when the server sent the entire file. */

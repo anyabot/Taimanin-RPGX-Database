@@ -178,3 +178,14 @@ html.adv-theater-open { overflow: hidden; }
 .effect-groups { display: grid; gap: 8px; }
 .effect-group { border-left: 2px solid var(--hub-accent, #e879f9); padding-left: 10px; }
 .effect-when { font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; opacity: .8; margin-bottom: 2px; }
+.story-page .hub-search, .story-page input[type=search] { margin: 10px 0; }
+.story-groups { display: grid; gap: 8px; margin-top: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); align-items: start; }
+.story-card { border: 1px solid var(--hub-border, #2a2e3b); border-radius: 10px; background: var(--hub-surface, #1a1d27); padding: 10px 12px; }
+.story-card summary { cursor: pointer; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; list-style: none; }
+.story-card summary::-webkit-details-marker { display: none; }
+.story-num { font-size: 12px; min-width: 64px; }
+.story-title { font-weight: 600; flex: 1; overflow-wrap: anywhere; }
+.story-count { font-size: 12px; }
+.story-parts { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.story-parts a { text-decoration: none; }
+.scene-sub { font-size: 14px; font-weight: 500; }

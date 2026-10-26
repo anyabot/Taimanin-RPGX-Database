@@ -95,6 +95,11 @@ export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain"
   art: { graphicId: string; graphicNum: number; r18GraphicId: string; r18GraphicNum: number; spineId: string };
 }
 
+/** public/data/stories/index.json (tools/web_export/stories.py). */
+export interface StoryPart { id: string; section: string | null; title: string | null }
+export interface StoryGroup { id: string; num: number; title: Text | null; parts: StoryPart[] }
+export interface StorySection { key: string; label: string; groups: StoryGroup[] }
+
 export interface RuneEffect { description: Text | null; range: [number, number] }
 export interface RunePiece {
   id: string;

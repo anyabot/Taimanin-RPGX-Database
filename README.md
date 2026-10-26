@@ -34,6 +34,7 @@ From `D:\Download\Taimanin`:
     py -3 tools/web_export/tables.py             # units, runes, icons, UI art
     py -3 tools/web_export/scenes.py             # public/data/scenes, adv_se.json (after tables.py)
     py -3 tools/web_export/buffs.py              # public/data/buffs.json for #/buffs (after tables.py)
+    py -3 tools/web_export/stories.py            # public/data/stories for #/story (after scenes.py)
 
 Even without a refresh, the site checks the live catalog `.hash` files and
 rescans a changed catalog itself, so renamed bundles keep loading.
