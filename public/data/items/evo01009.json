@@ -1,0 +1,1 @@
+{"id":"evo01009","name":{"ja":"魔狼の至宝"},"description":{"ja":"「ワーウルフ」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01009","sellGold":0,"sources":[{"page":"quests/mini-1009","title":{"ja":"決戦“ワーウルフ”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07010"],"bloom":["07010"]}}

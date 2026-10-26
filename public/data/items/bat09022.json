@@ -1,0 +1,1 @@
+{"id":"bat09022","name":{"ja":"まきびし"},"description":{"ja":"敵全体を高確率で麻痺状態にする"},"type":"battle","icon":"bat09022","sellGold":10,"battleLimit":2,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2021-11-23","end":"2021-12-16","costs":[["exu00025",1]]}]}

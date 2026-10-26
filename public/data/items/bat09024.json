@@ -1,0 +1,1 @@
+{"id":"bat09024","name":{"ja":"ロベルタのメイド服"},"description":{"ja":"バトル終了時まで、味方全体に封印状態異常無効を付与する"},"type":"battle","icon":"bat09024","sellGold":10,"battleLimit":1,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2022-07-31","end":"2022-08-31","costs":[["exu00032",25]]}]}

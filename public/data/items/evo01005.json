@@ -1,0 +1,1 @@
+{"id":"evo01005","name":{"ja":"碧眼の至宝"},"description":{"ja":"「八百比丘尼」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01005","sellGold":0,"sources":[{"page":"quests/mini-1005","title":{"ja":"決戦“八百比丘尼”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07002"],"bloom":["07002"]}}

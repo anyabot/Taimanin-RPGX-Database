@@ -1,0 +1,13 @@
+/* Item list and item pages (src/pages/Items.tsx). */
+.item-grid { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.item-cell { display: grid; grid-template-columns: 40px 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center;
+  padding: 6px 8px; border: 1px solid var(--hub-border, #2a2e3b); border-radius: 8px; text-decoration: none; color: inherit; font-size: 13px; }
+.item-cell .item-icon { grid-row: span 2; }
+.item-cell:hover { border-color: var(--hub-accent, #7aa2ff); }
+.item-units { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.item-units a { display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 13px; }
+.item-units img { border-radius: 6px; }
+.item-sources { margin: 0; padding-left: 18px; font-size: 13px; columns: 2 320px; }
+.item-sources li { break-inside: avoid; padding: 1px 0; }
+.item-use { font-size: 13px; margin: 2px 0; }

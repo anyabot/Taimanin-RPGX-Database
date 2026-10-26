@@ -1,0 +1,1 @@
+{"id":"rev00020","name":{"ja":"奮迅の雫"},"description":{"ja":"装備シリーズ「奮迅」の覚醒に使用できるアイテム"},"type":"rune_evolution","icon":"rev00020","sellGold":0,"sources":[{"page":"story/battles/c021","title":{"ja":"魔科医・桐生美琴"},"kinds":["raid reward"]},{"page":null,"title":null,"kinds":["exchange"],"start":"2023-04-14","end":"2030-01-01","costs":[["rev90000",1]]}],"uses":{"runeEvolve":6}}

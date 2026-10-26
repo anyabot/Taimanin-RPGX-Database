@@ -1,0 +1,1 @@
+{"id":"sup00001","name":{"ja":"スキルの書(初)"},"description":{"ja":"スキルLvを10%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup00001","sellGold":100,"effect":{"category":"skillup","value":10},"statusCost":100}

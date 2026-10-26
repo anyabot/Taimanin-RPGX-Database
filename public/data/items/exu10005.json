@@ -1,0 +1,1 @@
+{"id":"exu10005","name":{"ja":"イベントメダル シーズン5"},"description":{"ja":"対象の交換所で報酬と交換できる特別なアイテム\n有効期限：2025/5/31 9:59:59まで"},"type":"global","icon":"exu10005","sellGold":0,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2025-02-15","end":"2025-04-16","costs":[["exu10004",10]]}]}

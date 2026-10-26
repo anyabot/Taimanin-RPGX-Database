@@ -1,0 +1,1 @@
+{"id":"evo01010","name":{"ja":"妖魔の至宝"},"description":{"ja":"「篝」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01010","sellGold":0,"sources":[{"page":"quests/mini-1010","title":{"ja":"決戦“妖魔の対魔忍”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07011"],"bloom":["07011"]}}

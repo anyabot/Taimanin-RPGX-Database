@@ -1,0 +1,1 @@
+{"id":"evo01021","name":{"ja":"夜叉の至宝"},"description":{"ja":"「二車　骸佐」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01021","sellGold":0,"sources":[{"page":"quests/mini-1021","title":{"ja":"決戦“ニ車　骸佐”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["06101"],"bloom":["06101"]}}

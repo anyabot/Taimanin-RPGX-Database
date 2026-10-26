@@ -309,3 +309,23 @@ export interface ArenaCard {
   /** per scene, its CG stills (textures in the card's advstill bundle) */
   stills?: string[][];
 }
+
+/** public/data/items/index.json and items/<id>.json (tools/web_export/items.py). */
+export interface ItemIndexEntry { id: string; name: Text | null; type: string; icon: string; sources: number; used: boolean }
+export interface ItemSource {
+  page: string | null; title: Text | null; kinds: string[];
+  /** exchange shops: period and what they pay with ([item, num]) */
+  start?: string | null; end?: string | null; costs?: [string, number][];
+}
+export interface Item {
+  id: string; name: Text | null; description: Text | null; type: string; icon: string; sellGold: number;
+  effect?: { category: string; value: number };
+  battleLimit?: number;
+  /** exchange tickets: the units they can become */
+  units?: string[];
+  statusCost?: number;
+  sources?: ItemSource[];
+  uses?: { evolve?: string[]; bloom?: string[]; ability?: string[]; runeEvolve?: number; refine?: boolean };
+}
+/** Item icons: <icon>_s in image_item_s. */
+export const ITEM_ICONS = "image_item_s_assets_all";

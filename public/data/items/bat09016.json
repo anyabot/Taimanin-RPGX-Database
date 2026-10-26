@@ -1,0 +1,1 @@
+{"id":"bat09016","name":{"ja":"マンゴージュース"},"description":{"ja":"味方全体のHPを回復する"},"type":"battle","icon":"bat09016","sellGold":10,"battleLimit":4,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2021-07-22","end":"2021-08-16","costs":[["exu00018",1]]},{"page":null,"title":null,"kinds":["exchange"],"start":"2022-06-22","end":"2022-07-29","costs":[["exu00033",60]]}]}

@@ -1,0 +1,1 @@
+{"id":"tup00003","name":{"ja":"たこ焼き"},"description":{"ja":"ユニットの信頼度を8アップさせるアイテム"},"type":"trustup","icon":"tup00003","sellGold":100,"effect":{"category":"trustup","value":8},"statusCost":0}

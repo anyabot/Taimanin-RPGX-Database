@@ -1,0 +1,1 @@
+{"id":"luc00011","name":{"ja":"科学開運の神楽鈴(SR)"},"description":{"ja":"科学の初期レアリティが「SR」ユニットのラックを10アップさせるアイテム"},"type":"luckup","icon":"luc00011","sellGold":0,"effect":{"category":"luckup","value":10},"statusCost":0,"sources":[{"page":"quests/tower-6","title":{"ja":"科学アリーナ"},"kinds":["first clear"]}]}

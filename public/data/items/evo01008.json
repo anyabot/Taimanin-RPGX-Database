@@ -1,0 +1,1 @@
+{"id":"evo01008","name":{"ja":"用心棒の至宝"},"description":{"ja":"「ファウスト」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01008","sellGold":0,"sources":[{"page":"quests/mini-1008","title":{"ja":"決戦“ファウスト”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07004"],"bloom":["07004"]}}

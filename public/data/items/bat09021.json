@@ -1,0 +1,1 @@
+{"id":"bat09021","name":{"ja":"クナイ"},"description":{"ja":"2ターンの間、敵全体の受けるダメージが小増加する"},"type":"battle","icon":"bat09021","sellGold":10,"battleLimit":2,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2021-11-23","end":"2021-12-16","costs":[["exu00025",1]]}]}

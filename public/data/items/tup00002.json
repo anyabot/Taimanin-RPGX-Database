@@ -1,0 +1,1 @@
+{"id":"tup00002","name":{"ja":"プレゼント"},"description":{"ja":"ユニットの信頼度を50アップさせるアイテム"},"type":"trustup","icon":"tup00002","sellGold":150,"effect":{"category":"trustup","value":50},"statusCost":0}

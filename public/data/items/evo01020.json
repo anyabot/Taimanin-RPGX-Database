@@ -1,0 +1,1 @@
+{"id":"evo01020","name":{"ja":"白熊の至宝"},"description":{"ja":"「白熊タロー」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01020","sellGold":0,"sources":[{"page":"quests/mini-1020","title":{"ja":"決戦“白熊タロー”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07020"],"bloom":["07020"]}}

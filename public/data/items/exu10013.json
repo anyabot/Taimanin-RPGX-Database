@@ -1,0 +1,1 @@
+{"id":"exu10013","name":{"ja":"イベントメダル シーズン13"},"description":{"ja":"対象の交換所で報酬と交換できる特別なアイテム\n有効期限：2026/06/03 10:59:59まで"},"type":"global","icon":"exu10013","sellGold":0,"sources":[{"page":"story/battles/em059","title":{"ja":"マップ59"},"kinds":["drop","luck reward"]},{"page":null,"title":null,"kinds":["exchange"],"start":"2025-02-13","end":"2026-04-16","costs":[["exu10012",10]]}]}

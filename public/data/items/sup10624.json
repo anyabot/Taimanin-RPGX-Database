@@ -1,0 +1,1 @@
+{"id":"sup10624","name":{"ja":"ユニットスキルの書(秘伝)"},"description":{"ja":"稲毛　夏のスキルLvを100%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup10624","sellGold":0,"effect":{"category":"skillup","value":100},"statusCost":5000,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2024-09-16","end":"2024-10-31","costs":[["exu00072",1]]}]}

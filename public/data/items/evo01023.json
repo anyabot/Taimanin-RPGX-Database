@@ -1,0 +1,1 @@
+{"id":"evo01023","name":{"ja":"少女の至宝"},"description":{"ja":"「少女時子」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01023","sellGold":0,"sources":[{"page":"quests/mini-1023","title":{"ja":"決戦“少女時子”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07021"],"bloom":["07021"]}}

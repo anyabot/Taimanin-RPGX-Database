@@ -1,0 +1,1 @@
+{"id":"bat09006","name":{"ja":"かがみもち"},"description":{"ja":"味方全体の全ての状態異常を回復する"},"type":"battle","icon":"bat09006","sellGold":10,"battleLimit":2,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2023-01-01","end":"2023-01-16","costs":[["exu00045",1]]}]}
