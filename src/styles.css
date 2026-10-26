@@ -231,3 +231,10 @@ html.adv-theater-open { overflow: hidden; }
 @media (max-width: 640px) { .enemy-skill { grid-template-columns: 1fr; } }
 .battles-page .hub-segmented, .battles-page [role=group] { flex-wrap: wrap; margin-bottom: 10px; }
 .enemy-skills.numbered .enemy-skill { grid-template-columns: 64px 1fr; }
+.boss-ai { padding: 4px 10px 10px; }
+.boss-ai h3 { font-size: 14px; margin: 6px 0 2px; }
+.boss-ai p { margin: 0 0 6px; }
+.boss-ai ul { margin: 0 0 6px; padding-left: 18px; font-size: 13px; }
+.boss-ai li { padding: 1px 0; }
+.boss-ai-head { font-weight: 700; font-size: 12px; opacity: .85; margin-top: 4px; }
+.boss-ai-when { font-variant-numeric: tabular-nums; }
