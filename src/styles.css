@@ -224,3 +224,10 @@ html.adv-theater-open { overflow: hidden; }
 .rune-slot { font-weight: 700; font-size: 14px; }
 .rune-piece .effect-list li { font-size: 12px; }
 .rune-value { white-space: nowrap; }
+.enemy-skills { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.enemy-skill { display: grid; grid-template-columns: minmax(110px, 240px) 1fr; gap: 4px 12px; padding: 6px 0; border-top: 1px solid var(--hub-border, #2a2e3b); align-items: start; }
+.enemy-skill .effect-list { margin: 0; }
+.enemy-skill-name { padding-top: 2px; }
+@media (max-width: 640px) { .enemy-skill { grid-template-columns: 1fr; } }
+.battles-page .hub-segmented, .battles-page [role=group] { flex-wrap: wrap; margin-bottom: 10px; }
+.enemy-skills.numbered .enemy-skill { grid-template-columns: 64px 1fr; }

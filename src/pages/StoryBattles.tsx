@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Breadcrumbs, LoadState, Panel } from "@altterisk/game-hub";
+import { Breadcrumbs, LoadState, Panel, SegmentedButtons } from "@altterisk/game-hub";
 import {
   ENEMY_ICONS, tr, useData, useLang, type BattleBoss, type BattleEnemy, type Battles, type StorySection,
 } from "../data";
@@ -48,17 +48,16 @@ export default function StoryBattles() {
         {found?.g.banner && <StoryBanner banner={found.g.banner} large />}
         <div>
           <h1 lang="ja">{title}</h1>
-          {data && <p className="muted">{data.quests.length} quests · {Object.keys(data.enemies).length} enemies
-            {data.bosses.length > 0 && ` · ${data.bosses.length} raid bosses`}</p>}
+          {data && <p className="muted">{[
+            data.quests.length && `${data.quests.length} quests`,
+            Object.keys(data.enemies).length && `${Object.keys(data.enemies).length} enemies`,
+            data.bosses.length && `${data.bosses.length} raid boss tiers`,
+          ].filter(Boolean).join(" · ")}</p>}
         </div>
       </div>
       <LoadState loading={loading && !data} error={error} />
       {data && data.bosses.length > 0 && (
-        <Panel title="Raid bosses">
-          <div className="boss-grid">
-            {data.bosses.map((b) => <EnemyCard key={b.id} e={b} data={data} label={RAID_DIFFICULTY[b.difficulty] ?? `Difficulty ${b.difficulty}`} open />)}
-          </div>
-        </Panel>
+        <Panel title="Raid bosses"><RaidBosses bosses={data.bosses} data={data} /></Panel>
       )}
       {data && sections.map(([key, quests]) => (
         <Panel key={key} title={<span lang="ja">{partTitle(quests[0].scripts[0])}</span>}
@@ -115,6 +114,25 @@ function EnemyChip({ e, data }: { e: BattleEnemy; data: Battles }) {
   );
 }
 
+/** One boss at a time, picked by difficulty (and by boss when a raid has several). */
+function RaidBosses({ bosses, data }: { bosses: BattleBoss[]; data: Battles }) {
+  const lang = useLang();
+  const names = new Set(bosses.map((b) => tr(b.name, lang)));
+  const label = (b: BattleBoss) => (names.size > 1 ? `${tr(b.name, lang)} · ` : "") + (RAID_DIFFICULTY[b.difficulty] ?? `Difficulty ${b.difficulty}`);
+  const [pick, setPick] = useState(String(bosses[0].id));
+  const b = bosses.find((x) => String(x.id) === pick) ?? bosses[0];
+  return (
+    <>
+      {bosses.length > 1 && (
+        <SegmentedButtons label="Difficulty" selected={[String(b.id)]}
+          options={bosses.map((x) => ({ value: String(x.id), label: `${label(x)} (Lv ${x.level})` }))}
+          onToggle={setPick} />
+      )}
+      <EnemyCard e={b} data={data} label={label(b)} open />
+    </>
+  );
+}
+
 function EnemyCard({ e, data, label, open }: { e: BattleBoss; data: Battles; label: string; open?: boolean }) {
   const lang = useLang();
   return (
@@ -141,12 +159,15 @@ function EnemyDetail({ e, data }: { e: BattleEnemy; data: Battles }) {
         <div><dt>DEF</dt><dd>{e.def.toLocaleString()}</dd></div>
         <div><dt>SPD</dt><dd>{e.spd.toLocaleString()}</dd></div>
       </dl>
-      {e.skills.map((k) => data.skills[k] && (
-        <div key={k} className="enemy-skill">
-          <div className="enemy-skill-name" lang="ja">{tr(data.skills[k].name, lang)}</div>
-          <EffectList effects={data.skills[k].effects} />
-        </div>
-      ))}
+      {/* Running raids' skills have no names in the client's strings: number them. */}
+      <ol className={`enemy-skills${e.skills.every((k) => !tr(data.skills[k]?.name, lang)) ? " numbered" : ""}`}>
+        {e.skills.map((k, i) => data.skills[k] && (
+          <li key={k} className="enemy-skill">
+            <div className="enemy-skill-name" lang="ja">{tr(data.skills[k].name, lang) || <span lang="en">Skill {i + 1}</span>}</div>
+            <EffectList effects={data.skills[k].effects} />
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
