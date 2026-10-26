@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Breadcrumbs, LoadState, Panel, SegmentedButtons } from "@altterisk/game-hub";
+import { Breadcrumbs, LoadState, Panel, SegmentedButtons, TabPanel, UrlTabs } from "@altterisk/game-hub";
 import {
   ENEMY_ICONS, tr, useData, useLang, type BattleBoss, type BattleEnemy, type Battles, type StorySection,
 } from "../data";
@@ -12,6 +12,7 @@ const BOSS_ICONS = "image_bos_s_assets_all";
 // reactflow + dagre only load when a boss flowchart is shown
 const BossFlow = lazy(() => import("../bossFlow"));
 const DIFFICULTY = ["", "Normal", "Hard", "Very hard", "Extreme", "Nightmare"];
+const BOSS_TABS = [{ id: "skills", label: "Skills" }, { id: "ai", label: "AI" }] as const;
 const RAID_DIFFICULTY = ["", "Beginner", "Intermediate", "Advanced", "Expert", "Master"];
 
 /** Quests, enemies and raid bosses of one story chapter / event. */
@@ -137,6 +138,8 @@ function RaidBosses({ bosses, data }: { bosses: BattleBoss[]; data: Battles }) {
 
 function EnemyCard({ e, data, label, open }: { e: BattleBoss; data: Battles; label: string; open?: boolean }) {
   const lang = useLang();
+  const [tab, setTab] = useState<string>("skills");
+  const idBase = `boss-${e.id}`;
   return (
     <div className="enemy-card">
       <div className="enemy-card-head">
@@ -146,8 +149,15 @@ function EnemyCard({ e, data, label, open }: { e: BattleBoss; data: Battles; lab
           <div className="muted small"><ElementIcon element={e.element} size={13} /> {label} · Lv {e.level}</div>
         </div>
       </div>
-      {open && <EnemyDetail e={e} data={data} />}
-      {open && <BossBehaviour e={e} data={data} />}
+      {open && (
+        <>
+          <EnemyDetail e={e} data={data} skills={false} />
+          <UrlTabs tabs={BOSS_TABS} active={tab} onChange={setTab} idBase={idBase} label="Boss details" />
+          <TabPanel tab={tab} idBase={idBase}>
+            {tab === "skills" ? <EnemySkills e={e} data={data} /> : <BossBehaviour e={e} data={data} />}
+          </TabPanel>
+        </>
+      )}
     </div>
   );
 }
@@ -163,7 +173,6 @@ function BossBehaviour({ e, data }: { e: BattleBoss; data: Battles }) {
   return (
     <div className="boss-ai">
       <div className="boss-ai-top">
-        <h3>Behaviour</h3>
         {rules.length > 0 && (
           <SegmentedButtons label="View" selected={[view]} onToggle={setView}
             options={[{ value: "flow", label: "Flowchart" }, { value: "list", label: "List" }]} />
@@ -191,8 +200,7 @@ function BossBehaviour({ e, data }: { e: BattleBoss; data: Battles }) {
   );
 }
 
-function EnemyDetail({ e, data }: { e: BattleEnemy; data: Battles }) {
-  const lang = useLang();
+function EnemyDetail({ e, data, skills = true }: { e: BattleEnemy; data: Battles; skills?: boolean }) {
   return (
     <div className="enemy-detail">
       <dl className="enemy-stats">
@@ -201,6 +209,15 @@ function EnemyDetail({ e, data }: { e: BattleEnemy; data: Battles }) {
         <div><dt>DEF</dt><dd>{e.def.toLocaleString()}</dd></div>
         <div><dt>SPD</dt><dd>{e.spd.toLocaleString()}</dd></div>
       </dl>
+      {skills && <EnemySkills e={e} data={data} />}
+    </div>
+  );
+}
+
+function EnemySkills({ e, data }: { e: BattleEnemy; data: Battles }) {
+  const lang = useLang();
+  return (
+    <div className="enemy-detail">
       {/* Running raids' skills have no names in the client's strings: number them. */}
       <ol className={`enemy-skills${e.skills.every((k) => !tr(data.skills[k]?.name, lang)) ? " numbered" : ""}`}>
         {e.skills.map((k, i) => data.skills[k] && (
