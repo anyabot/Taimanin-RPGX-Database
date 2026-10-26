@@ -104,9 +104,10 @@ await step("story-battles", async () => {
   return { bosses: await cdp.eval(`return document.querySelectorAll(".enemy-card").length`), noHScroll: await noHScroll() };
 }, false);
 await step("raid-behaviour", async () => {
-  await cdp.goto(`${SITE}/#/story/battles/er064`, `document.querySelectorAll(".boss-ai li").length > 0`);
-  await cdp.eval(`document.querySelector(".boss-ai").scrollIntoView()`);
-  return { rules: await cdp.eval(`return document.querySelectorAll(".boss-ai li").length`) };
+  await cdp.goto(`${SITE}/#/story/battles/er064`, `document.querySelectorAll(".boss-ai").length > 0`);
+  await waitFor(() => cdp.eval(`return document.querySelectorAll(".react-flow__node").length > 0`), 30000, "flowchart");
+  await cdp.eval(`document.querySelector(".boss-flow").scrollIntoView()`);
+  return { nodes: await cdp.eval(`return document.querySelectorAll(".react-flow__node").length`) };
 }, false);
 await step("runes", async () => {
   await cdp.goto(`${SITE}/#/runes`, `document.querySelectorAll(".rune-sets > *").length > 0`);
