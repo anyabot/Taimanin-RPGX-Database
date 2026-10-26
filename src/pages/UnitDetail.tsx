@@ -12,11 +12,14 @@ import {
 import { toImageData } from "../unity/client";
 import { EffectList, ElementIcon, RarityIcon } from "../components";
 import type { SceneDoc } from "../adv";
+import { AbilityPanel, BloomTab } from "./growth";
+import type { Growth } from "../data";
 
 const TABS = [
   { id: "stats", label: "Stats" },
   { id: "skills", label: "Skills" },
   { id: "leader", label: "Leader & abilities" },
+  { id: "bloom", label: "Bloom" },
   { id: "voices", label: "Voices" },
   { id: "obtain", label: "Obtain" },
   { id: "profile", label: "Profile" },
@@ -76,6 +79,7 @@ export default function UnitDetail() {
         {tab === "stats" && <StatsTab key={form.id} form={form} />}
         {tab === "skills" && <SkillsTab unit={unit} form={form} />}
         {tab === "leader" && <LeaderTab unit={unit} />}
+        {tab === "bloom" && <BloomTab key={form.id} unit={unit} form={unit.forms[unit.forms.length - 1]} />}
         {tab === "voices" && <VoicesTab unit={unit} />}
         {tab === "obtain" && <ObtainTab unit={unit} />}
         {tab === "profile" && <ProfileTab unit={unit} />}
@@ -175,12 +179,7 @@ function SkillCard({ skill: s, lang }: { skill: Skill; lang: "en" | "ja" }) {
 
 function LeaderTab({ unit }: { unit: Unit }) {
   const lang = useLang();
-  // Ability rows come one per level; group them under their slot.
-  const slots = useMemo(() => {
-    const m = new Map<number, Unit["abilities"]>();
-    for (const a of unit.abilities) m.set(a.slot, [...(m.get(a.slot) || []), a]);
-    return [...m.entries()];
-  }, [unit]);
+  const { data: growth } = useData<Growth>("growth");
   return (
     <>
       {unit.leader ? (
@@ -191,14 +190,9 @@ function LeaderTab({ unit }: { unit: Unit }) {
           )}
         </Panel>
       ) : <p>No leader skill.</p>}
-      {slots.map(([slot, rows]) => (
-        <Panel key={slot} title={<>Ability {slot} · {tr(rows[0].name, lang)}</>}>
-          <ol className="ability-levels">
-            {rows.map((a, i) => <li key={i}><b>Lv {a.level}</b> {tr(a.description, lang)}</li>)}
-          </ol>
-        </Panel>
-      ))}
-      {!slots.length && <p className="muted">This unit has no abilities.</p>}
+      {unit.abilities.length > 1 && <p className="muted small">Both abilities are active in battle at the same time.</p>}
+      {unit.abilities.map((a) => <AbilityPanel key={a.slot} a={a} growth={growth ?? null} />)}
+      {!unit.abilities.length && <p className="muted">This unit has no abilities.</p>}
     </>
   );
 }
