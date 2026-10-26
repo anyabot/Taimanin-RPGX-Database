@@ -198,7 +198,7 @@ html.adv-theater-open { overflow: hidden; }
 .bundle-image.failed { background: none; }
 .story-banner { display: block; width: 100%; aspect-ratio: 308 / 112; margin: -10px -12px 8px; width: calc(100% + 24px); border-radius: 10px 10px 0 0; }
 .story-banner.large { margin: 0; width: min(100%, 420px); border-radius: 10px; flex: none; }
-.story-battles { display: inline-block; margin: 8px 0 2px; font-size: 13px; text-decoration: none; }
+.story-battles { display: inline-flex; align-items: center; justify-content: center; line-height: 1.2; padding: 6px 12px; margin: 8px 0 2px; font-size: 13px; text-decoration: none; }
 .battles-head { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: 8px 0 16px; }
 .battles-head h1 { margin: 0 0 4px; font-size: 22px; }
 .quest-list { display: grid; gap: 10px; }
@@ -264,3 +264,15 @@ html.adv-theater-open { overflow: hidden; }
 .bloom-table { width: 100%; }
 .bloom-table td.bloom-bonus { display: table-cell; }
 .bloom-bonus > div { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.stage { display: grid; gap: 8px; }
+.stage-story { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+.stage-story a { text-decoration: none; }
+.stage-rewards { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; margin: 2px 0 4px; }
+.stage-rewards b { font-variant-numeric: tabular-nums; }
+.drops h4 { margin: 8px 0 4px; font-size: 13px; }
+.drop-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); }
+.drop-list li { display: grid; grid-template-columns: 32px 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; }
+.drop-list .drop-rate { font-variant-numeric: tabular-nums; opacity: .8; }
+.drop-list .drop-icon { width: 32px; height: 32px; border-radius: 6px; }
+.drop-group { font-size: 11px; opacity: .6; }

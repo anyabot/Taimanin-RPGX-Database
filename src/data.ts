@@ -132,7 +132,16 @@ export interface BattleEnemy {
 /** One scripted rule of a raid boss (from its gimmick rows); skill = index into its skills. */
 export interface BossRule { phase: number | null; when: string; do: string; skill: number | null }
 export interface BattleBoss extends BattleEnemy { id: number; difficulty: number; stage: number; ai?: BossRule[] }
-export interface BattleQuest { id: number; difficulty: number; stage: number; scripts: string[]; waves: [string, number][][] }
+/** One drop row (battles.py _drop): type is eContentType; rate as listed (out of 10000). */
+export interface QuestDrop {
+  type: "jewel" | "gold" | "item" | "unit" | "rune" | string; id: string; num: number; rate: number;
+  group?: number; frame?: number; name?: Text | null; icon?: string | null; unit?: string;
+}
+export interface BattleQuest {
+  id: number; section: number; difficulty: number; scripts: string[]; waves: [string, number][][];
+  ap: number; userExp: number; unitExp: number; gold: number;
+  drops: Partial<Record<"enemy" | "boss" | "rare" | "luck", QuestDrop[]>>;
+}
 export interface Battles {
   quests: BattleQuest[]; enemies: Record<string, BattleEnemy>; bosses: BattleBoss[]; skills: Record<string, BattleSkill>;
 }

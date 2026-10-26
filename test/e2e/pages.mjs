@@ -108,10 +108,25 @@ await step("story", async () => {
   await cdp.goto(`${SITE}/#/story?section=event`, `document.querySelectorAll(".story-card").length > 0`);
   return { cards: await cdp.eval(`return document.querySelectorAll(".story-card").length`), noHScroll: await noHScroll() };
 }, false);
+await step("story-card-open", async () => {
+  await cdp.goto(`${SITE}/#/story?section=main&open=c002`, `!!document.querySelector(".story-battles")`);
+  await cdp.eval(`document.querySelector(".story-card[open]").scrollIntoView({ block: "start" })`);
+  // the Battles pill: text centred in its box
+  return { pill: await cdp.eval(`const b = document.querySelector(".story-battles").getBoundingClientRect(), t = document.createRange(); t.selectNodeContents(document.querySelector(".story-battles")); const r = t.getBoundingClientRect(); return [Math.round(r.top - b.top), Math.round(b.bottom - r.bottom)]`) };
+}, false);
 await step("story-battles", async () => {
   await cdp.goto(`${SITE}/#/story/battles/er004`, `document.querySelectorAll(".enemy-card").length > 0`);
   await waitFor(() => cdp.eval(`return document.querySelectorAll(".enemy-icon img").length > 0`), 30000, "enemy icons");
   return { bosses: await cdp.eval(`return document.querySelectorAll(".enemy-card").length`), noHScroll: await noHScroll() };
+}, false);
+await step("story-stages", async () => {
+  await cdp.goto(`${SITE}/#/story/battles/c002`, `document.querySelectorAll(".stage").length > 0`);
+  await waitFor(() => cdp.eval(`return document.querySelectorAll(".drop-list img").length > 0`), 30000, "drop icons");
+  return {
+    stages: await cdp.eval(`return document.querySelectorAll(".stage").length`),
+    drops: await cdp.eval(`return document.querySelectorAll(".drop-list li").length`),
+    noHScroll: await noHScroll(),
+  };
 }, false);
 await step("raid-behaviour", async () => {
   await cdp.goto(`${SITE}/#/story/battles/er064`, `document.querySelectorAll(".enemy-card [role=tab]").length > 0`);
