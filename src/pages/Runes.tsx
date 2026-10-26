@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox } from "@altterisk/game-hub";
+import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
 import { RARITY, RUNE_ICONS, tr, useData, useLang, type RuneEffect, type RuneSet } from "../data";
@@ -40,9 +40,39 @@ function Effects({ title, list }: { title: string; list: RuneEffect[] }) {
   if (!list.length) return null;
   return (
     <div className="rune-effects">
-      <h4>{title}</h4>
+      {title && <h4>{title}</h4>}
       <ul className="effect-list">{collapse(list).map((e, i) => <EffectLine key={i} e={e} />)}</ul>
     </div>
+  );
+}
+
+/** The 2- and 4-piece bonuses: decoded lines, the game's text as the tooltip
+ *  (and as the fallback for the few bonus types not decoded). */
+function Bonuses({ set }: { set: RuneSet }) {
+  const lang = useLang();
+  return (
+    <dl className="rune-bonus">
+      {Object.entries(set.bonus).map(([n, b]) => {
+        const fx = set.bonusFx?.[n];
+        return (
+          <div key={n} title={tr(b, lang)}>
+            <dt>{n}-piece</dt>
+            <dd>
+              {fx ? (fx.length ? (
+                <ul className="effect-list">
+                  {fx.map((l, i) => (
+                    <li key={i}>
+                      {l.icon ? <img src={ui(`Battle_status_icon_${l.icon}`)} alt="" width={20} height={20} /> : <span className="effect-dot" />}
+                      <span>{l.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : <span className="muted">No effect</span>) : <span lang="ja">{tr(b, lang)}</span>}
+            </dd>
+          </div>
+        );
+      })}
+    </dl>
   );
 }
 
@@ -52,28 +82,37 @@ function Tier({ set }: { set: RuneSet }) {
   const p = set.pieces[0];
   return (
     <section className="rune-tier">
-      <h3>
-        <RarityIcon rarity={p.rarity} />
-        {tr(set.name, lang)}
-        <span className="muted">slots {[...new Set(set.pieces.map((x) => x.slotLabel))].join("")}</span>
-      </h3>
-      <dl className="rune-bonus">
-        {Object.entries(set.bonus).map(([n, b]) => <div key={n}><dt>{n}-piece</dt><dd lang="ja">{tr(b, lang)}</dd></div>)}
-      </dl>
+      <h3 lang="ja">{tr(set.name, lang)}</h3>
+      <Bonuses set={set} />
       <div className="rune-pieces">
         {set.pieces.map((x) => (
           <div key={x.id} className="rune-piece" title={tr(x.name, lang)}>
-            <BundleImage stem={RUNE_ICONS} name={`${x.icon}_s`} width={56} height={56} className="rune-icon" />
-            <span className="rune-slot">{x.slotLabel}{x.main.length > 1 && <span className="muted small"> · main stat: one of</span>}</span>
+            <BundleImage stem={RUNE_ICONS} name={`${x.icon}_s`} width={40} height={40} className="rune-icon" />
+            <span className="rune-slot">{x.slotLabel}{x.main.length > 1 && <span className="muted small"> · one of</span>}</span>
             <ul className="effect-list">{collapse(x.main).map((e, i) => <EffectLine key={i} e={e} />)}</ul>
           </div>
         ))}
       </div>
       <details>
         <summary>Sub effects ({p.subCount.join("–")} per piece, rolled from these)</summary>
-        <Effects title="Sub effects" list={p.sub} />
+        <Effects title="" list={p.sub} />
       </details>
     </section>
+  );
+}
+
+/** A set family with its rarity tiers as tabs (highest tier first shown). */
+function Family({ family, tiers }: { family: string; tiers: RuneSet[] }) {
+  const [pick, setPick] = useState<string | null>(null);
+  const t = tiers.find((x) => String(x.id) === pick) ?? tiers[tiers.length - 1];
+  return (
+    <Panel title={<span lang="ja">{family}</span>} className="rune-family">
+      {tiers.length > 1 && (
+        <SegmentedButtons label="Rarity" selected={[String(t.id)]} onToggle={setPick}
+          options={tiers.map((x) => ({ value: String(x.id), label: <RarityIcon rarity={x.pieces[0].rarity} height={16} /> }))} />
+      )}
+      <Tier set={t} />
+    </Panel>
   );
 }
 
@@ -92,7 +131,8 @@ export default function Runes() {
     const m = new Map<string, RuneSet[]>();
     for (const s of sets || []) {
       if (rarityF.length && !s.pieces.some((p) => rarityF.includes(String(p.rarity)))) continue;
-      if (q && !textMatch(q, [s.family, s.name?.ja, s.name?.en, ...Object.values(s.bonus).map((b) => b?.ja)])) continue;
+      if (q && !textMatch(q, [s.family, s.name?.ja, s.name?.en, ...Object.values(s.bonus).map((b) => b?.ja),
+        ...Object.values(s.bonusFx ?? {}).flat().map((l) => l.text)])) continue;
       m.set(s.family, [...(m.get(s.family) || []), s]);
     }
     for (const list of m.values()) list.sort((a, b) => a.pieces[0].rarity - b.pieces[0].rarity);
@@ -103,7 +143,7 @@ export default function Runes() {
   return (
     <div className="runes-page">
       <h1>Runes</h1>
-      <p className="muted">Equipment: six slots α–ζ, with two- and four-piece set bonuses. Each family comes in rarity tiers; effect values are the range over every enhancement level.</p>
+      <p className="muted">Equipment: six slots α–ζ, with two- and four-piece set bonuses. Each family comes in rarity tiers; piece values are the range over every enhancement level.</p>
       <ListToolbar
         search={<SearchBox value={q} onChange={(v) => setParam("q", v)} placeholder="Set name or bonus" />}
         count={sets ? `${families.length} / ${total} sets` : undefined}
@@ -114,11 +154,8 @@ export default function Runes() {
       {sets && !families.length && <EmptyState title="No rune sets match" />}
       <div className="rune-sets">
         {families.map(([family, tiers]) => (
-          <Panel key={family} title={family}>
-            {tiers
-              .filter((t) => !rarityF.length || rarityF.includes(String(t.pieces[0].rarity)))
-              .map((t) => <Tier key={t.id} set={t} />)}
-          </Panel>
+          <Family key={family} family={family}
+            tiers={tiers.filter((t) => !rarityF.length || rarityF.includes(String(t.pieces[0].rarity)))} />
         ))}
       </div>
     </div>
