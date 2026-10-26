@@ -88,11 +88,29 @@ export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain"
   forms: UnitForm[];
   skills: Record<string, Skill>;
   leader: { name: Text | null; detail: Text | null; effects: Effect[] } | null;
-  abilities: { slot: number; name: Text | null; level: number; description: Text | null }[];
+  /** Both slots are active in battle; each has Lv1..9 (single-level ones come unlocked). */
+  abilities: {
+    slot: number; name: Text | null; icon: number;
+    release: { type: number; exp: number; items: [string, number][] };
+    levels: { level: number; description: Text | null; effects: Effect[] }[];
+  }[];
+  /** Bloom table ids (growth.json) plus this unit's materials per Bloom level. */
+  bloom: { points: number; gold: number; status: number; bonus: number; items: [number, string, number][] } | null;
   voices: Voice[];
   trust: number[];
   scenes: string[][];
   art: { graphicId: string; graphicNum: number; r18GraphicId: string; r18GraphicNum: number; spineId: string };
+}
+
+/** public/data/growth.json (tables.py export_growth): tables all units share. */
+export interface Growth {
+  abilityExp: Record<string, number>;
+  bloom: {
+    points: Record<string, number[]>; gold: Record<string, number[]>;
+    status: { table: number; stat: number; from: number; to: number; cost: number; gain: number }[];
+    bonus: { table: number; stat: number; level: number; bonus: number; value: number }[];
+  };
+  items: Record<string, { name: Text | null; icon: string }>;
 }
 
 /** public/data/stories/index.json (tools/web_export/stories.py). */

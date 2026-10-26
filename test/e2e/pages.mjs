@@ -45,6 +45,16 @@ for (const tab of ["stats", "skills", "leader", "voices", "obtain", "profile", "
     await waitFor(() => cdp.eval(`return document.querySelector(".unit-page").innerText.length > 200`), 10000, "content");
   });
 }
+await step(`unit-${UNIT}-bloom`, async () => {
+  await cdp.goto(`${SITE}/#/units/${UNIT}?tab=bloom`, `document.querySelectorAll(".bloom-table tbody tr").length === 5`);
+  // HP to Lv 30: every HP breakpoint chip lights up
+  for (let i = 0; i < 30; i++) await cdp.eval(`document.querySelector('[aria-label="HP up"]').click()`);
+  await waitFor(() => cdp.eval(`return document.querySelectorAll(".bloom-mats img").length > 0`), 30000, "item icons");
+  return {
+    left: await cdp.eval(`return document.querySelector(".bloom-points").innerText`),
+    chipsOn: await cdp.eval(`return document.querySelectorAll(".bloom-chip.on").length`),
+  };
+});
 await step(`unit-${UNIT}-related`, async () => {
   await cdp.goto(`${SITE}/#/units/${UNIT}`, `document.querySelectorAll(".related-unit").length > 0`, 15000);
   const first = await cdp.eval(`const a = document.querySelector(".related-unit"); const href = a.getAttribute("href"); a.click(); return href`);
