@@ -1,0 +1,24 @@
+/* Battle pages (src/battles.tsx): the parts added on top of the stage /
+   enemy styles in styles.css. */
+.stage-rules h4, .stage-missions h4, .stage-first-clear h4 { margin: 4px 0 2px; font-size: 13px; }
+.stage-rules ul, .stage-missions ol { margin: 0; padding-left: 18px; font-size: 13px; }
+.stage-rules li, .stage-missions li { padding: 1px 0; }
+.stage-raid { margin: 2px 0; }
+.stage-raid b { font-variant-numeric: tabular-nums; }
+.boss-facts { display: grid; gap: 2px; margin: 6px 0 2px; }
+.boss-rules { margin: 4px 0; padding-left: 18px; font-size: 13px; }
+.enemy-ai-tag { margin-left: 4px; padding: 0 4px; border-radius: 4px; font-size: 10px; font-weight: 700;
+  border: 1px solid var(--hub-border, #2a2e3b); }
+.enemy-traits { display: flex; flex-wrap: wrap; gap: 4px; }
+.trait-chip { font-size: 11px; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--hub-border, #2a2e3b); }
+.enemy-res { display: grid; gap: 2px; }
+.enemy-res .res { display: inline-flex; align-items: center; gap: 2px; margin-right: 10px; font-variant-numeric: tabular-nums; }
+.enemy-res .res.weak { color: var(--hub-good, #4caf7a); }
+.enemy-res .res.strong { color: var(--hub-bad, #d9645a); }
+/* the story-less mode list (/quests) */
+.quest-groups { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); margin-top: 12px; }
+.quest-card { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--hub-border, #2a2e3b); border-radius: 10px;
+  text-decoration: none; color: inherit; }
+.quest-card:hover { border-color: var(--hub-accent, #7aa2ff); }
+.quest-card-title { font-weight: 600; }
+.quest-card .muted { font-size: 12px; }
