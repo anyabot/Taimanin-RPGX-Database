@@ -256,9 +256,11 @@ html.adv-theater-open { overflow: hidden; }
 .bloom-level { white-space: nowrap; }
 .bloom-level span { display: inline-block; min-width: 2.2em; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 .bloom-level .hub-button { min-width: 28px; padding: 2px 6px; }
-.bloom-bonus { display: flex; flex-wrap: wrap; gap: 4px; }
 .bloom-chip { font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--hub-border, #2a2e3b); opacity: .6; }
 .bloom-chip.on { opacity: 1; border-color: #e0a84a; color: #f1c56f; }
 .bloom-mats { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
 .bloom-mats li { display: grid; grid-template-columns: 40px 1fr auto; gap: 8px; align-items: center; }
-.bloom-table { overflow-x: auto; display: block; }
+.bloom-scroll { overflow-x: auto; }
+.bloom-table { width: 100%; }
+.bloom-table td.bloom-bonus { display: table-cell; }
+.bloom-bonus > div { display: flex; flex-wrap: wrap; gap: 4px; }
