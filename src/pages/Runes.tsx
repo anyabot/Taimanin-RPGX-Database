@@ -13,13 +13,27 @@ const ui = (name: string) => `${import.meta.env.BASE_URL}ui/${name}.webp`;
  *  enhancement levels. The game's own wording is the tooltip. */
 function EffectLine({ e }: { e: RuneEffect }) {
   const lang = useLang();
-  const text = e.stat ? `${e.stat} +${fmtRange(e.range)}${e.flat ? "" : "%"}` : `${tr(e.description, lang)} ${fmtRange(e.range)}`;
+  const value = `+${fmtRange(e.range)}${e.flat ? "" : "%"}`;
   return (
     <li title={tr(e.description, lang)}>
       {e.icon ? <img src={ui(`Battle_status_icon_${e.icon}`)} alt="" width={22} height={22} /> : <span className="effect-dot" />}
-      <span>{text}</span>
+      <span>{e.stat ? <>{e.stat} <span className="rune-value">{value}</span></> : `${tr(e.description, lang)} ${fmtRange(e.range)}`}</span>
     </li>
   );
+}
+
+/** All nine ailment resistances with one shared range -> one line (1024 of the
+ *  lists that have any; the 49 with one or two keep them listed). Both lists
+ *  are pools (a slot's main stat is one of them, sub effects are rolled from
+ *  them), so the line says "any", not "all". */
+function collapse(list: RuneEffect[]): RuneEffect[] {
+  const res = list.filter((e) => e.stat?.endsWith(" resistance"));
+  if (res.length < 9 || new Set(res.map((e) => e.range.join())).size !== 1) return list;
+  const at = list.indexOf(res[0]);
+  const rest = list.filter((e) => !res.includes(e));
+  const all: RuneEffect = { ...res[0], stat: "Any status ailment resistance",
+    description: { ja: res.map((e) => e.description?.ja).join(" / ") } };
+  return [...rest.slice(0, at), all, ...rest.slice(at)];
 }
 
 function Effects({ title, list }: { title: string; list: RuneEffect[] }) {
@@ -27,7 +41,7 @@ function Effects({ title, list }: { title: string; list: RuneEffect[] }) {
   return (
     <div className="rune-effects">
       <h4>{title}</h4>
-      <ul className="effect-list">{list.map((e, i) => <EffectLine key={i} e={e} />)}</ul>
+      <ul className="effect-list">{collapse(list).map((e, i) => <EffectLine key={i} e={e} />)}</ul>
     </div>
   );
 }
@@ -51,7 +65,7 @@ function Tier({ set }: { set: RuneSet }) {
           <div key={x.id} className="rune-piece" title={tr(x.name, lang)}>
             <BundleImage stem={RUNE_ICONS} name={`${x.icon}_s`} width={56} height={56} className="rune-icon" />
             <span className="rune-slot">{x.slotLabel}{x.main.length > 1 && <span className="muted small"> · main stat: one of</span>}</span>
-            <ul className="effect-list">{x.main.map((e, i) => <EffectLine key={i} e={e} />)}</ul>
+            <ul className="effect-list">{collapse(x.main).map((e, i) => <EffectLine key={i} e={e} />)}</ul>
           </div>
         ))}
       </div>

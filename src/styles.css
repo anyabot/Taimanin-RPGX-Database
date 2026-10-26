@@ -223,3 +223,4 @@ html.adv-theater-open { overflow: hidden; }
 .rune-piece .rune-icon { grid-row: 1 / 3; border-radius: 8px; }
 .rune-slot { font-weight: 700; font-size: 14px; }
 .rune-piece .effect-list li { font-size: 12px; }
+.rune-value { white-space: nowrap; }
