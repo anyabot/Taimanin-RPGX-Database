@@ -49,7 +49,7 @@ export function buildFlow(rules: BossRule[], skillName: (i: number) => string) {
   const ups = changes.filter((r) => r.when !== "from the start").sort((a, b) => target(b) - target(a));
 
   let row = 0;
-  let at = node("start", "Boss's turn", 0, row++);
+  let at = node("start", "Its turn", 0, row++);
   const entry = new Map<number, { from: string; label: FlowEdge["label"] }>();
   let label: FlowEdge["label"] = "";
   for (const r of ups) {

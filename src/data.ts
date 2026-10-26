@@ -123,28 +123,61 @@ export interface StoryGroup {
   battles?: { quests: number; enemies: number; bosses: number };
 }
 
-/** public/data/stories/battles/<group>.json (tools/web_export/battles.py). */
+/** public/data/stories/battles/<group>.json and quests/<id>.json (tools/web_export/battles.py). */
 export interface BattleSkill { name: Text | null; effects: Effect[] }
-export interface BattleEnemy {
-  name: Text | null; element: string | null; level: number; hp: number; atk: number; def: number; spd: number;
-  icon: string | null; skills: string[];
-}
-/** One scripted rule of a raid boss (from its gimmick rows); skill = index into its skills. */
+/** One scripted rule of an enemy (from its gimmick rows); skill = index into its skills. */
 export interface BossRule { phase: number | null; when: string; do: string; skill: number | null }
-export interface BattleBoss extends BattleEnemy { id: number; difficulty: number; stage: number; ai?: BossRule[] }
-/** One drop row (battles.py _drop): type is eContentType; rate as listed (out of 10000). */
+export interface BattleEnemy {
+  name: Text | null; element: string | null; level: number; hp: number; sp?: number; atk: number; def: number; spd: number;
+  icon: string | null; skills: string[];
+  /** resistances as listed (%): element + = resists, - = weak */
+  res?: { element?: Record<string, number>; ailment?: Record<string, number> };
+  traits?: string[];
+  ai?: BossRule[];
+}
+/** A reward of any kind (battles.py Ctx.content / drop): type is eContentType; rate as listed (out of 10000). */
 export interface QuestDrop {
-  type: "jewel" | "gold" | "item" | "unit" | "rune" | string; id: string; num: number; rate: number;
+  type: "jewel" | "gold" | "item" | "unit" | "rune" | string; id: string; num: number; rate?: number;
   group?: number; frame?: number; name?: Text | null; icon?: string | null; unit?: string;
+  /** destroy rewards: the rank range they apply to */
+  range?: [number, number];
+}
+export interface BattleBoss extends BattleEnemy {
+  id: number; difficulty: number; stage: number; ai?: BossRule[];
+  turnLimit?: number;
+  rewards?: Partial<Record<"discover" | "destroy" | "mvp" | "semi", QuestDrop[]>>;
+  /** main-story raid bosses: the quests they can appear in, and the raid challenge */
+  appearsIn?: number[];
+  challenge?: { start: string | null; ticket: QuestDrop; perDay: number };
+  rules?: string[];
 }
 export interface BattleQuest {
   id: number; section: number; difficulty: number; scripts: string[]; waves: [string, number][][];
   ap: number; userExp: number; unitExp: number; gold: number;
   drops: Partial<Record<"enemy" | "boss" | "rare" | "luck", QuestDrop[]>>;
+  title?: Text | null;
+  /** stage rules (eStageGimmickType), written out by battles.py */
+  rules?: string[];
+  missions?: Text[];
+  /** tower floors: the first-clear reward */
+  reward?: QuestDrop;
+  stageTitle?: Text | null;
+  /** main story: chance (out of 10000) that clearing finds a raid boss */
+  raidChance?: number;
 }
 export interface Battles {
   quests: BattleQuest[]; enemies: Record<string, BattleEnemy>; bosses: BattleBoss[]; skills: Record<string, BattleSkill>;
+  /** main story: per quest, the raid boss spawn chance by tier (out of 10000) */
+  raidRates?: Record<string, number[]>;
+  /** quests.py: the noun for one stage ("Floor") */
+  stage?: string;
 }
+/** public/data/quests/index.json (tools/web_export/quests.py). */
+export interface QuestGroup {
+  id: string; title: Text | null; label?: Text | null; note?: string | null; kind?: string | null;
+  start?: string | null; end?: string | null; runs?: number; quests: number;
+}
+export interface QuestSection { key: string; label: string; groups: QuestGroup[] }
 /** Enemy and boss icons: ene_0001 / bos_0262 -> <icon>_s in image_ene_s. */
 export const ENEMY_ICONS = "image_ene_s_assets_all";
 export interface StorySection { key: string; label: string; groups: StoryGroup[] }

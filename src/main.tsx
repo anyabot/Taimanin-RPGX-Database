@@ -9,6 +9,7 @@ import Runes from "./pages/Runes";
 import Buffs from "./pages/Buffs";
 import StoryList from "./pages/StoryList";
 import StoryBattles from "./pages/StoryBattles";
+import QuestList, { QuestBattles } from "./pages/Quests";
 import ScenePlayer from "./pages/ScenePlayer";
 import DecoderLab from "./pages/DecoderLab";
 import "@altterisk/game-hub/hub.css";
@@ -29,6 +30,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="story" element={<StoryList />} />
           <Route path="story/battles/:id" element={<StoryBattles />} />
           <Route path="story/:id" element={<ScenePlayer source="story" />} />
+          <Route path="quests" element={<QuestList />} />
+          <Route path="quests/:id" element={<QuestBattles />} />
           <Route path="runes" element={<Runes />} />
           <Route path="buffs" element={<Buffs />} />
           {import.meta.env.DEV && <Route path="lab" element={<DecoderLab />} />}
