@@ -1,7 +1,13 @@
 /* Scene stills (src/art.tsx SceneStills) and the unit Growth panel. */
 .scene-stills { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 2px; flex-basis: 100%; }
 .scene-still { border-radius: 6px; overflow: hidden; background: var(--hub-surface-2, #ffffff08); }
-.scene-still img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scene-still img { width: 100%; height: 100%; object-fit: contain; display: block; }
+/* filter buttons and search on one wrapping row (cards list) */
+.filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0; }
+.filter-row > * { margin: 0 !important; }
+.skin-preview { display: grid; gap: 4px; margin: 8px 0 16px; justify-items: start; }
+.skin-preview h3 { margin: 0; font-size: 15px; }
+.skin-preview .bundle-image { border-radius: 8px; overflow: hidden; max-width: 100%; }
 .growth-head { margin: 8px 0 4px; font-size: 13px; }
 .rune-evolve { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 4px; }
 .rune-evolve-item { display: inline-flex; align-items: center; gap: 2px; }

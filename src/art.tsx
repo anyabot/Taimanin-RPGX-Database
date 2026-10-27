@@ -19,7 +19,7 @@ export function SceneStills({ names }: { names?: string[] }) {
   if (!names?.length) return null;
   return (
     <span className="scene-stills">
-      {names.map((n) => <BundleImage key={n} stem={stillStem(n)} name={n} width={128} height={72} className="scene-still" alt="" />)}
+      {names.map((n) => <BundleImage key={n} stem={stillStem(n)} name={n} width={150} height={100} className="scene-still" alt="" />)}
     </span>
   );
 }

@@ -31,11 +31,13 @@ export default function CardList() {
   return (
     <div className="story-page">
       <PageHeader title="Arena cards" subtitle="The 決戦アリーナ cards in RPGX: art and scenes from the game's own files." />
+      <div className="filter-row">
       <SegmentedButtons label="Union" selected={[union]} onToggle={(v) => set("union", v === union ? null : v)}
         options={UNIONS.map((u) => ({ value: u, label: u }))} />
       <SegmentedButtons label="Rarity" selected={[rarity]} onToggle={(v) => set("rarity", v === rarity ? null : v)}
         options={rarities.map((r) => ({ value: String(r), label: RARITY[r] ?? String(r) }))} />
       <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search names, illustrators, voices" />
+      </div>
       <p className="muted small">{cards.length} / {data.length}</p>
       <div className="quest-groups">
         {cards.map((c) => (
