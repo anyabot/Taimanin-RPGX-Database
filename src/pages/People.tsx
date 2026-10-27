@@ -4,6 +4,7 @@ import { Breadcrumbs, CardGrid, FallbackImage, LoadState, PageHeader, Panel, Sea
 import { textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
 import { iconUrl, isUpcoming, tr, unitName, useData, useLang, type ArenaCard, type UnitIndexEntry } from "../data";
+import { CardTile } from "./Cards";
 import { ROLE_LABEL, gatherPeople, personHref, personKey, type Person, type Role } from "../people";
 
 function usePeople() {
@@ -102,11 +103,7 @@ export function PersonPage() {
         <Panel title={`Arena cards (${p.cards.length})`}>
           <div className="quest-groups">
             {p.cards.map(({ card: c, note }) => (
-              <Link key={c.id} className="quest-card" to={`/cards/${c.id}`}>
-                <span className="quest-card-title" lang="ja"><RarityIcon rarity={c.rarity} height={14} /> {tr(c.name, lang) || c.id}</span>
-                {c.title && <span className="muted" lang="ja">{tr(c.title, lang)}</span>}
-                <span className="muted">{[c.union, note].filter(Boolean).join(" · ")}</span>
-              </Link>
+              <CardTile key={c.id} card={c} detail={[c.union, note].filter(Boolean).join(" · ")} />
             ))}
           </div>
         </Panel>

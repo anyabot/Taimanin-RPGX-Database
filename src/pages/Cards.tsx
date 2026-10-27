@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Breadcrumbs, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
+import { Breadcrumbs, FallbackImage, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
-import { RARITY, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
+import { RARITY, cardIconUrl, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
 import { CreditLinks, RarityIcon } from "../components";
 import { ArtGallery, SceneStills } from "../art";
 import type { SceneDoc } from "../adv";
+import "../battles.css";
 
 const UNIONS = ["Taimanin", "UFS", "Demon"];
 
@@ -41,15 +42,26 @@ export default function CardList() {
       <p className="muted small">{cards.length} / {data.length}</p>
       <div className="quest-groups">
         {cards.map((c) => (
-          <Link key={c.id} className="quest-card" to={`/cards/${c.id}`}>
-            <span className="quest-card-title" lang="ja"><RarityIcon rarity={c.rarity} height={14} /> {tr(c.name, lang) || c.id}</span>
-            {c.title && <span className="muted" lang="ja">{tr(c.title, lang)}</span>}
-            <span className="muted">{[c.union, c.scenes.length && `${c.scenes.length} scene${c.scenes.length === 1 ? "" : "s"}`, c.illustrator]
-              .filter(Boolean).join(" · ")}</span>
-          </Link>
+          <CardTile key={c.id} card={c} detail={[c.union, c.scenes.length && `${c.scenes.length} scene${c.scenes.length === 1 ? "" : "s"}`, c.illustrator]
+            .filter(Boolean).join(" · ")} />
         ))}
       </div>
     </div>
+  );
+}
+
+/** A card in a list: its face, name, title and one line of detail. */
+export function CardTile({ card: c, detail }: { card: ArenaCard; detail?: string }) {
+  const lang = useLang();
+  return (
+    <Link className="quest-card card-tile" to={`/cards/${c.id}`}>
+      <FallbackImage srcs={[cardIconUrl(c.id)]} alt="" loading="lazy" width={56} height={56} missingClassName="card-tile-noicon" />
+      <span className="card-tile-text">
+        <span className="quest-card-title" lang="ja"><RarityIcon rarity={c.rarity} height={14} /> {tr(c.name, lang) || c.id}</span>
+        {c.title && <span className="muted" lang="ja">{tr(c.title, lang)}</span>}
+        {detail && <span className="muted">{detail}</span>}
+      </span>
+    </Link>
   );
 }
 
@@ -73,7 +85,8 @@ export function CardDetail() {
       <Breadcrumbs items={[{ label: "Arena cards", href: "#/cards" }, { label: name }]} />
       <div className="battles-head">
         <div>
-          <h1 lang="ja"><RarityIcon rarity={card.rarity} height={18} /> {name}</h1>
+          <h1 lang="ja" className="card-head"><img src={cardIconUrl(card.id)} alt="" width={64} height={64} />
+            <RarityIcon rarity={card.rarity} height={18} /> {name}</h1>
           {card.title && <p className="muted" lang="ja">{tr(card.title, lang)}</p>}
         </div>
       </div>

@@ -27,3 +27,9 @@
 .event-info p { margin: 0; }
 .luck-rewards summary, .event-info summary { cursor: pointer; font-size: 13px; font-weight: 600; margin: 4px 0; }
 .boss-point { margin-right: 10px; }
+.card-tile { grid-template-columns: 56px minmax(0, 1fr); align-items: center; column-gap: 10px; }
+.card-tile > img, .card-tile-noicon { width: 56px; height: 56px; border-radius: 6px; }
+.card-tile-noicon { background: var(--hub-border, #2a2e3b); }
+.card-tile-text { display: grid; gap: 2px; min-width: 0; }
+.card-head { display: flex; align-items: center; gap: 10px; }
+.card-head img { border-radius: 8px; }
