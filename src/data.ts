@@ -11,9 +11,19 @@ export interface Text { ja: string; en?: string }
 /** A decoded effect line (tools/web_export/effects.py); icon names a Battle_status_icon_*.
  *  `when` marks a conditional part of the skill: one of its variants ("2+ Oni
  *  allies", "25% chance") or its extra action at the end of the turn. */
-export interface Effect { text: string; icon?: string; when?: string }
+export interface Effect {
+  text: string; icon?: string; when?: string;
+  /** battle system the effect goes through, which decides how it stacks (see STACK) */
+  tag?: StackTag;
+  /** for a state: its stacking group (BattleUnit.AddStateEffect) */
+  stack?: string;
+}
+export type StackTag = "buff" | "debuff" | "buffslot" | "debuffslot" | "trait" | "state" | "shield" | "ailment" | "marker" | "instant"
+  | "mode" | "modifier" | "passive" | "other";
 
 export interface UnitIndexEntry {
+  /** other English spellings of the name (wiki redirects, older spellings), for search */
+  aliases?: string[];
   id: string;
   name: Text | null;
   title: Text | null;
@@ -31,6 +41,8 @@ export interface UnitIndexEntry {
   family: string;
   /** acquisition tags: Standard, Pickup, Limited, Festival, Collab, Raid event, ... */
   obtain: string[];
+  /** has a Live2D skin (UnitSkins) */
+  skin?: boolean;
 }
 
 export type StatKey = "hp" | "sp" | "atk" | "def" | "spd" | "luck";
@@ -53,6 +65,8 @@ export interface UnitForm {
   stats: Record<StatKey, [number, number]>;
   spCharge: number;
   skills: string[];
+  /** mode switches (SwapSkillCommand): the kit after skill `by` is used */
+  modes?: { by: string; skills: string[] }[];
   /** items that evolve this form into the next (UnitEvolutionItems), where the data lists them */
   evolve?: [string, number][];
 }
@@ -79,7 +93,7 @@ export interface ObtainEntry {
   upcoming?: boolean;
 }
 
-export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain"> {
+export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain" | "skin"> {
   obtain: ObtainEntry[];
   standardPool: boolean;
   root: string;

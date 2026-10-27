@@ -39,6 +39,7 @@ export default function UnitList() {
   const traitF = csv("trait");
   const sourceF = csv("source");
   const showUpcoming = params.get("upcoming") === "1";
+  const skinF = params.get("skin") === "1";
   const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(params);
     if (v) next.set(k, v); else next.delete(k);
@@ -58,7 +59,8 @@ export default function UnitList() {
       (!elementF.length || (u.element && elementF.includes(u.element))) &&
       (!traitF.length || traitF.some((t) => u.traits.includes(t))) &&
       (!sourceF.length || sourceF.some((t) => u.obtain.includes(t))) &&
-      (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja])));
+      (!skinF || !!u.skin) &&
+      (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja, ...(u.aliases ?? [])])));
     const by: Record<string, (a: UnitIndexEntry, b: UnitIndexEntry) => number> = {
       release: (a, b) => (b.release || "").localeCompare(a.release || "") || b.id.localeCompare(a.id),
       rarity: (a, b) => b.rarity - a.rarity || b.id.localeCompare(a.id),
@@ -66,10 +68,11 @@ export default function UnitList() {
     };
     const cmp = by[sort] || ((a: UnitIndexEntry, b: UnitIndexEntry) => (b.stats[sort as "atk"] || 0) - (a.stats[sort as "atk"] || 0));
     return [...list].sort(cmp);
-  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), sourceF.join(), showUpcoming]);
+  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), sourceF.join(), showUpcoming, skinF]);
 
   const pages = Math.max(1, Math.ceil(shown.length / PAGE));
-  const active = rarityF.length + elementF.length + traitF.length + sourceF.length + (showUpcoming ? 1 : 0);
+  const active = rarityF.length + elementF.length + traitF.length + sourceF.length + (showUpcoming ? 1 : 0) + (skinF ? 1 : 0);
+  const skinCount = useMemo(() => (units || []).filter((u) => u.skin).length, [units]);
   const upcomingCount = useMemo(() => (units || []).filter(isUpcoming).length, [units]);
 
   return (
@@ -96,6 +99,10 @@ export default function UnitList() {
             selected={traitF} onToggle={(v) => toggle("trait", traitF, v)} />
           <CheckboxGroup title="Source" options={SOURCES.filter((s) => units?.some((u) => u.obtain.includes(s.value)))}
             selected={sourceF} onToggle={(v) => toggle("source", sourceF, v)} />
+          {skinCount > 0 && (
+            <CheckboxGroup title="Extras" options={[{ value: "1", label: `Has a skin (${skinCount})` }]}
+              selected={skinF ? ["1"] : []} onToggle={() => setParam("skin", skinF ? null : "1")} />
+          )}
           {upcomingCount > 0 && (
             <CheckboxGroup title="Release" options={[{ value: "1", label: `Upcoming (${upcomingCount})` }]}
               selected={showUpcoming ? ["1"] : []} onToggle={() => setParam("upcoming", showUpcoming ? null : "1")} />

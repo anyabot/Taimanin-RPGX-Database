@@ -155,12 +155,28 @@ export class SceneArt {
   /** Scene voices are direct downloads, one folder per scene (the exporter
    *  names it: Adv/Voice_r18/<scene> for R18 scripts, Adv/Voice/<scene> else). */
   voiceUrl(name: string) {
-    const folder = this.doc.voice ?? `Adv/Voice_r18/${this.doc.id.replace(/_r18$/, "")}`;
+    let folder = this.doc.voice ?? `Adv/Voice_r18/${this.doc.id.replace(/_r18$/, "")}`;
+    // A script can reuse another scene's lines (chr_5008_3 plays
+    // chr_5008_2_0000_r18): those live in that scene's folder, named by the
+    // line itself.
+    const owner = name.match(/^(.+?)_\d{4}(?:_r18)?$/)?.[1];
+    if (owner && !folder.endsWith(`/${owner}`)) folder = `${folder.slice(0, folder.lastIndexOf("/"))}/${owner}`;
     return `${DIRECT_ROOT}/${folder}/${name}.ogg`;
   }
 
-  /** Everything a beat shows, for prefetching. Errors are left to the beat. */
-  prefetch(b: { bg: string | null; ev: string | null; actors: { name: string }[]; spine: string | null }) {
+  /** A voice line downloaded in full, as a blob URL, so a beat can wait for
+   *  it and start it together with its picture. */
+  voice(name: string): Promise<string> {
+    return this.once(`voice:${name}`, async () => {
+      const res = await fetch(this.voiceUrl(name));
+      if (!res.ok) throw new Error(`voice ${name}: HTTP ${res.status}`);
+      return URL.createObjectURL(await res.blob());
+    });
+  }
+
+  /** Everything a beat shows or plays, for prefetching. Errors are left to the beat. */
+  prefetch(b: { bg: string | null; ev: string | null; actors: { name: string }[]; spine: string | null; voice?: string | null }) {
+    if (b.voice) this.voice(b.voice).catch(() => {});
     if (b.bg) this.bg(b.bg).catch(() => {});
     if (b.ev) this.ev(b.ev).catch(() => {});
     for (const a of b.actors) if (this.doc.actors[a.name]) this.actor(a.name).catch(() => {});

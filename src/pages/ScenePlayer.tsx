@@ -98,6 +98,9 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   const [auto, setAuto] = useState(false);
   const [muted, setMuted] = useState(() => { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } });
   const [fx, setFx] = useState({ flash: 0, quake: 0 });
+  // the current beat's voice, downloaded; cues wait for it (and the picture)
+  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+  const stepped = useRef(false);
   const voice = useRef<HTMLAudioElement | null>(null);
   const bgm = useRef<{ name: string; el: HTMLAudioElement } | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -145,6 +148,8 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
     setBusy(true);
     const lost: string[] = [];
     const soft = <T,>(p: Promise<T>, what: string) => p.catch((e) => { console.warn(what, e); lost.push(what); return null; });
+    // the voice is downloaded before the beat is shown, so both start together
+    const line = b.voice && !muted ? soft(art.voice(b.voice), `voice ${b.voice}`) : Promise.resolve(null);
     Promise.all([
       b.bg ? soft(art.bg(b.bg), `background ${b.bg}`) : null,
       b.ev && doc.ev[b.ev] ? soft(art.ev(b.ev), `CG ${b.ev}`) : null,
@@ -153,8 +158,10 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
         const url = await soft(art.actor(a.name), `actor ${a.name}`);
         return url ? { slot: a.slot, x: a.x, url } : null;
       })),
-    ]).then(([bg, ev, actors]) => {
+      line,
+    ]).then(([bg, ev, actors, voiceUrl]) => {
       if (!live) return;
+      setVoiceUrl(voiceUrl);
       if (b.ev && !doc.ev[b.ev]) lost.push(`CG ${b.ev}`);
       setShown({ bg, ev, actors: actors.filter((a): a is Shown["actors"][number] => !!a) });
       setMissing(lost);
@@ -164,21 +171,25 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
     return () => { live = false; };
   }, [b, art, doc]);
 
-  // One-shot cues only when stepping forward onto a beat, never when jumping.
+  // One-shot cues only when stepping forward onto a beat, never when jumping,
+  // and only once the beat is on screen (its picture and voice loaded).
   useEffect(() => {
-    const stepped = i === prev.current + 1;
+    stepped.current = i === prev.current + 1;
     prev.current = i;
     voice.current?.pause();
     voice.current = null;
-    if (!stepped) return;
-    if (b.voice && !muted) {
-      const a = new Audio(art.voiceUrl(b.voice));
+  }, [i]);
+  useEffect(() => {
+    if (busy || !stepped.current) return;
+    stepped.current = false;
+    if (b.voice && !muted && voiceUrl) {
+      const a = new Audio(voiceUrl);
       voice.current = a;
       a.play().catch(() => {});
     }
     if (!muted) for (const s of b.se) art.seClip(s).then((url) => { const a = new Audio(url); a.volume = 0.6; a.play().catch(() => {}); }, () => {});
     if (b.flash || b.quake) setFx((f) => ({ flash: f.flash + (b.flash ? 1 : 0), quake: f.quake + (b.quake ? 1 : 0) }));
-  }, [i]);
+  }, [busy, i]);
 
   // Music follows the beat in either direction.
   useEffect(() => {
