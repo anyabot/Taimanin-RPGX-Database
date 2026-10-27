@@ -112,59 +112,61 @@ img.element-icon { width: var(--icon-w, 20px); height: var(--icon-w, 20px); max-
 .scene-siblings { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 /* The ADV stage: a 1280x720 space scaled to fit. Backgrounds fill it, CGs are
    a 960x720 frame pillarboxed in it, actors a 1280x760 canvas anchored to the
-   bottom at LEFT 25% / CENTER 50% / RIGHT 75%. */
+   bottom at LEFT 25% / CENTER 50% / RIGHT 75%.
+   Class prefix scn-, never adv-: ad-block lists hide ".adv-*" site-wide
+   (EasyList has ##.adv-text), which made the dialogue box vanish. */
 .scene-player { container: player / inline-size; }
-.adv-frame { position: relative; width: min(100%, calc((100vh - 220px) * 16 / 9)); min-width: 280px; margin: 0 auto;
+.scn-frame { position: relative; width: min(100%, calc((100vh - 220px) * 16 / 9)); min-width: 280px; margin: 0 auto;
   container-type: inline-size; cursor: pointer; user-select: none; }
-.adv-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; overflow: hidden; border-radius: 6px; }
-.adv-stage > img { position: absolute; display: block; pointer-events: none; }
-.adv-bg { inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.adv-ev { inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
-.adv-actor { bottom: 0; height: 105.56%; aspect-ratio: 1280 / 760; left: 50%; transform: translateX(-50%); }
-.adv-actor.x-LEFT { left: 25%; } .adv-actor.x-RIGHT { left: 75%; }
+.scn-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; overflow: hidden; border-radius: 6px; }
+.scn-stage > img { position: absolute; display: block; pointer-events: none; }
+.scn-bg { inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scn-ev { inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+.scn-actor { bottom: 0; height: 105.56%; aspect-ratio: 1280 / 760; left: 50%; transform: translateX(-50%); }
+.scn-actor.x-LEFT { left: 25%; } .scn-actor.x-RIGHT { left: 75%; }
 /* Dialogue over the picture... */
-.adv-text { position: absolute; left: 4%; right: 4%; bottom: 3%; min-height: 22%; padding: 1.4cqw 2.2cqw; border-radius: 1cqw;
+.scn-text { position: absolute; left: 4%; right: 4%; bottom: 3%; min-height: 22%; padding: 1.4cqw 2.2cqw; border-radius: 1cqw;
   background: #0a0b10cc; color: #fff; font-size: max(12px, 2.1cqw); line-height: 1.5; }
-.adv-text.off { display: none; }
-.adv-name { font-weight: 700; color: #f6c445; margin-bottom: .3em; }
-.adv-line { white-space: pre-line; }
+.scn-text.off { display: none; }
+.scn-name { font-weight: 700; color: #f6c445; margin-bottom: .3em; }
+.scn-line { white-space: pre-line; }
 /* ...and under it on a narrow player, where overlaid text would cover the CG:
    a fixed height for 4 lines + name, so the controls do not jump per line. */
 @container player (max-width: 640px) {
-  .adv-text { position: static; margin-top: 8px; min-height: calc(5 * 1.5em + 20px); padding: 10px 12px; border-radius: 8px;
+  .scn-text { position: static; margin-top: 8px; min-height: calc(5 * 1.5em + 20px); padding: 10px 12px; border-radius: 8px;
     font-size: 14px; color: inherit; background: var(--hub-surface, #1a1d27); border: 1px solid var(--hub-border, #2a2e3b); }
-  .adv-text.off { display: block; visibility: hidden; }
+  .scn-text.off { display: block; visibility: hidden; }
 }
 /* Theater: the player fills the screen, the frame fits what is left after the controls. */
 .scene-player.theater { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; flex-direction: column;
   justify-content: center; overflow: auto;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-.scene-player.theater .adv-frame { width: min(100vw, calc((100dvh - 64px) * 16 / 9)); min-width: 0; }
-.scene-player.theater .adv-stage { border-radius: 0; }
-.scene-player.theater .adv-controls { width: min(100%, 1280px); max-width: none; margin: 8px auto 0; padding: 0 8px; }
-.scene-player.theater .adv-help, .scene-player.theater .adv-missing { display: none; }
+.scene-player.theater .scn-frame { width: min(100vw, calc((100dvh - 64px) * 16 / 9)); min-width: 0; }
+.scene-player.theater .scn-stage { border-radius: 0; }
+.scene-player.theater .scn-controls { width: min(100%, 1280px); max-width: none; margin: 8px auto 0; padding: 0 8px; }
+.scene-player.theater .scn-help, .scene-player.theater .scn-missing { display: none; }
 @container player (max-width: 640px) {
-  .scene-player.theater .adv-frame { width: 100%; }
-  .scene-player.theater .adv-text { margin: 8px; color: #fff; background: #15171f; border-color: #2a2e3b; }
+  .scene-player.theater .scn-frame { width: 100%; }
+  .scene-player.theater .scn-text { margin: 8px; color: #fff; background: #15171f; border-color: #2a2e3b; }
 }
-html.adv-theater-open { overflow: hidden; }
-.adv-flash { position: absolute; inset: 0; background: #fff; pointer-events: none; animation: adv-flash .9s ease-out forwards; }
-@keyframes adv-flash { from { opacity: .95; } to { opacity: 0; } }
-.adv-stage.quake-0 { animation: adv-quake-a .4s; } .adv-stage.quake-1 { animation: adv-quake-b .4s; }
-@keyframes adv-quake-a { 0%, 100% { transform: none; } 25% { transform: translateY(-1.2%); } 50% { transform: translateY(1%); } 75% { transform: translateY(-.5%); } }
-@keyframes adv-quake-b { 0%, 100% { transform: none; } 25% { transform: translateY(-1.2%); } 50% { transform: translateY(1%); } 75% { transform: translateY(-.5%); } }
-.adv-busy { position: absolute; top: 8px; right: 10px; font-size: 12px; color: #fffc; background: #0008; padding: 2px 8px; border-radius: 6px; }
-.adv-note { position: absolute; top: 8px; left: 10px; right: 90px; font-size: 12px; color: #fff; background: #000a; padding: 4px 8px; border-radius: 6px; }
-.adv-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px auto; max-width: max(280px, calc((100vh - 220px) * 16 / 9)); }
-.adv-controls input[type=range] { flex: 1; min-width: 120px; }
-.adv-count { font-variant-numeric: tabular-nums; font-size: 13px; }
-@media (prefers-reduced-motion: reduce) { .adv-stage.quake-0, .adv-stage.quake-1 { animation: none; } .adv-flash { animation-duration: .2s; } }
+html.scn-theater-open { overflow: hidden; }
+.scn-flash { position: absolute; inset: 0; background: #fff; pointer-events: none; animation: scn-flash .9s ease-out forwards; }
+@keyframes scn-flash { from { opacity: .95; } to { opacity: 0; } }
+.scn-stage.quake-0 { animation: scn-quake-a .4s; } .scn-stage.quake-1 { animation: scn-quake-b .4s; }
+@keyframes scn-quake-a { 0%, 100% { transform: none; } 25% { transform: translateY(-1.2%); } 50% { transform: translateY(1%); } 75% { transform: translateY(-.5%); } }
+@keyframes scn-quake-b { 0%, 100% { transform: none; } 25% { transform: translateY(-1.2%); } 50% { transform: translateY(1%); } 75% { transform: translateY(-.5%); } }
+.scn-busy { position: absolute; top: 8px; right: 10px; font-size: 12px; color: #fffc; background: #0008; padding: 2px 8px; border-radius: 6px; }
+.scn-note { position: absolute; top: 8px; left: 10px; right: 90px; font-size: 12px; color: #fff; background: #000a; padding: 4px 8px; border-radius: 6px; }
+.scn-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px auto; max-width: max(280px, calc((100vh - 220px) * 16 / 9)); }
+.scn-controls input[type=range] { flex: 1; min-width: 120px; }
+.scn-count { font-variant-numeric: tabular-nums; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .scn-stage.quake-0, .scn-stage.quake-1 { animation: none; } .scn-flash { animation-duration: .2s; } }
 .art-actions { position: absolute; right: 8px; bottom: 8px; opacity: 0; transition: opacity .15s; }
 .art-item:hover .art-actions, .art-item:focus-within .art-actions { opacity: 1; }
 @media (hover: none) { .art-actions { opacity: 1; } }
 .art-download { text-decoration: none; font-size: 12px; }
-.adv-spine { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-.adv-spine[hidden] { display: none; }
+.scn-spine { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.scn-spine[hidden] { display: none; }
 .buff-filters { margin: 8px 0 12px; }
 .buff-filters summary { cursor: pointer; font-size: 13px; }
 .buff-filter-grid { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; margin-top: 8px; }

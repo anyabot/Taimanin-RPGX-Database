@@ -47,19 +47,19 @@ for (const c of CASES) {
     const route = c.story ? `story/${c.story}` : `scenes/${c.scene}${c.unit ? `?unit=${c.unit}` : ""}`;
     c.scene ??= c.story;
     await cdp.goto(`${SITE}/#/${route}`, `!!document.querySelector(".app")`);
-    await waitFor(() => cdp.eval(`return !!document.querySelector(".adv-stage") || /error|not/i.test(document.querySelector(".scene-page")?.innerText || "")`), 60000, "stage");
+    await waitFor(() => cdp.eval(`return !!document.querySelector(".scn-stage") || /error|not/i.test(document.querySelector(".scene-page")?.innerText || "")`), 60000, "stage");
     const loaded = Date.now() - t0;
     for (const beat of c.beats) {
-      await cdp.eval(`const r = document.querySelector(".adv-controls input[type=range]");
+      await cdp.eval(`const r = document.querySelector(".scn-controls input[type=range]");
         const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
         set.call(r, ${beat}); r.dispatchEvent(new Event("input", { bubbles: true })); return true`);
-      await waitFor(() => cdp.eval(`return !document.querySelector(".adv-busy") && !/Loading animation/.test(document.querySelector(".adv-stage")?.innerText || "")`), 90000, `beat ${beat}`);
+      await waitFor(() => cdp.eval(`return !document.querySelector(".scn-busy") && !/Loading animation/.test(document.querySelector(".scn-stage")?.innerText || "")`), 90000, `beat ${beat}`);
       await new Promise((r) => setTimeout(r, 400));
-      const info = await cdp.eval(`const s = document.querySelector(".adv-stage");
-        const sp = s.querySelector(".adv-spine");
+      const info = await cdp.eval(`const s = document.querySelector(".scn-stage");
+        const sp = s.querySelector(".scn-spine");
         return { imgs: [...s.querySelectorAll("img")].map(i => i.className + ":" + (i.naturalWidth > 0)),
-          spine: sp && !sp.hidden ? "shown" : "-", note: s.querySelector(".adv-note")?.innerText || "",
-          text: (document.querySelector(".adv-line")?.innerText || "").slice(0, 30), count: document.querySelector(".adv-count")?.innerText,
+          spine: sp && !sp.hidden ? "shown" : "-", note: s.querySelector(".scn-note")?.innerText || "",
+          text: (document.querySelector(".scn-line")?.innerText || "").slice(0, 30), count: document.querySelector(".scn-count")?.innerText,
           missing: document.querySelector(".scene-player > p.small")?.innerText || "" }`);
       await cdp.shot(path.join(OUT, `${c.scene}_${beat}.png`), false);
       console.log(`ok   ${c.scene} beat ${beat} (script ready in ${loaded} ms)`, JSON.stringify(info));

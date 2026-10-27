@@ -128,8 +128,8 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   }, []);
   useEffect(() => {
     if (!theater) return;
-    document.documentElement.classList.add("adv-theater-open");
-    return () => document.documentElement.classList.remove("adv-theater-open");
+    document.documentElement.classList.add("scn-theater-open");
+    return () => document.documentElement.classList.remove("scn-theater-open");
   }, [theater]);
   const b = beats[Math.min(i, beats.length - 1)];
 
@@ -234,35 +234,35 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
     <div ref={playerRef} className={`scene-player${theater ? " theater" : ""}`}>
       {/* The frame holds the stage and the dialogue: over the picture on wide
           screens, under it on narrow ones (container query on .scene-player). */}
-      <div className="adv-frame" onClick={forward} role="button" tabIndex={0} aria-label="Next line">
-      <div ref={stageRef} className={`adv-stage${fx.quake ? ` quake-${fx.quake % 2}` : ""}`}>
-        {shown.bg && <img className="adv-bg" src={shown.bg} alt="" />}
-        {shown.actors.map((a) => <img key={a.slot} className={`adv-actor x-${a.x}`} src={a.url} alt="" />)}
+      <div className="scn-frame" onClick={forward} role="button" tabIndex={0} aria-label="Next line">
+      <div ref={stageRef} className={`scn-stage${fx.quake ? ` quake-${fx.quake % 2}` : ""}`}>
+        {shown.bg && <img className="scn-bg" src={shown.bg} alt="" />}
+        {shown.actors.map((a) => <img key={a.slot} className={`scn-actor x-${a.x}`} src={a.url} alt="" />)}
         {/* The 960x720 CG frame, pillarboxed over everything below it. */}
-        {shown.ev && <img className="adv-ev" src={shown.ev} alt="" />}
-        {fx.flash > 0 && <div key={fx.flash} className="adv-flash" />}
+        {shown.ev && <img className="scn-ev" src={shown.ev} alt="" />}
+        {fx.flash > 0 && <div key={fx.flash} className="scn-flash" />}
         {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} />}
-        {busy && <div className="adv-busy" aria-live="polite" translate="no">Loading…</div>}
+        {busy && <div className="scn-busy" aria-live="polite" translate="no">Loading…</div>}
       </div>
         {/* The box stays mounted (an empty one holds its place under the picture);
             its content is keyed per line: page translators (Chrome, Edge) swap
             text nodes for their own elements, so React's in-place update of the
             old node would never show. A fresh element per line is translated anew. */}
-        <div className={`adv-text${textOn ? "" : " off"}`} lang="ja">
+        <div className={`scn-text${textOn ? "" : " off"}`} lang="ja">
           {textOn && (
             <div key={i}>
-              {b.name && <div className="adv-name">{b.name}</div>}
-              <div className="adv-line">{b.text}</div>
+              {b.name && <div className="scn-name">{b.name}</div>}
+              <div className="scn-line">{b.text}</div>
             </div>
           )}
         </div>
       </div>
-      <div className="adv-controls" translate="no">
+      <div className="scn-controls" translate="no">
         <button className="hub-btn" onClick={() => go(i - 1)} disabled={i === 0} aria-label="Previous line">‹</button>
         <input type="range" min={0} max={beats.length - 1} value={i} onChange={(e) => go(Number(e.target.value))}
           aria-label="Position in scene" />
         <button className="hub-btn" onClick={forward} disabled={i >= beats.length - 1 && !next} aria-label="Next line">›</button>
-        <span className="adv-count muted">{i + 1} / {beats.length}</span>
+        <span className="scn-count muted">{i + 1} / {beats.length}</span>
         <button className="hub-btn" aria-pressed={auto} onClick={() => setAuto((v) => !v)}>{auto ? "Auto ■" : "Auto ▶"}</button>
         <button className="hub-btn" aria-pressed={muted} onClick={() => setMuted((v) => !v)}>{muted ? "Sound off" : "Sound on"}</button>
         <button className="hub-btn" aria-pressed={hideText} onClick={() => setHideText((v) => !v)}>{hideText ? "Show text" : "Hide text"}</button>
@@ -273,8 +273,8 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
             title="Play the animated CGs, or show the still images instead">{animate ? "Animation on" : "Animation off"}</button>
         )}
       </div>
-      {missing.length > 0 && <p className="muted small adv-missing" translate="no">Not available for this line: {missing.join(", ")}</p>}
-      <p className="muted small adv-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; F for theater.
+      {missing.length > 0 && <p className="muted small scn-missing" translate="no">Not available for this line: {missing.join(", ")}</p>}
+      <p className="muted small scn-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; F for theater.
         Dialogue is the game's Japanese text (your browser's page translation works on it).</p>
     </div>
   );
@@ -304,9 +304,9 @@ function SpineLayer({ art, doc, model, animation }: { art: SceneArt; doc: SceneD
   }, [model, animation, art, doc]);
   return (
     <>
-      <canvas ref={canvas} className="adv-spine" hidden={!model || shown !== model} />
-      {state === "loading" && <div className="adv-note" translate="no">Loading animation…</div>}
-      {state === "error" && <div className="adv-note" translate="no">This animated CG could not be loaded; showing the stills.</div>}
+      <canvas ref={canvas} className="scn-spine" hidden={!model || shown !== model} />
+      {state === "loading" && <div className="scn-note" translate="no">Loading animation…</div>}
+      {state === "error" && <div className="scn-note" translate="no">This animated CG could not be loaded; showing the stills.</div>}
     </>
   );
 }
