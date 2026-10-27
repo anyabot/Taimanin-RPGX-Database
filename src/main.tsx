@@ -8,6 +8,7 @@ import UnitDetail from "./pages/UnitDetail";
 import Runes from "./pages/Runes";
 import Buffs from "./pages/Buffs";
 import Statuses from "./pages/Statuses";
+import PeopleIndex, { PersonPage } from "./pages/People";
 import StoryList from "./pages/StoryList";
 import StoryBattles from "./pages/StoryBattles";
 import QuestList, { QuestBattles } from "./pages/Quests";
@@ -42,6 +43,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="runes" element={<Runes />} />
           <Route path="buffs" element={<Buffs />} />
           <Route path="statuses" element={<Statuses />} />
+          <Route path="people" element={<PeopleIndex />} />
+          <Route path="people/:role/:name" element={<PersonPage />} />
           {import.meta.env.DEV && <Route path="lab" element={<DecoderLab />} />}
         </Route>
       </Routes>

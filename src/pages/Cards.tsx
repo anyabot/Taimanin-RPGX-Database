@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { RARITY, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
-import { RarityIcon } from "../components";
+import { CreditLinks, RarityIcon } from "../components";
 import { ArtGallery, SceneStills } from "../art";
 import type { SceneDoc } from "../adv";
 
@@ -80,8 +80,8 @@ export function CardDetail() {
       <Panel title="Card">
         <dl className="credits">
           {card.union && <><dt>Union</dt><dd>{card.union}</dd></>}
-          {card.illustrator && <><dt>Illustrator</dt><dd>{card.illustrator}</dd></>}
-          {card.voiceActor && <><dt>Voice</dt><dd>{card.voiceActor}</dd></>}
+          {card.illustrator && <><dt>Illustrator</dt><dd><CreditLinks raw={card.illustrator} role="artist" /></dd></>}
+          {card.voiceActor && <><dt>Voice</dt><dd><CreditLinks raw={card.voiceActor} role="cv" /></dd></>}
           {card.sale && <><dt>On sale from</dt><dd>{card.sale}</dd></>}
         </dl>
       </Panel>

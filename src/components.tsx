@@ -1,6 +1,7 @@
 // Game-icon building blocks. The images are cut from the game's own UI atlas
 // by tools/web_export/tables.py (public/ui).
 import { ELEMENTS, RARITY, type Effect, type StackTag } from "./data";
+import { credits, personHref, type Role } from "./people";
 import "./stack.css";
 
 const ui = (name: string) => `${import.meta.env.BASE_URL}ui/${name}.webp`;
@@ -115,3 +116,11 @@ const STATE_GROUP_LABEL: Record<string, string> = {
   darkblade: "Darkness Blade",
   own: "Others (SP cost changes, bleed, frozen, guts …)",
 };
+
+/** A credit as links to each person it names ("A & B", "A (original design: B)"). */
+export function CreditLinks({ raw, role }: { raw: string; role: Role }) {
+  const list = credits(raw, role);
+  return <span lang="ja">{list.map((c, i) => (
+    <span key={c.key}>{i > 0 && (c.note ? " · " : " & ")}<a href={personHref(role, c.name)}>{c.name}</a>{(c.note || c.aside) && <span className="muted"> ({c.note || c.aside})</span>}</span>
+  ))}</span>;
+}

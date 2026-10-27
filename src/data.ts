@@ -47,10 +47,6 @@ export interface UnitIndexEntry {
   voiceActor?: string | null;
 }
 
-/** The people in a voice credit: a duo is written "A&B". */
-export const voiceActors = (credit: string | null | undefined) =>
-  (credit || "").split("&").map((s) => s.trim()).filter(Boolean);
-
 export type StatKey = "hp" | "sp" | "atk" | "def" | "spd" | "luck";
 
 export interface Skill {
