@@ -1,0 +1,16 @@
+/* Stacking badges on effect lines (see STACK in components.tsx) */
+.stack-badge {
+  display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 9px;
+  border: 1px solid var(--hub-border); font-size: 11px; line-height: 17px; white-space: nowrap;
+  vertical-align: 1px; cursor: help;
+}
+.stack-badge.buff, .stack-badge.debuffslot { border-color: var(--hub-good, #3fb950); color: var(--hub-good, #3fb950); }
+.stack-badge.debuff, .stack-badge.buffslot, .stack-badge.ailment { border-color: var(--hub-bad, #f0606a); color: var(--hub-bad, #f0606a); }
+.stack-badge.trait, .stack-badge.state, .stack-badge.shield { border-color: var(--hub-accent); color: var(--hub-accent); }
+.stack-badge.instant, .stack-badge.modifier, .stack-badge.mode, .stack-badge.marker,
+.stack-badge.passive, .stack-badge.other { opacity: .75; }
+.stack-rules { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.stack-rules li { display: grid; grid-template-columns: 112px 1fr; gap: 8px; align-items: baseline; }
+@media (max-width: 520px) { .stack-rules li { grid-template-columns: 1fr; gap: 2px; } }
+.stack-help { margin: 8px 0 12px; font-size: 13px; }
+.stack-help summary { cursor: pointer; color: var(--hub-accent); margin-bottom: 8px; }

@@ -11,7 +11,15 @@ export interface Text { ja: string; en?: string }
 /** A decoded effect line (tools/web_export/effects.py); icon names a Battle_status_icon_*.
  *  `when` marks a conditional part of the skill: one of its variants ("2+ Oni
  *  allies", "25% chance") or its extra action at the end of the turn. */
-export interface Effect { text: string; icon?: string; when?: string }
+export interface Effect {
+  text: string; icon?: string; when?: string;
+  /** battle system the effect goes through, which decides how it stacks (see STACK) */
+  tag?: StackTag;
+  /** for a state: its stacking group (BattleUnit.AddStateEffect) */
+  stack?: string;
+}
+export type StackTag = "buff" | "debuff" | "buffslot" | "debuffslot" | "trait" | "state" | "shield" | "ailment" | "marker" | "instant"
+  | "mode" | "modifier" | "passive" | "other";
 
 export interface UnitIndexEntry {
   /** other English spellings of the name (wiki redirects, older spellings), for search */

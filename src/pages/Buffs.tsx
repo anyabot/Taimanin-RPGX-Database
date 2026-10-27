@@ -2,7 +2,8 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckboxGroup, FallbackImage, FilterChip, FilterRow, GroupCard, LoadState, PageHeader } from "@altterisk/game-hub";
 import { ELEMENTS, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
-import { ElementIcon, RarityIcon } from "../components";
+import { ElementIcon, RarityIcon, StackBadge, StackRules } from "../components";
+import type { StackTag } from "../data";
 
 /** One row of public/data/buffs.json (tools/web_export/buffs.py). */
 interface BuffRow {
@@ -18,6 +19,11 @@ interface BuffRow {
   s: "attack" | "skill1" | "skill2" | "ultimate" | "leader";
   n?: string;
   x: string;
+  /** other durations of the same buff in another variant of the skill: [turns, condition] */
+  alt?: [number, string][];
+  /** stacking tag and state group of the effect line (see STACK) */
+  g?: StackTag;
+  gs?: string;
 }
 
 const CATEGORIES = [
@@ -147,6 +153,10 @@ export default function Buffs() {
     <div className="buffs-page">
       <PageHeader title="Buff ranking"
         subtitle="Who gives the biggest effect, by type and target. Values come from each unit's top form; one row per unit (its best)." />
+      <details className="stack-help">
+        <summary>How effects stack</summary>
+        <StackRules />
+      </details>
       <FilterRow label="Type">
         {CATEGORIES.map((c) => (
           <FilterChip key={c.k} active={c.k === cat} count={unitsIn(byCat.get(c.k) || [])}
@@ -213,7 +223,8 @@ export default function Buffs() {
                     return (
                       <tr key={`${r.u}-${i}`}>
                         <td data-label="#" className="muted">{i + 1}</td>
-                        <td data-label="Value" className="buff-val" title={r.x}><strong>{fmtValue(r)}</strong></td>
+                        <td data-label="Value" className="buff-val" title={r.x}><strong>{fmtValue(r)}</strong>
+                          {r.g && <div><StackBadge tag={r.g} stack={r.gs} /></div>}</td>
                         <td data-label="Unit">
                           <Link className="buff-unit" to={`/units/${r.u}?tab=${r.s === "leader" ? "leader" : "skills"}`}>
                             <FallbackImage srcs={[iconUrl(r.u)]} alt="" width={36} height={36} loading="lazy" missingClassName="buff-noicon" />
@@ -224,7 +235,8 @@ export default function Buffs() {
                           </Link>
                         </td>
                         <td data-label="Target" className="buff-target">{target(r)}{r.n && <div className="muted small">{r.n}</div>}</td>
-                        <td data-label="Duration" className="muted">{fmtTurns(r)}</td>
+                        <td data-label="Duration" className="muted">{fmtTurns(r)}
+                          {r.alt?.map(([t, n]) => <div key={n} className="small">{fmtTurns({ ...r, t })}: {n}</div>)}</td>
                         <td data-label="Source" className="muted">{SOURCE_LABEL[r.s]}</td>
                       </tr>
                     );
