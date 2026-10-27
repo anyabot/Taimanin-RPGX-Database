@@ -53,8 +53,6 @@ export function EffectList({ effects }: { effects: Effect[] }) {
 export const STACK: Record<StackTag, { label: string; rule: string }> = {
   buff: { label: "Buff", rule: "One buff per stat. A stronger one replaces it; an equal one replaces it only if it lasts longer; a weaker one is ignored. Trait buffs and states apply on top." },
   debuff: { label: "Debuff", rule: "One debuff per stat. A stronger one replaces it; an equal one replaces it only if it lasts longer; a weaker one is ignored." },
-  debuffslot: { label: "Debuff slot", rule: "Helps (lower is better here), but the game files a negative value as a debuff: it uses the stat's debuff slot with the debuff rules, and counts as a debuff for effects that remove debuffs." },
-  buffslot: { label: "Buff slot", rule: "Hurts (lower is better here), but the game files a positive value as a buff: it uses the stat's buff slot with the buff rules, and counts as a buff for effects that remove buffs." },
   trait: { label: "Trait buff", rule: "One per trait and stat, kept apart from plain buffs (both apply). An equal or stronger one replaces it." },
   state: { label: "State", rule: "One of each kind per unit." },
   shield: { label: "Shield", rule: "Not checked yet." },

@@ -18,7 +18,7 @@ export interface Effect {
   /** for a state: its stacking group (BattleUnit.AddStateEffect) */
   stack?: string;
 }
-export type StackTag = "buff" | "debuff" | "buffslot" | "debuffslot" | "trait" | "state" | "shield" | "ailment" | "marker" | "instant"
+export type StackTag = "buff" | "debuff" | "trait" | "state" | "shield" | "ailment" | "marker" | "instant"
   | "mode" | "modifier" | "passive" | "other";
 
 export interface UnitIndexEntry {
