@@ -8,6 +8,7 @@ import { SpineStage, spineRuntime } from "../spine";
 
 const MUTE_KEY = "taimanin.scene.muted";
 const SPINE_KEY = "taimanin.scene.spine";
+const PRELOAD_KEY = "taimanin.scene.preload";
 
 /** A scene played in the browser: a unit H-scene (#/scenes/:id) or a story
  *  part (#/story/:id). Script, CGs, actors, BGM, SE and voice all come from
@@ -95,6 +96,9 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   const [missing, setMissing] = useState<string[]>([]);
   const [hideText, setHideText] = useState(false);
   const [animate, setAnimate] = useState(() => { try { return localStorage.getItem(SPINE_KEY) !== "0"; } catch { return true; } });
+  // Text mode: every line in the page up front (page translators reach them all),
+  // or only the current line (for translators that handle new text themselves).
+  const [preload, setPreload] = useState(() => { try { return localStorage.getItem(PRELOAD_KEY) !== "0"; } catch { return true; } });
   const [auto, setAuto] = useState(false);
   const [muted, setMuted] = useState(() => { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } });
   const [fx, setFx] = useState({ flash: 0, quake: 0 });
@@ -213,6 +217,7 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   useEffect(() => () => { voice.current?.pause(); bgm.current?.el.pause(); }, []);
   useEffect(() => { try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch { /* private mode */ } }, [muted]);
   useEffect(() => { try { localStorage.setItem(SPINE_KEY, animate ? "1" : "0"); } catch { /* private mode */ } }, [animate]);
+  useEffect(() => { try { localStorage.setItem(PRELOAD_KEY, preload ? "1" : "0"); } catch { /* private mode */ } }, [preload]);
 
   // Auto: next beat when the voice ends, or after a pause scaled to the text.
   useEffect(() => {
@@ -255,18 +260,26 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
         {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} />}
         {busy && <div className="scn-busy" aria-live="polite" translate="no">Loading…</div>}
       </div>
-        {/* Every line of the scene is in the box from the start, stacked and
-            transparent but for the current one, and never re-rendered: page
-            translators (Chrome, Edge) translate them all up front and swap the
-            text nodes for their own, so stepping only changes which line shows.
-            Lines inserted one at a time were often left untranslated by Chrome. */}
-        <div className={`scn-text${textOn ? "" : " off"}`} lang="ja">
-          {beats.map((x, k) => (x.text || x.name) && (
+        {/* Preloaded: every line of the scene is in the box from the start,
+            stacked and transparent but for the current one, and never
+            re-rendered: page translators (Chrome, Edge) translate them all up
+            front and swap the text nodes for their own, so stepping only changes
+            which line shows. Lines inserted one at a time were often left
+            untranslated by Chrome.
+            Per line: only the current line, keyed so each is a fresh element
+            (an in-place update of a node a translator replaced would never show). */}
+        <div key={preload ? "all" : "one"} className={`scn-text${textOn ? "" : " off"}`} lang="ja">
+          {preload ? beats.map((x, k) => (x.text || x.name) && (
             <div key={k} className={`scn-say${k === i ? " on" : ""}`} aria-hidden={k !== i}>
               {x.name && <div className="scn-name">{x.name}</div>}
               <div className="scn-line">{x.text}</div>
             </div>
-          ))}
+          )) : textOn && (
+            <div key={i} className="scn-say on">
+              {b.name && <div className="scn-name">{b.name}</div>}
+              <div className="scn-line">{b.text}</div>
+            </div>
+          )}
         </div>
       </div>
       <div className="scn-controls" translate="no">
@@ -280,6 +293,9 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
         <button className="hub-btn" aria-pressed={hideText} onClick={() => setHideText((v) => !v)}>{hideText ? "Show text" : "Hide text"}</button>
         <button className="hub-btn" aria-pressed={theater} onClick={toggleTheater}
           title="Fill the screen with the scene (Esc to leave)">{theater ? "Exit theater" : "Theater"}</button>
+        <button className="hub-btn" aria-pressed={preload} onClick={() => setPreload((v) => !v)}
+          title="Which works best depends on the translator. All lines: the whole scene's text is in the page up front (Chrome's built-in translation). Per line: only the current line (some translator extensions)">
+          {preload ? "Text: all lines" : "Text: per line"}</button>
         {Object.keys(doc.spine).length > 0 && (
           <button className="hub-btn" aria-pressed={animate} onClick={() => setAnimate((v) => !v)}
             title="Play the animated CGs, or show the still images instead">{animate ? "Animation on" : "Animation off"}</button>
@@ -287,7 +303,8 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
       </div>
       {missing.length > 0 && <p className="muted small scn-missing" translate="no">Not available for this line: {missing.join(", ")}</p>}
       <p className="muted small scn-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; F for theater.
-        Dialogue is the game's Japanese text (your browser's page translation works on it).</p>
+        Dialogue is the game's Japanese text (your browser's page translation works on it; if lines stay untranslated,
+        switch the Text button between "all lines" and "per line").</p>
     </div>
   );
 }
