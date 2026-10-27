@@ -31,6 +31,8 @@ export interface UnitIndexEntry {
   family: string;
   /** acquisition tags: Standard, Pickup, Limited, Festival, Collab, Raid event, ... */
   obtain: string[];
+  /** has a Live2D skin (UnitSkins) */
+  skin?: boolean;
 }
 
 export type StatKey = "hp" | "sp" | "atk" | "def" | "spd" | "luck";
@@ -79,7 +81,7 @@ export interface ObtainEntry {
   upcoming?: boolean;
 }
 
-export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain"> {
+export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain" | "skin"> {
   obtain: ObtainEntry[];
   standardPool: boolean;
   root: string;
