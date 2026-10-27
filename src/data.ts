@@ -14,6 +14,8 @@ export interface Text { ja: string; en?: string }
 export interface Effect { text: string; icon?: string; when?: string }
 
 export interface UnitIndexEntry {
+  /** other English spellings of the name (wiki redirects, older spellings), for search */
+  aliases?: string[];
   id: string;
   name: Text | null;
   title: Text | null;
@@ -55,6 +57,8 @@ export interface UnitForm {
   stats: Record<StatKey, [number, number]>;
   spCharge: number;
   skills: string[];
+  /** mode switches (SwapSkillCommand): the kit after skill `by` is used */
+  modes?: { by: string; skills: string[] }[];
   /** items that evolve this form into the next (UnitEvolutionItems), where the data lists them */
   evolve?: [string, number][];
 }

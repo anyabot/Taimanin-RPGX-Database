@@ -60,7 +60,7 @@ export default function UnitList() {
       (!traitF.length || traitF.some((t) => u.traits.includes(t))) &&
       (!sourceF.length || sourceF.some((t) => u.obtain.includes(t))) &&
       (!skinF || !!u.skin) &&
-      (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja])));
+      (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja, ...(u.aliases ?? [])])));
     const by: Record<string, (a: UnitIndexEntry, b: UnitIndexEntry) => number> = {
       release: (a, b) => (b.release || "").localeCompare(a.release || "") || b.id.localeCompare(a.id),
       rarity: (a, b) => b.rarity - a.rarity || b.id.localeCompare(a.id),

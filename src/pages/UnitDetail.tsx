@@ -52,7 +52,17 @@ export default function UnitDetail() {
       <PageHeader
         art={<img src={iconUrl(unit.id)} alt="" width={96} height={96} />}
         title={name}
-        subtitle={tr(unit.title, lang)}
+        subtitle={<>
+          {tr(unit.title, lang)}
+          {lang === "en" && unit.name?.ja && (
+            <span className="unit-name-ja" lang="ja">
+              {tr(unit.title, lang) ? " · " : ""}{[unit.title?.ja, unit.name.ja].filter(Boolean).join(" ")}
+            </span>
+          )}
+          {unit.aliases && unit.aliases.length > 0 && (
+            <span className="unit-aliases"><br />Also written: {unit.aliases.join(", ")}</span>
+          )}
+        </>}
         id={unit.id}
         badges={<>
           <RarityIcon rarity={unit.rarity} height={22} />
@@ -188,6 +198,17 @@ function SkillsTab({ unit, form }: { unit: Unit; form: UnitForm }) {
         const s = unit.skills[key];
         if (!s) return null;
         return <SkillCard key={key} skill={s} lang={lang} />;
+      })}
+      {form.modes?.map((m) => {
+        const by = unit.skills[m.by];
+        const changed = m.skills.filter((k) => !form.skills.includes(k) && unit.skills[k]);
+        return (
+          <section key={m.by} className="skill-mode" style={{ display: "grid", gap: 12 }}>
+            <h3 style={{ margin: "8px 0 0" }}>After {by ? <>{SLOT_LABEL[by.slot]}{by.name && <> · {tr(by.name, lang)}</>}</> : "the mode switch"}: mode skills</h3>
+            <p className="muted small">The switch replaces {changed.map((k) => SLOT_LABEL[unit.skills[k].slot]).join(", ")}; the other skills stay.</p>
+            {changed.map((k) => <SkillCard key={k} skill={unit.skills[k]} lang={lang} />)}
+          </section>
+        );
       })}
     </div>
   );
