@@ -6,7 +6,7 @@ import {
 import { searchParamsAdapter } from "@altterisk/game-hub/filters";
 import { tabParam } from "@altterisk/game-hub";
 import {
-  RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
+  RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceActors, voiceUrl, type Skill, type Unit, type UnitForm,
   type UnitIndexEntry, type ObtainEntry,
 } from "../data";
 import { ArtGallery, SceneStills } from "../art";
@@ -74,6 +74,10 @@ export default function UnitDetail() {
           {unit.traits.map((t) => <MetaChip key={t} label="Trait" value={t} href={`#/units?trait=${encodeURIComponent(t)}`} />)}
           {unit.roles.map((r) => <MetaChip key={r} label="Role" value={r} />)}
           {unit.release && <MetaChip label="Released" value={unit.release} />}
+          {unit.illustrator && <MetaChip label="Artist" value={unit.illustrator} title="Units by this artist"
+            href={`#/units?artist=${encodeURIComponent(unit.illustrator)}`} />}
+          {voiceActors(unit.voiceActor).map((v) => <MetaChip key={v} label="CV" value={v} title="Units with this voice actor"
+            href={`#/units?cv=${encodeURIComponent(v)}`} />)}
         </MetaChips>}
       />
       <RelatedUnits id={unit.id} />
@@ -357,8 +361,10 @@ function ProfileTab({ unit }: { unit: Unit }) {
     <Panel title="Profile">
       <p className="profile-text">{tr(unit.profile, lang) || "No profile."}</p>
       <dl className="credits">
-        {unit.illustrator && <><dt>Illustrator</dt><dd>{unit.illustrator}</dd></>}
-        {unit.voiceActor && <><dt>Voice</dt><dd>{unit.voiceActor}</dd></>}
+        {unit.illustrator && <><dt>Illustrator</dt><dd>
+          <Link to={`/units?artist=${encodeURIComponent(unit.illustrator)}`}>{unit.illustrator}</Link></dd></>}
+        {unit.voiceActor && <><dt>Voice</dt><dd>{voiceActors(unit.voiceActor).map((v, i) => <span key={v}>{i > 0 && " & "}
+          <Link to={`/units?cv=${encodeURIComponent(v)}`}>{v}</Link></span>)}</dd></>}
         {unit.trust.length > 0 && <><dt>Scene unlocks</dt><dd>Trust {unit.trust.join(", ")}</dd></>}
         {unit.skin && <><dt>Skin</dt><dd lang="ja"><Link to={`/units/${unit.id}?tab=art`}>{tr(unit.skin.name, lang) || unit.skin.item}</Link> (preview on the Art tab)</dd></>}
       </dl>

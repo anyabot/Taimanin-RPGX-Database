@@ -43,7 +43,13 @@ export interface UnitIndexEntry {
   obtain: string[];
   /** has a Live2D skin (UnitSkins) */
   skin?: boolean;
+  illustrator?: string | null;
+  voiceActor?: string | null;
 }
+
+/** The people in a voice credit: a duo is written "A&B". */
+export const voiceActors = (credit: string | null | undefined) =>
+  (credit || "").split("&").map((s) => s.trim()).filter(Boolean);
 
 export type StatKey = "hp" | "sp" | "atk" | "def" | "spd" | "luck";
 

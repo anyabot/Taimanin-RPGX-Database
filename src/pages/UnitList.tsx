@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  CardGrid, CheckboxGroup, EmptyState, FallbackImage, FilterPanel, ListToolbar, LoadState, Pager, SearchBox,
+  CardGrid, CheckboxGroup, EmptyState, FallbackImage, FilterPanel, ListToolbar, LoadState, MetaChip, MetaChips, Pager, SearchBox,
 } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
-import { ELEMENTS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
+import { ELEMENTS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, voiceActors, type UnitIndexEntry } from "../data";
 
 const PAGE = 72;
 const SOURCES = [
@@ -40,6 +40,9 @@ export default function UnitList() {
   const sourceF = csv("source");
   const showUpcoming = params.get("upcoming") === "1";
   const skinF = params.get("skin") === "1";
+  // people, from a unit page's Artist / CV chips
+  const artistF = params.get("artist");
+  const cvF = params.get("cv");
   const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(params);
     if (v) next.set(k, v); else next.delete(k);
@@ -60,7 +63,10 @@ export default function UnitList() {
       (!traitF.length || traitF.some((t) => u.traits.includes(t))) &&
       (!sourceF.length || sourceF.some((t) => u.obtain.includes(t))) &&
       (!skinF || !!u.skin) &&
-      (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja, ...(u.aliases ?? [])])));
+      (!artistF || u.illustrator === artistF) &&
+      (!cvF || voiceActors(u.voiceActor).includes(cvF)) &&
+      (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja,
+        u.illustrator, u.voiceActor, ...(u.aliases ?? [])])));
     const by: Record<string, (a: UnitIndexEntry, b: UnitIndexEntry) => number> = {
       release: (a, b) => (b.release || "").localeCompare(a.release || "") || b.id.localeCompare(a.id),
       rarity: (a, b) => b.rarity - a.rarity || b.id.localeCompare(a.id),
@@ -68,10 +74,11 @@ export default function UnitList() {
     };
     const cmp = by[sort] || ((a: UnitIndexEntry, b: UnitIndexEntry) => (b.stats[sort as "atk"] || 0) - (a.stats[sort as "atk"] || 0));
     return [...list].sort(cmp);
-  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), sourceF.join(), showUpcoming, skinF]);
+  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), sourceF.join(), showUpcoming, skinF, artistF, cvF]);
 
   const pages = Math.max(1, Math.ceil(shown.length / PAGE));
-  const active = rarityF.length + elementF.length + traitF.length + sourceF.length + (showUpcoming ? 1 : 0) + (skinF ? 1 : 0);
+  const active = rarityF.length + elementF.length + traitF.length + sourceF.length + (showUpcoming ? 1 : 0) + (skinF ? 1 : 0)
+    + (artistF ? 1 : 0) + (cvF ? 1 : 0);
   const skinCount = useMemo(() => (units || []).filter((u) => u.skin).length, [units]);
   const upcomingCount = useMemo(() => (units || []).filter(isUpcoming).length, [units]);
 
@@ -79,7 +86,7 @@ export default function UnitList() {
     <div className="units-page">
       <h1>Units</h1>
       <ListToolbar
-        search={<SearchBox value={q} onChange={(v) => setParam("q", v)} placeholder="Name, title or id" />}
+        search={<SearchBox value={q} onChange={(v) => setParam("q", v)} placeholder="Name, title, id, artist or CV" />}
         count={units ? `${shown.length} / ${units.length}` : undefined}
         activeFilters={active}
         onClearFilters={() => { const n = new URLSearchParams(); if (q) n.set("q", q); setParams(n, { replace: true }); }}
@@ -109,6 +116,14 @@ export default function UnitList() {
           )}
         </div>
       </FilterPanel>
+      {(artistF || cvF) && (
+        <MetaChips className="unit-people">
+          {artistF && <MetaChip label="Artist" value={<>{artistF} <button className="hub-btn hub-btn--sm" aria-label="Clear artist"
+            onClick={() => setParam("artist", null)}>×</button></>} />}
+          {cvF && <MetaChip label="CV" value={<>{cvF} <button className="hub-btn hub-btn--sm" aria-label="Clear voice actor"
+            onClick={() => setParam("cv", null)}>×</button></>} />}
+        </MetaChips>
+      )}
       <LoadState loading={loading} error={error} />
       {units && !shown.length && <EmptyState title="No units match" hint="Clear a filter or the search." />}
       <CardGrid min={150}>
