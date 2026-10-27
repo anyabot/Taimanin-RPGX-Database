@@ -339,7 +339,7 @@ function ProfileTab({ unit }: { unit: Unit }) {
         {unit.illustrator && <><dt>Illustrator</dt><dd>{unit.illustrator}</dd></>}
         {unit.voiceActor && <><dt>Voice</dt><dd>{unit.voiceActor}</dd></>}
         {unit.trust.length > 0 && <><dt>Scene unlocks</dt><dd>Trust {unit.trust.join(", ")}</dd></>}
-        {unit.skin && <><dt>Skin</dt><dd lang="ja">{tr(unit.skin.name, lang) || unit.skin.item} (Live2D)</dd></>}
+        {unit.skin && <><dt>Skin</dt><dd lang="ja"><Link to={`/units/${unit.id}?tab=art`}>{tr(unit.skin.name, lang) || unit.skin.item}</Link> (preview on the Art tab)</dd></>}
       </dl>
     </Panel>
   );
@@ -349,6 +349,7 @@ function ProfileTab({ unit }: { unit: Unit }) {
  *  in the live catalog: image_chr_{l,xl,ldiff}_..._uni_<id>[_r18]_l_<n>.png */
 function ArtTab({ unit }: { unit: Unit }) {
   const { assets, error } = useAssets();
+  const lang = useLang();
   const [r18, setR18] = useState(false);
   const stems = useMemo(() => {
     if (!assets) return [];
@@ -363,6 +364,13 @@ function ArtTab({ unit }: { unit: Unit }) {
     <>
       <SegmentedButtons label="Art" options={[{ value: "base", label: "Base" }, { value: "r18", label: "R18" }]}
         selected={[r18 ? "r18" : "base"]} onToggle={(v) => setR18(v === "r18")} />
+      {unit.skin && !r18 && (
+        <div className="skin-preview">
+          <h3 lang="ja">Skin: {tr(unit.skin.name, lang) || unit.skin.item}</h3>
+          <BundleImage stem="image_customize_skin_assets_all" name={`${unit.skin.resource}_thumb`} width={364} height={208} />
+          <p className="muted small">The game's preview picture. In game the skin is a Live2D model; it is not animated here.</p>
+        </div>
+      )}
       <LoadState loading={!assets && !error} error={error} />
       {assets && !stems.length && <p className="muted">No art bundles found for this unit.</p>}
       <ArtGallery stems={stems} alt={`${unit.id} art`} fileName={artFileName} />
