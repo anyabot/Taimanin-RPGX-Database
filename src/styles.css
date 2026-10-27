@@ -127,7 +127,12 @@ img.element-icon { width: var(--icon-w, 20px); height: var(--icon-w, 20px); max-
 /* Dialogue over the picture... */
 .scn-text { position: absolute; left: 4%; right: 4%; bottom: 3%; min-height: 22%; padding: 1.4cqw 2.2cqw; border-radius: 1cqw;
   background: #0a0b10cc; color: #fff; font-size: max(12px, 2.1cqw); line-height: 1.5; }
-.scn-text.off { display: none; }
+/* Hidden lines stay rendered (opacity, not display/visibility) so page translators
+   that only translate what is visible still reach them. */
+.scn-text { overflow: hidden; }
+.scn-text.off { opacity: 0; pointer-events: none; }
+.scn-say { position: absolute; left: 0; right: 0; top: 0; padding: inherit; opacity: 0; pointer-events: none; }
+.scn-say.on { position: static; padding: 0; opacity: 1; pointer-events: auto; }
 .scn-name { font-weight: 700; color: #f6c445; margin-bottom: .3em; }
 .scn-line { white-space: pre-line; }
 /* ...and under it on a narrow player, where overlaid text would cover the CG:
@@ -135,7 +140,7 @@ img.element-icon { width: var(--icon-w, 20px); height: var(--icon-w, 20px); max-
 @container player (max-width: 640px) {
   .scn-text { position: static; margin-top: 8px; min-height: calc(5 * 1.5em + 20px); padding: 10px 12px; border-radius: 8px;
     font-size: 14px; color: inherit; background: var(--hub-surface, #1a1d27); border: 1px solid var(--hub-border, #2a2e3b); }
-  .scn-text.off { display: block; visibility: hidden; }
+  .scn-text { position: relative; }
 }
 /* Theater: the player fills the screen, the frame fits what is left after the controls. */
 .scene-player.theater { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; flex-direction: column;

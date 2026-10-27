@@ -255,17 +255,18 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
         {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} />}
         {busy && <div className="scn-busy" aria-live="polite" translate="no">Loading…</div>}
       </div>
-        {/* The box stays mounted (an empty one holds its place under the picture);
-            its content is keyed per line: page translators (Chrome, Edge) swap
-            text nodes for their own elements, so React's in-place update of the
-            old node would never show. A fresh element per line is translated anew. */}
+        {/* Every line of the scene is in the box from the start, stacked and
+            transparent but for the current one, and never re-rendered: page
+            translators (Chrome, Edge) translate them all up front and swap the
+            text nodes for their own, so stepping only changes which line shows.
+            Lines inserted one at a time were often left untranslated by Chrome. */}
         <div className={`scn-text${textOn ? "" : " off"}`} lang="ja">
-          {textOn && (
-            <div key={i}>
-              {b.name && <div className="scn-name">{b.name}</div>}
-              <div className="scn-line">{b.text}</div>
+          {beats.map((x, k) => (x.text || x.name) && (
+            <div key={k} className={`scn-say${k === i ? " on" : ""}`} aria-hidden={k !== i}>
+              {x.name && <div className="scn-name">{x.name}</div>}
+              <div className="scn-line">{x.text}</div>
             </div>
-          )}
+          ))}
         </div>
       </div>
       <div className="scn-controls" translate="no">
