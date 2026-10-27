@@ -102,8 +102,9 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   const [auto, setAuto] = useState(false);
   const [muted, setMuted] = useState(() => { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } });
   const [fx, setFx] = useState({ flash: 0, quake: 0 });
-  // the current beat's voice, downloaded; cues wait for it (and the picture)
-  const [voiceUrl, setVoiceUrl] = useState<string | null>(null);
+  // the beat whose picture and voice are on screen, and that voice, downloaded;
+  // cues wait for it (busy alone is stale in the render that steps)
+  const [loaded, setLoaded] = useState<{ i: number; voiceUrl: string | null }>({ i: -1, voiceUrl: null });
   const stepped = useRef(false);
   const voice = useRef<HTMLAudioElement | null>(null);
   const bgm = useRef<{ name: string; el: HTMLAudioElement } | null>(null);
@@ -165,7 +166,7 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
       line,
     ]).then(([bg, ev, actors, voiceUrl]) => {
       if (!live) return;
-      setVoiceUrl(voiceUrl);
+      setLoaded({ i, voiceUrl });
       if (b.ev && !doc.ev[b.ev]) lost.push(`CG ${b.ev}`);
       setShown({ bg, ev, actors: actors.filter((a): a is Shown["actors"][number] => !!a) });
       setMissing(lost);
@@ -184,16 +185,16 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
     voice.current = null;
   }, [i]);
   useEffect(() => {
-    if (busy || !stepped.current) return;
+    if (loaded.i !== i || !stepped.current) return;
     stepped.current = false;
-    if (b.voice && !muted && voiceUrl) {
-      const a = new Audio(voiceUrl);
+    if (b.voice && !muted && loaded.voiceUrl) {
+      const a = new Audio(loaded.voiceUrl);
       voice.current = a;
       a.play().catch(() => {});
     }
     if (!muted) for (const s of b.se) art.seClip(s).then((url) => { const a = new Audio(url); a.volume = 0.6; a.play().catch(() => {}); }, () => {});
     if (b.flash || b.quake) setFx((f) => ({ flash: f.flash + (b.flash ? 1 : 0), quake: f.quake + (b.quake ? 1 : 0) }));
-  }, [busy, i]);
+  }, [loaded, i]);
 
   // Music follows the beat in either direction.
   useEffect(() => {
@@ -221,14 +222,14 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
 
   // Auto: next beat when the voice ends, or after a pause scaled to the text.
   useEffect(() => {
-    if (!auto || busy) return;
+    if (!auto || loaded.i !== i) return;
     const wait = Math.max(1800, b.text.length * 90);
     const t = setTimeout(forward, wait);
     const v = voice.current;
     const onEnd = () => { clearTimeout(t); setTimeout(forward, 700); };
     if (v && !muted) { clearTimeout(t); v.addEventListener("ended", onEnd); v.addEventListener("error", onEnd); }
     return () => { clearTimeout(t); v?.removeEventListener("ended", onEnd); v?.removeEventListener("error", onEnd); };
-  }, [auto, busy, i]);
+  }, [auto, loaded, i]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
