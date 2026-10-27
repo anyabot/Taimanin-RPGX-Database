@@ -4,7 +4,7 @@
 // "Spine behavior":
 //  - runtime: the vendored, locally patched spine-webgl 3.6
 //    (public/vendor/spine-3.6, see the TAIMANIN LOCAL PATCH note inside it)
-//  - placement is authored: scale 1, skeleton origin at the stage centre;
+//  - placement is authored: scale 0.75, skeleton origin at the stage centre;
 //    never fitted to the animated extent
 //  - event atlases are straight alpha (all 50 R18 event models), drawn on an
 //    opaque black surface, with alpha blended (ONE, ONE_MINUS_SRC_ALPHA)
@@ -16,6 +16,9 @@
 declare global { interface Window { spine?: any } }
 
 export const STAGE_W = 1280, STAGE_H = 720;
+/** StorySpineEV.Init: localScale = kInitLocalScale (100) / _correctionScaleValue
+ *  (1.333), times the SkeletonDataAsset scale 0.01. */
+const EV_SCALE = 100 / 1.333 * 0.01;
 
 let runtime: Promise<any> | null = null;
 export function spineRuntime(): Promise<any> {
@@ -76,7 +79,9 @@ export class SpineStage {
     this.batcher = new spine.webgl.PolygonBatcher(gl);
     this.renderer = new spine.webgl.SkeletonRenderer(gl);
     this.mvp = new spine.webgl.Matrix4();
-    this.mvp.ortho2d(0, 0, STAGE_W, STAGE_H);
+    // Spine 3.6's Skeleton has no scale of its own: scale the view instead,
+    // with the skeleton origin at the stage centre.
+    this.mvp.ortho2d(-STAGE_W / 2 / EV_SCALE, -STAGE_H / 2 / EV_SCALE, STAGE_W / EV_SCALE, STAGE_H / EV_SCALE);
     this.last = performance.now() / 1000;
     this.frame = requestAnimationFrame((t) => this.draw(t));
   }
@@ -101,9 +106,7 @@ export class SpineStage {
       const data = new sp.SkeletonBinary(new sp.AtlasAttachmentLoader(atlas)).readSkeletonData(model.skels[variant]);
       const skeleton = new sp.Skeleton(data);
       if (data.findSkin?.("default")) skeleton.setSkinByName("default");
-      skeleton.scaleX = skeleton.scaleY = 1;
-      skeleton.x = STAGE_W / 2;
-      skeleton.y = STAGE_H / 2;
+      skeleton.x = skeleton.y = 0;
       skeleton.setToSetupPose();
       skeleton.updateWorldTransform();
       this.skeleton = skeleton;
