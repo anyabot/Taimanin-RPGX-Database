@@ -1,0 +1,14 @@
+.status-list { display: grid; gap: 12px; margin-top: 12px; }
+.status-title { display: inline-flex; align-items: center; gap: 8px; }
+.status-effect { margin: 0 0 6px; }
+.status-rule { margin: 6px 0; font-size: 13px; }
+.status-help { margin: 6px 0; font-size: 13px; }
+.status-help summary { cursor: pointer; color: var(--hub-accent); }
+.status-help p { white-space: pre-line; margin: 6px 0 0; }
+.status-units-head { margin: 10px 0 6px; font-size: 13px; }
+.status-units { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+.status-units a { display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 13px; }
+.status-units a > span { display: grid; min-width: 0; }
+.status-units a > span > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-units img { border-radius: 6px; flex: none; }

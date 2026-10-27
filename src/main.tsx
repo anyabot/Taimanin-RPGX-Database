@@ -7,6 +7,7 @@ import UnitList from "./pages/UnitList";
 import UnitDetail from "./pages/UnitDetail";
 import Runes from "./pages/Runes";
 import Buffs from "./pages/Buffs";
+import Statuses from "./pages/Statuses";
 import StoryList from "./pages/StoryList";
 import StoryBattles from "./pages/StoryBattles";
 import QuestList, { QuestBattles } from "./pages/Quests";
@@ -40,6 +41,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="items/:id" element={<ItemDetail />} />
           <Route path="runes" element={<Runes />} />
           <Route path="buffs" element={<Buffs />} />
+          <Route path="statuses" element={<Statuses />} />
           {import.meta.env.DEV && <Route path="lab" element={<DecoderLab />} />}
         </Route>
       </Routes>

@@ -56,7 +56,7 @@ export const STACK: Record<StackTag, { label: string; rule: string }> = {
   trait: { label: "Trait buff", rule: "One per trait and stat, kept apart from plain buffs (both apply). An equal or stronger one replaces it." },
   state: { label: "State", rule: "One of each kind per unit." },
   shield: { label: "Shield", rule: "Not checked yet." },
-  ailment: { label: "Ailment", rule: "Status ailment. Not checked yet how a second one stacks." },
+  ailment: { label: "Ailment", rule: "Status ailment. Inflicting one the unit already has adds 1 turn to it (Sleep: no change). A petrified unit gets no new ailments." },
   marker: { label: "Marker", rule: "Adds or removes stacks, up to the marker's limit." },
   instant: { label: "Instant", rule: "Happens once, when the skill is used." },
   mode: { label: "Mode", rule: "Changes the unit's mode or skill set." },
