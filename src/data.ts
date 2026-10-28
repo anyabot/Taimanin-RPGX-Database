@@ -39,7 +39,7 @@ export interface UnitIndexEntry {
   stats: Record<StatKey, number>;
   /** character family: other versions of the same character share it */
   family: string;
-  /** acquisition tags: Standard, Pickup, Limited, Festival, Collab, Raid event, ... */
+  /** acquisition tags: Standard, Pickup, Limited, Gosha / Yomihara / Collab Festival, Collab, Raid event, ... */
   obtain: string[];
   /** has a Live2D skin (UnitSkins) */
   skin?: boolean;
@@ -90,6 +90,8 @@ export interface ObtainEntry {
   start?: string | null;
   end?: string | null;
   need?: number;
+  /** the game's pull type where it matters: "Pick-up select", "Guaranteed 11-pull" */
+  pull?: string[];
   archive?: boolean;
   /** only in the REVIEW tree: part of the next update */
   upcoming?: boolean;

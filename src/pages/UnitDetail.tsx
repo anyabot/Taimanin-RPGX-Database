@@ -308,6 +308,11 @@ const KIND_LABEL: Record<ObtainEntry["kind"], string> = {
   gacha: "Gacha", spark: "Spark reward", event: "Event", exchange: "Exchange shop", mission: "Mission reward",
 };
 
+const PULL_NOTE: Record<string, string> = {
+  "Pick-up select": "The player picks which featured unit gets the rate-up (in at least one version of this banner)",
+  "Guaranteed 11-pull": "An 11-pull that guarantees one of the featured units",
+};
+
 function period(e: ObtainEntry) {
   if (e.start && e.end) return `${e.start} – ${e.end}`;
   if (e.end) return `until ${e.end}`;
@@ -341,6 +346,7 @@ function ObtainTab({ unit }: { unit: Unit }) {
                 {e.type && <span className={`obtain-type t-${e.type.replace(/\s+/g, "-")}`}>{e.type}</span>}
                 <span className="obtain-title">
                   {tr(e.title, lang) || (kind === "spark" ? `Spark reward${e.need ? ` at ${e.need} pulls` : ""}` : KIND_LABEL[e.kind])}
+                  {e.pull?.map((p) => <span key={p} className="obtain-pull" title={PULL_NOTE[p]}>{p}</span>)}
                   {e.archive && <span className="muted"> (archive)</span>}
                   {e.upcoming && <span className="obtain-upcoming" title="From the next update's data (REVIEW server), not live yet">Upcoming</span>}
                 </span>

@@ -101,7 +101,8 @@ img.element-icon { width: var(--icon-w, 20px); height: var(--icon-w, 20px); max-
 .obtain-title { overflow-wrap: anywhere; white-space: pre-line; }
 .obtain-period { font-size: 12px; margin-left: auto; }
 .obtain-type { font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 6px; background: var(--hub-accent-soft, #e879f922); }
-.t-Limited, .t-Festival { background: #f6c44533; } .t-Collab { background: #60a5fa33; }
+.t-Limited, .obtain-type[class*="Festival"] { background: #f6c44533; } .t-Collab { background: #60a5fa33; }
+.obtain-pull { margin-left: 6px; font-size: 11px; padding: 0 6px; border: 1px solid var(--hub-border, #8884); border-radius: 6px; }
 .small { font-size: 12px; }
 .obtain-upcoming { margin-left: 6px; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 6px; border: 1px solid var(--hub-accent, #e879f9); color: var(--hub-accent, #e879f9); }
 .scene-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }

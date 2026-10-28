@@ -10,8 +10,8 @@ import { ELEMENTS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, 
 const PAGE = 72;
 const SOURCES = [
   { value: "Standard", label: "Standard pool" }, { value: "Pickup", label: "Pickup gacha" },
-  { value: "Limited", label: "Limited gacha" }, { value: "Festival", label: "Festival gacha" },
-  { value: "Collab", label: "Collab gacha" }, { value: "Kessen", label: "Kessen" },
+  { value: "Limited", label: "Limited gacha" }, { value: "Gosha Festival", label: "Gosha Festival" },
+  { value: "Yomihara Festival", label: "Yomihara Festival" }, { value: "Collab Festival", label: "Collab Festival" },  { value: "Collab", label: "Collab gacha" }, { value: "Kessen", label: "Kessen" },
   { value: "Story event", label: "Story event" }, { value: "Raid event", label: "Raid event" },
   { value: "Map event", label: "Map event" }, { value: "exchange", label: "Exchange shop" },
   { value: "spark", label: "Spark reward" }, { value: "mission", label: "Mission reward" },
