@@ -14,3 +14,10 @@
 @media (max-width: 520px) { .stack-rules li { grid-template-columns: 1fr; gap: 2px; } }
 .stack-help { margin: 8px 0 12px; font-size: 13px; }
 .stack-help summary { cursor: pointer; color: var(--hub-accent); margin-bottom: 8px; }
+.effect-formula { margin: 4px 0 2px; font-size: 13px; }
+.effect-formula > summary { cursor: pointer; opacity: .75; font-size: 12px; }
+.formula-expr { display: block; margin: 6px 0 4px; padding: 6px 8px; border-radius: 6px; background: var(--hub-surface-2, rgba(127,127,127,.12)); white-space: normal; overflow-wrap: anywhere; }
+.formula-where { margin: 0 0 6px; padding-left: 18px; }
+.formula-table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.formula-table th, .formula-table td { padding: 2px 10px 2px 0; text-align: left; }
+.formula-table th { font-weight: 600; opacity: .75; }

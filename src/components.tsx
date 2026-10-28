@@ -1,6 +1,6 @@
 // Game-icon building blocks. The images are cut from the game's own UI atlas
 // by tools/web_export/tables.py (public/ui).
-import { ELEMENTS, RARITY, type Effect, type StackTag } from "./data";
+import { ELEMENTS, RARITY, type Effect, type Formula, type StackTag } from "./data";
 import { credits, personHref, type Role } from "./people";
 import "./stack.css";
 
@@ -20,7 +20,27 @@ export function ElementIcon({ element, size = 20 }: { element: string | null; si
     style={{ ["--icon-w" as string]: `${size}px` }} />;
 }
 
-export function EffectList({ effects }: { effects: Effect[] }) {
+/** The formula behind a computed effect. "r × C" cells (C = the skill's SP
+ *  cost) are worked out when the cost is known. */
+function FormulaBox({ f, sp }: { f: Formula; sp?: number }) {
+  const cell = (c: string) => {
+    const m = /^([\d.]+) × C$/.exec(c);
+    return m && sp ? `${Math.round(Number(m[1]) * sp)} SP (${m[1]}× cost)` : c;
+  };
+  return (
+    <details className="effect-formula">
+      <summary>Formula</summary>
+      <code className="formula-expr">{f.expr}</code>
+      <ul className="formula-where">{f.where.map((w) => <li key={w}>{w}</li>)}</ul>
+      <table className="formula-table">
+        <thead><tr>{f.table.head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
+        <tbody>{f.table.rows.map((r, i) => <tr key={i}>{r.map((c, k) => <td key={k}>{cell(c)}</td>)}</tr>)}</tbody>
+      </table>
+    </details>
+  );
+}
+
+export function EffectList({ effects, sp }: { effects: Effect[]; sp?: number }) {
   if (!effects.length) return null;
   // Effects that share a `when` (a variant of the skill, or its extra action)
   // are listed together under that condition.
@@ -33,7 +53,8 @@ export function EffectList({ effects }: { effects: Effect[] }) {
   const items = (list: Effect[]) => list.map((e, i) => (
     <li key={i}>
       {e.icon ? <img src={ui(`Battle_status_icon_${e.icon}`)} alt="" width={22} height={22} /> : <span className="effect-dot" />}
-      <span><StackBadge tag={e.tag} stack={e.stack} />{e.text}</span>
+      <span><StackBadge tag={e.tag} stack={e.stack} />{e.text}
+        {e.formulas?.map((f, k) => <FormulaBox key={k} f={f} sp={sp} />)}</span>
     </li>
   ));
   return (
@@ -74,6 +95,7 @@ export const STATE_STACK: Record<string, string> = {
   regen: "A stronger one replaces it, otherwise the one already there may get more turns. HP regen clears bleed, SP regen clears SP drain.",
   spdrain: "Blocked while the target has SP regen. A bigger value × turns replaces it; an equal one adds a turn.",
   darkblade: "Own rules (Darkness Blade and its cut), not described yet.",
+  trait: "A trait effect: applied only if the unit has that trait, and kept apart from the plain one and from other traits' (one per trait and state type). Within the same trait, the state's usual rule applies: for attack boost, a stronger one replaces it and an equal one adds 1 turn.",
   own: "Has its own handler; not checked yet.",
 };
 

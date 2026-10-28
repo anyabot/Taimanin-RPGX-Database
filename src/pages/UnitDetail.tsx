@@ -225,7 +225,9 @@ function SkillCard({ skill: s, lang }: { skill: Skill; lang: "en" | "ja" }) {
   const [lvIdx, setLvIdx] = useState(s.levels.length - 1);
   const lv = s.levels[lvIdx];
   // Many skills (every normal attack) read the same at each level.
-  const varies = s.levels.some((l) => l.sp !== lv.sp || tr(l.detail, lang) !== tr(lv.detail, lang));
+  const varies = s.levels.some((l) => l.sp !== lv.sp || tr(l.detail, lang) !== tr(lv.detail, lang) || !!l.effects);
+  const effects = lv.effects ?? s.effects;
+  const perLevel = s.levels.some((l) => l.effects);
   return (
     <Panel
       title={<>{SLOT_LABEL[s.slot]}{s.name && <> · {tr(s.name, lang)}</>}</>}
@@ -235,12 +237,13 @@ function SkillCard({ skill: s, lang }: { skill: Skill; lang: "en" | "ja" }) {
         <LevelControl label="Skill level" value={lvIdx + 1} min={1} max={s.levels.length} onChange={(v) => setLvIdx(v - 1)} />
       )}
       <p className="skill-detail">{tr(lv.detail, lang)}</p>
-      {s.effects.length > 0 && (
+      {effects.length > 0 && (
         <div className="skill-effects">
-          <h4>Effects at max level</h4>
-          <EffectList effects={s.effects} />
+          <h4>{perLevel ? `Effects at level ${lv.level}` : "Effects at max level"}</h4>
+          <EffectList effects={effects} sp={lv.sp} />
         </div>
       )}
+      {s.dataNote && <p className="skill-data-note">{s.dataNote}</p>}
     </Panel>
   );
 }

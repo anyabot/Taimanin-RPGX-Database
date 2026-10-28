@@ -17,7 +17,10 @@ export interface Effect {
   tag?: StackTag;
   /** for a state: its stacking group (BattleUnit.AddStateEffect) */
   stack?: string;
+  /** a computed value: the client's formula, its symbols and worked values */
+  formulas?: Formula[];
 }
+export interface Formula { expr: string; where: string[]; table: { head: string[]; rows: string[][] } }
 export type StackTag = "buff" | "debuff" | "trait" | "state" | "shield" | "ailment" | "marker" | "instant"
   | "mode" | "modifier" | "passive" | "other";
 
@@ -57,8 +60,12 @@ export interface Skill {
   name: Text | null;
   hits: number;
   cutin: boolean;
-  levels: { level: number; sp: number; detail: Text | null }[];
+  /** effects: only on a level whose effects differ from the last level's */
+  levels: { level: number; sp: number; detail: Text | null; effects?: Effect[] }[];
+  /** effects at the last level */
   effects: Effect[];
+  /** the description and the skill data disagree (e.g. per-level numbers the data lacks) */
+  dataNote?: string;
 }
 
 export interface UnitForm {
@@ -87,8 +94,11 @@ export interface Voice {
 /** One way to get a unit (tools/web_export/tables.py acquisition()). */
 /** Unit origins in display order: pool, festivals, the seasonal lines through the year, the rest. */
 export const ORIGINS = ["Permanent", "Gosha Fes", "Yomihara Fes", "Collab Fes", "New Year", "Valentine", "Bunny",
-  "New Life", "Golden Week", "June Bride", "Summer", "Summer Festival", "Yukata", "Oct 10", "Halloween", "Race Queen",
-  "Maid", "Soirée", "Christmas", "Limited", "Collab", "Mercenary", "Event"];
+  "New Term", "New Life", "School Club", "Girls' Band", "Bikini Armor", "Golden Week", "June Bride", "Summer",
+  "Summer Festival", "Yukata", "Oct 10", "Halloween", "Lingerie", "Race Queen", "Maid", "Soirée", "Christmas",
+  "Limited", "Collab", "Mercenary", "Event"];
+/** The origin filter's value for units with no known origin. */
+export const NO_ORIGIN = "Unknown";
 
 export interface ObtainEntry {
   kind: "gacha" | "spark" | "event" | "exchange" | "mission";

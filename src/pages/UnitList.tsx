@@ -5,7 +5,7 @@ import {
 } from "@altterisk/game-hub";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
-import { ELEMENTS, ORIGINS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
+import { ELEMENTS, NO_ORIGIN, ORIGINS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 
 const PAGE = 72;
 const SOURCES = [
@@ -60,7 +60,7 @@ export default function UnitList() {
       (!elementF.length || (u.element && elementF.includes(u.element))) &&
       (!traitF.length || traitF.some((t) => u.traits.includes(t))) &&
       (!sourceF.length || sourceF.some((t) => u.obtain.includes(t))) &&
-      (!originF.length || (!!u.origin && originF.includes(u.origin))) &&
+      (!originF.length || originF.includes(u.origin || NO_ORIGIN)) &&
       (!skinF || !!u.skin) &&
       (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja,
         u.illustrator, u.voiceActor, ...(u.aliases ?? [])])));
@@ -75,7 +75,9 @@ export default function UnitList() {
 
   const pages = Math.max(1, Math.ceil(shown.length / PAGE));
   const active = rarityF.length + elementF.length + traitF.length + sourceF.length + originF.length + (showUpcoming ? 1 : 0) + (skinF ? 1 : 0);
-  const originCount = (o: string) => (units || []).filter((u) => u.origin === o && (showUpcoming || !isUpcoming(u))).length;
+  const originCount = (o: string) => (units || []).filter((u) => (u.origin || NO_ORIGIN) === o && (showUpcoming || !isUpcoming(u))).length;
+  // every origin in the data shows, in ORIGINS order, unlisted ones after it, then the units with none
+  const originList = [...ORIGINS, ...[...new Set((units || []).map((u) => u.origin).filter((o): o is string => !!o && !ORIGINS.includes(o)))].sort(), NO_ORIGIN];
   const skinCount = useMemo(() => (units || []).filter((u) => u.skin).length, [units]);
   const upcomingCount = useMemo(() => (units || []).filter(isUpcoming).length, [units]);
 
@@ -103,7 +105,7 @@ export default function UnitList() {
             selected={traitF} onToggle={(v) => toggle("trait", traitF, v)} />
           <CheckboxGroup title="Source" options={SOURCES.filter((s) => units?.some((u) => u.obtain.includes(s.value)))}
             selected={sourceF} onToggle={(v) => toggle("source", sourceF, v)} />
-          <CheckboxGroup title="Origin" options={ORIGINS.filter((o) => originCount(o) > 0).map((o) => ({ value: o, label: `${o} (${originCount(o)})` }))}
+          <CheckboxGroup title="Origin" options={originList.filter((o) => originCount(o) > 0).map((o) => ({ value: o, label: `${o} (${originCount(o)})` }))}
             selected={originF} onToggle={(v) => toggle("origin", originF, v)} />
           {skinCount > 0 && (
             <CheckboxGroup title="Extras" options={[{ value: "1", label: `Has a skin (${skinCount})` }]}
