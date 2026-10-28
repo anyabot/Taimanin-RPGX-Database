@@ -21,6 +21,8 @@ export default function App() {
           </div>
           <nav className="hub-bar__nav" aria-label="Primary">
             <NavLink to="/units">Units</NavLink>
+            <NavLink to="/events">Events</NavLink>
+            <NavLink to="/banners">Banners</NavLink>
             <NavLink to="/buffs">Buffs</NavLink>
             <NavLink to="/statuses">Statuses</NavLink>
             <NavLink to="/story">Story</NavLink>

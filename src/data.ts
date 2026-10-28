@@ -161,7 +161,18 @@ export interface StoryGroup {
   id: string; num: number; title: Text | null; parts: StoryPart[];
   banner?: BundleRef;
   battles?: { quests: number; enemies: number; bosses: number };
+  /** events in the current client: their period (tools/web_export/stories.py) */
+  period?: EventPeriod;
 }
+export interface EventPeriod { kind: string; start?: string; end?: string; exchangeEnd?: string }
+
+/** public/data/banners.json: limited gacha banners, newest first (tables.py export_banners). */
+export interface GachaBanner {
+  id: number; title: Text | null; type: string; start: string | null; end: string | null;
+  /** Gachas.image_id: gacha_img_<n> (key art) in image_gacha2020 */
+  image: number; pull?: string[]; units: string[];
+}
+export const gachaArt = (image: number) => `image_gacha2020_assets_image_gacha2020_gacha_img_${image}.png`;
 
 /** public/data/stories/battles/<group>.json and quests/<id>.json (tools/web_export/battles.py). */
 export interface BattleSkill { name: Text | null; effects: Effect[] }
@@ -304,8 +315,35 @@ export const unitName = (u: { name: Text | null; displayName?: Text | null }, l:
   tr(u.name, l) || tr(u.displayName, l) || "?";
 
 /** Units already in the master data ahead of their release date. */
-const today = new Date().toISOString().slice(0, 10);
+export const today = new Date().toISOString().slice(0, 10);
 export const isUpcoming = (u: { release: string | null }) => !!u.release && u.release > today;
+
+const DAY = 86400000;
+/** The client's event and banner rows often open a year before they close
+ *  (er064: 2025-10-21 – 2026-11-04, its featured unit released 2026-10-21), so
+ *  only the close date is trusted; an opening more than 60 days before it is dropped. */
+export function windowOf(start?: string | null, end?: string | null): { start?: string; end?: string } {
+  if (!end) return { start: start ?? undefined };
+  const long = !!start && Date.parse(end) - Date.parse(start) > 60 * DAY;
+  return { start: start && !long ? start : undefined, end };
+}
+export type Phase = "upcoming" | "running" | "ended";
+export function phaseOf(start?: string | null, end?: string | null): Phase {
+  const w = windowOf(start, end);
+  if (w.start && w.start > today) return "upcoming";
+  return !w.end || w.end >= today ? "running" : "ended";
+}
+/** "ends in 5 days" / "starts in 2 days" / "ended 2026-10-21" */
+export function phaseText(start?: string | null, end?: string | null): string {
+  const w = windowOf(start, end);
+  const days = (d: string) => Math.max(0, Math.round((Date.parse(d) - Date.parse(today)) / DAY));
+  const n = (d: number) => (d === 0 ? "today" : d === 1 ? "in 1 day" : `in ${d} days`);
+  switch (phaseOf(start, end)) {
+    case "upcoming": return `starts ${n(days(w.start!))}`;
+    case "running": return w.end ? `ends ${n(days(w.end))}` : "running";
+    default: return `ended ${w.end}`;
+  }
+}
 
 // ---- the bundle decoder, created once
 let assets: Promise<Assets> | null = null;

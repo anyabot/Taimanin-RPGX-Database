@@ -1,10 +1,10 @@
 // The battle view shared by story chapters (/story/battles/:id) and the
 // story-less modes (/quests/:id): raid bosses, then one panel per stage.
-import { lazy, Suspense, useCallback, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Panel, SegmentedButtons, TabPanel, UrlTabs } from "@altterisk/game-hub";
 import {
-  ENEMY_ICONS, iconUrl, tr, useLang, type BattleBoss, type BattleEnemy, type BattleQuest, type Battles,
+  ENEMY_ICONS, iconUrl, tr, useLang, windowOf, type BattleBoss, type BattleEnemy, type BattleQuest, type Battles,
   type BattleEvent, type LuckTier, type QuestDrop,
 } from "./data";
 import { EffectList, ElementIcon } from "./components";
@@ -147,10 +147,11 @@ function LuckRewards({ tiers }: { tiers: LuckTier[] }) {
 }
 
 /** A running event: dates, bonus units, reward shop, box gacha, lap rewards. */
-function EventInfo({ ev }: { ev: BattleEvent }) {
+export function EventInfo({ ev }: { ev: BattleEvent }) {
+  const w = windowOf(ev.start, ev.end);
   return (
     <div className="event-info">
-      <p className="small">{ev.start} – {ev.end}{ev.exchangeEnd ? ` · exchange until ${ev.exchangeEnd}` : ""}</p>
+      <p className="small">{w.start ? `${w.start} – ${w.end}` : `until ${w.end}`}{ev.exchangeEnd ? ` · exchange until ${ev.exchangeEnd}` : ""}</p>
       {ev.bonus.length > 0 && (
         <div>
           <h4>Bonus units</h4>
@@ -160,14 +161,7 @@ function EventInfo({ ev }: { ev: BattleEvent }) {
           <p className="muted small">Each bonus unit in the team adds the listed % of its own Luck.</p>
         </div>
       )}
-      {ev.shop && ev.shop.length > 0 && (
-        <div>
-          <h4>Reward shop</h4>
-          <ul className="drop-list">{ev.shop.map((r, i) => (
-            <DropLine key={i} d={r} note={`${r.cost.toLocaleString()} pt${r.max > 1 ? ` · ×${r.max}` : ""}`} />
-          ))}</ul>
-        </div>
-      )}
+      {ev.shop && ev.shop.length > 0 && <RewardShop rows={ev.shop} />}
       {ev.gacha && <BoxGacha gacha={ev.gacha} />}
       {ev.laps && ev.laps.length > 0 && (
         <details>
@@ -175,6 +169,32 @@ function EventInfo({ ev }: { ev: BattleEvent }) {
           <ul className="drop-list">{ev.laps.map((r, i) => <DropLine key={i} d={r} note={`lap ${r.lap}`} />)}</ul>
         </details>
       )}
+    </div>
+  );
+}
+
+type ShopRow = NonNullable<BattleEvent["shop"]>[number];
+
+/** The event's point shop. The shop lists some rewards in several slots, each with
+ *  its own price and limit; those are shown as one reward. A negative limit is no
+ *  limit (UIExchangeCheckPopup.IsBuyCheck skips the check). */
+function RewardShop({ rows }: { rows: ShopRow[] }) {
+  const byKey = new Map<string, ShopRow[]>();
+  for (const r of rows) {
+    const k = `${r.type}:${r.id}:${r.num}`;
+    byKey.set(k, [...(byKey.get(k) ?? []), r]);
+  }
+  const groups = [...byKey.values()];
+  const total = rows.reduce((n, r) => n + (r.max > 0 ? r.cost * r.max : 0), 0);
+  const tier = (r: ShopRow) => `${r.cost.toLocaleString()} pt ${r.max < 0 ? "· no limit" : `×${r.max.toLocaleString()}`}`;
+  return (
+    <div>
+      <h4>Reward shop ({groups.length})</h4>
+      <ul className="drop-list shop-list">{groups.map((g, i) => (
+        <DropLine key={i} d={g[0]} note={<>{g.map((r, j) => <span key={j}>{tier(r)}</span>)}</>} />
+      ))}</ul>
+      <p className="muted small">Price per exchange × how many times it can be exchanged. Everything with a limit
+        costs {total.toLocaleString()} pt in all.</p>
     </div>
   );
 }
@@ -225,7 +245,7 @@ function DropBlock({ title, list }: { title: string; list: QuestDrop[] }) {
   );
 }
 
-export function DropLine({ d, showGroup, note }: { d: QuestDrop; showGroup?: boolean; note?: string }) {
+export function DropLine({ d, showGroup, note }: { d: QuestDrop; showGroup?: boolean; note?: ReactNode }) {
   const lang = useLang();
   const name = d.type === "gold" ? "Gold" : d.type === "jewel" ? "Jewels" : tr(d.name ?? null, lang) || d.id;
   const icon = d.type === "item" && d.icon

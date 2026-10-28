@@ -289,3 +289,33 @@ html.scn-theater-open { overflow: hidden; }
 .people-list li { display: flex; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--hub-border, #2a2e3b); }
 .people-list a { text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .people-more { margin-top: 12px; }
+
+/* Home, events and gacha banners */
+.home-hero { text-align: center; padding: 12px 0 4px; }
+.home-hero h1 { margin: 0 0 4px; }
+.home-page section, .events-page section { margin: 22px 0; }
+.home-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.home-section-head h2, .events-page h2 { margin: 0 0 10px; font-size: 18px; }
+.hub-banner-card__art .story-banner { margin: 0; width: 100%; border-radius: 0; }
+.events-tools { display: flex; flex-direction: column; align-items: stretch; gap: 8px; margin: 12px 0; }
+.events-tools > * { flex: none; }
+.event-nav { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; margin: 8px 0; flex-wrap: wrap; }
+.event-head { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin: 8px 0 16px; }
+.event-head-text { flex: 1 1 260px; min-width: 0; }
+.event-head h1 { margin: 0 0 6px; font-size: 22px; }
+.event-head p { margin: 0 0 6px; }
+.event-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.event-phase { margin-left: 8px; }
+.event-phase.running { background: #22c55e33; }
+.event-phase.upcoming { background: #60a5fa33; }
+.gacha-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+.gacha-banner { display: flex; flex-direction: column; border: 1px solid var(--hub-border, #8884); border-radius: 12px; overflow: hidden;
+  background: var(--hub-surface, transparent); }
+.gacha-banner.highlight { border-color: var(--hub-accent, #e879f9); }
+.gacha-art { display: block; width: 100%; aspect-ratio: 5 / 2; object-fit: cover; object-position: top; background: #0003; }
+.gacha-body { padding: 10px 12px 12px; }
+.gacha-body h3 { margin: 0 0 6px; font-size: 15px; }
+.gacha-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 4px; }
+.gacha-units { list-style: none; margin: 8px 0 0; padding: 0; display: flex; gap: 8px; flex-wrap: wrap; }
+.gacha-units a { display: flex; flex-direction: column; align-items: center; width: 64px; font-size: 11px; text-align: center; gap: 2px; }
+.gacha-units img { border-radius: 8px; }

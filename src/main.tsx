@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import AgeGate from "./AgeGate";
 import UnitList from "./pages/UnitList";
@@ -10,6 +10,9 @@ import Buffs from "./pages/Buffs";
 import Statuses from "./pages/Statuses";
 import PeopleIndex, { PersonPage } from "./pages/People";
 import StoryList from "./pages/StoryList";
+import Home from "./pages/Home";
+import EventList, { EventPage } from "./pages/Events";
+import BannerList from "./pages/Banners";
 import StoryBattles from "./pages/StoryBattles";
 import QuestList, { QuestBattles } from "./pages/Quests";
 import CardList, { CardDetail } from "./pages/Cards";
@@ -27,7 +30,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <HashRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route index element={<Navigate to="/units" replace />} />
+          <Route index element={<Home />} />
+          <Route path="events" element={<EventList />} />
+          <Route path="events/:id" element={<EventPage />} />
+          <Route path="banners" element={<BannerList />} />
           <Route path="units" element={<UnitList />} />
           <Route path="units/:id" element={<UnitDetail />} />
           <Route path="scenes/:id" element={<ScenePlayer />} />
