@@ -75,6 +75,7 @@ export default function UnitDetail() {
         meta={<MetaChips>
           {unit.traits.map((t) => <MetaChip key={t} label="Trait" value={t} href={`#/units?trait=${encodeURIComponent(t)}`} />)}
           {unit.roles.map((r) => <MetaChip key={r} label="Role" value={r} />)}
+          {unit.origin && <MetaChip label="Origin" value={unit.origin} href={`#/units?origin=${encodeURIComponent(unit.origin)}`} />}
           {unit.release && <MetaChip label="Released" value={unit.release} />}
           {credits(unit.illustrator, "artist").map((c) => <MetaChip key={c.key} label={c.note ? "Design" : "Artist"} value={c.name}
             title="Everything by this artist" href={personHref("artist", c.name)} />)}

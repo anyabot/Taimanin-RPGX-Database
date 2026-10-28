@@ -34,6 +34,8 @@ export interface UnitIndexEntry {
   traits: string[];
   release: string | null;
   limited: boolean;
+  /** where the unit first came from: Permanent, Gosha Fes, June Bride, Collab, Event ... (from banners and shops) */
+  origin?: string;
   characterId: number;
   scenes: number;
   stats: Record<StatKey, number>;
@@ -83,6 +85,11 @@ export interface Voice {
 }
 
 /** One way to get a unit (tools/web_export/tables.py acquisition()). */
+/** Unit origins in display order: pool, festivals, the seasonal lines through the year, the rest. */
+export const ORIGINS = ["Permanent", "Gosha Fes", "Yomihara Fes", "Collab Fes", "New Year", "Valentine", "Bunny",
+  "New Life", "Golden Week", "June Bride", "Summer", "Summer Festival", "Yukata", "Oct 10", "Halloween", "Race Queen",
+  "Maid", "Soirée", "Christmas", "Limited", "Collab", "Mercenary", "Event"];
+
 export interface ObtainEntry {
   kind: "gacha" | "spark" | "event" | "exchange" | "mission";
   type?: string;
