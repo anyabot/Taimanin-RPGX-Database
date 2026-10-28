@@ -3,12 +3,20 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
 import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Actor, type Beat, type SceneDoc } from "../adv";
-import { SceneArt, loadScript, type SeIndex } from "../sceneArt";
+import { SceneArt, composeFrame, loadScript, saveBlob, type SeIndex } from "../sceneArt";
+import { TranscriptView } from "./Transcript";
 import { SpineStage, spineRuntime } from "../spine";
 
 const MUTE_KEY = "taimanin.scene.muted";
 const SPINE_KEY = "taimanin.scene.spine";
 const PRELOAD_KEY = "taimanin.scene.preload";
+const PICTURES_KEY = "taimanin.scene.pictures";
+
+/** Beats with something to look at: a CG, an animation or an actor, not a
+ *  blank stage or a bare background. */
+const hasPicture = (b: Beat) => !!(b.ev || b.spine || b.actors.length);
+/** What is on screen at a beat, to tell where the picture changes. */
+const pictureKey = (b: Beat) => JSON.stringify([b.bg, b.ev, b.actors.map((a) => [a.slot, a.name, a.x]), b.spine, b.spineAnim]);
 
 /** A scene played in the browser: a unit H-scene (#/scenes/:id) or a story
  *  part (#/story/:id). Script, CGs, actors, BGM, SE and voice all come from
@@ -79,7 +87,8 @@ export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "st
       )}
       {doc && art && script?.id === doc.id && (
         <Stage key={doc.id} doc={doc} art={art} beats={script.beats}
-          next={at >= 0 && at < siblings.length - 1 ? sceneLink(siblings[at + 1]) : null} />
+          next={at >= 0 && at < siblings.length - 1 ? sceneLink(siblings[at + 1]) : null}
+          transcript={`${source === "story" ? `/story/${id}` : `/scenes/${id}`}/transcript${unitId ? `?unit=${unitId}` : ""}`} />
       )}
     </div>
   );
@@ -87,7 +96,7 @@ export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "st
 
 interface Shown { bg: string | null; ev: string | null; actors: { slot: string; x: Actor["x"]; url: string }[] }
 
-function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats: Beat[]; next: string | null }) {
+function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: SceneArt; beats: Beat[]; next: string | null; transcript: string }) {
   const navigate = useNavigate();
   const [i, setI] = useState(0);
   const prev = useRef(-1);
@@ -99,9 +108,22 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   // Text mode: every line in the page up front (page translators reach them all),
   // or only the current line (for translators that handle new text themselves).
   const [preload, setPreload] = useState(() => { try { return localStorage.getItem(PRELOAD_KEY) !== "0"; } catch { return true; } });
+  // Picture mode: no text or voice, and stepping goes from picture to picture.
+  const [pictures, setPictures] = useState(() => { try { return localStorage.getItem(PICTURES_KEY) === "1"; } catch { return false; } });
   const [auto, setAuto] = useState(false);
   const [muted, setMuted] = useState(() => { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } });
   const [fx, setFx] = useState({ flash: 0, quake: 0 });
+  // the animated CG's current frame, while one is showing
+  const spineSnap = useRef<(() => HTMLCanvasElement) | null>(null);
+  const [saving, setSaving] = useState(false);
+  const savePicture = () => {
+    setSaving(true);
+    let spine: HTMLCanvasElement | null = null;
+    try { spine = animate ? spineSnap.current?.() ?? null : null; } catch (e) { console.warn("spine snapshot", e); }
+    composeFrame(shown, spine)
+      .then((blob) => saveBlob(blob, `${doc.id}_${String(i + 1).padStart(3, "0")}.png`), (e) => console.warn("save picture", e))
+      .finally(() => setSaving(false));
+  };
   // the beat whose picture and voice are on screen, and that voice, downloaded;
   // cues wait for it (busy alone is stale in the render that steps)
   const [loaded, setLoaded] = useState<{ i: number; voiceUrl: string | null }>({ i: -1, voiceUrl: null });
@@ -140,12 +162,29 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
     return () => document.documentElement.classList.remove("scn-theater-open");
   }, [theater]);
   const b = beats[Math.min(i, beats.length - 1)];
+  // the first beat of every picture (all of them if the scene has none)
+  const shots = useMemo(() => {
+    const all = beats.flatMap((x, k) => (k === 0 || pictureKey(x) !== pictureKey(beats[k - 1]) ? [k] : []));
+    const some = all.filter((k) => hasPicture(beats[k]));
+    return some.length ? some : all;
+  }, [beats]);
+  let shot = 0;
+  while (shot < shots.length - 1 && shots[shot + 1] <= i) shot++;
+  // entering picture mode on a blank or bare-background beat: on to the next picture
+  useEffect(() => {
+    if (pictures && !hasPicture(b) && hasPicture(beats[shots[0]])) go(shots.find((k) => k > i) ?? shots[shots.length - 1]);
+  }, [pictures]);
 
   const go = (n: number) => setI(Math.max(0, Math.min(beats.length - 1, n)));
   const forward = () => {
-    if (i < beats.length - 1) go(i + 1);
+    if (pictures) {
+      if (shot < shots.length - 1) go(shots[shot + 1]);
+      else if (next) navigate(next);
+    } else if (i < beats.length - 1) go(i + 1);
     else if (next) navigate(next);
   };
+  const back = () => go(pictures ? shots[Math.max(0, shot - 1)] : i - 1);
+  const atEnd = pictures ? shot >= shots.length - 1 : i >= beats.length - 1;
 
   // Layers: keep the previous picture until the new one has decoded.
   useEffect(() => {
@@ -154,7 +193,7 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
     const lost: string[] = [];
     const soft = <T,>(p: Promise<T>, what: string) => p.catch((e) => { console.warn(what, e); lost.push(what); return null; });
     // the voice is downloaded before the beat is shown, so both start together
-    const line = b.voice && !muted ? soft(art.voice(b.voice), `voice ${b.voice}`) : Promise.resolve(null);
+    const line = b.voice && !muted && !pictures ? soft(art.voice(b.voice), `voice ${b.voice}`) : Promise.resolve(null);
     Promise.all([
       b.bg ? soft(art.bg(b.bg), `background ${b.bg}`) : null,
       b.ev && doc.ev[b.ev] ? soft(art.ev(b.ev), `CG ${b.ev}`) : null,
@@ -187,7 +226,7 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   useEffect(() => {
     if (loaded.i !== i || !stepped.current) return;
     stepped.current = false;
-    if (b.voice && !muted && loaded.voiceUrl) {
+    if (b.voice && !muted && !pictures && loaded.voiceUrl) {
       const a = new Audio(loaded.voiceUrl);
       voice.current = a;
       a.play().catch(() => {});
@@ -219,26 +258,32 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
   useEffect(() => { try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch { /* private mode */ } }, [muted]);
   useEffect(() => { try { localStorage.setItem(SPINE_KEY, animate ? "1" : "0"); } catch { /* private mode */ } }, [animate]);
   useEffect(() => { try { localStorage.setItem(PRELOAD_KEY, preload ? "1" : "0"); } catch { /* private mode */ } }, [preload]);
+  useEffect(() => {
+    try { localStorage.setItem(PICTURES_KEY, pictures ? "1" : "0"); } catch { /* private mode */ }
+    if (pictures) { voice.current?.pause(); voice.current = null; }
+  }, [pictures]);
 
-  // Auto: next beat when the voice ends, or after a pause scaled to the text.
+  // Auto: next beat when the voice ends, or after a pause scaled to the text
+  // (a fixed pause per picture in picture mode).
   useEffect(() => {
     if (!auto || loaded.i !== i) return;
-    const wait = Math.max(1800, b.text.length * 90);
+    const wait = pictures ? 3500 : Math.max(1800, b.text.length * 90);
     const t = setTimeout(forward, wait);
     const v = voice.current;
     const onEnd = () => { clearTimeout(t); setTimeout(forward, 700); };
     if (v && !muted) { clearTimeout(t); v.addEventListener("ended", onEnd); v.addEventListener("error", onEnd); }
     return () => { clearTimeout(t); v?.removeEventListener("ended", onEnd); v?.removeEventListener("error", onEnd); };
-  }, [auto, loaded, i]);
+  }, [auto, loaded, i, pictures]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.altKey || e.ctrlKey || e.metaKey) return;
       if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") { e.preventDefault(); forward(); }
-      else if (e.key === "ArrowLeft") { e.preventDefault(); go(i - 1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
       else if (e.key === "Home") go(0);
       else if (e.key === "End") go(beats.length - 1);
       else if (e.key.toLowerCase() === "h") setHideText((v) => !v);
+      else if (e.key.toLowerCase() === "p") setPictures((v) => !v);
       else if (e.key.toLowerCase() === "f") toggleTheater();
       else if (e.key === "Escape" && theater && !document.fullscreenElement) setTheater(false);
     };
@@ -246,19 +291,19 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  const textOn = b.textBox && !hideText && !!(b.text || b.name);
+  const textOn = b.textBox && !hideText && !pictures && !!(b.text || b.name);
   return (
     <div ref={playerRef} className={`scene-player${theater ? " theater" : ""}`}>
       {/* The frame holds the stage and the dialogue: over the picture on wide
           screens, under it on narrow ones (container query on .scene-player). */}
-      <div className="scn-frame" onClick={forward} role="button" tabIndex={0} aria-label="Next line">
+      <div className="scn-frame" onClick={forward} role="button" tabIndex={0} aria-label={pictures ? "Next picture" : "Next line"}>
       <div ref={stageRef} className={`scn-stage${fx.quake ? ` quake-${fx.quake % 2}` : ""}`}>
         {shown.bg && <img className="scn-bg" src={shown.bg} alt="" />}
         {shown.actors.map((a) => <img key={a.slot} className={`scn-actor x-${a.x}`} src={a.url} alt="" />)}
         {/* The 960x720 CG frame, pillarboxed over everything below it. */}
         {shown.ev && <img className="scn-ev" src={shown.ev} alt="" />}
         {fx.flash > 0 && <div key={fx.flash} className="scn-flash" />}
-        {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} />}
+        {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} snap={spineSnap} />}
         {busy && <div className="scn-busy" aria-live="polite" translate="no">Loading…</div>}
       </div>
         {/* Preloaded: every line of the scene is in the box from the start,
@@ -284,28 +329,41 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
         </div>
       </div>
       <div className="scn-controls" translate="no">
-        <button className="hub-btn" onClick={() => go(i - 1)} disabled={i === 0} aria-label="Previous line">‹</button>
-        <input type="range" min={0} max={beats.length - 1} value={i} onChange={(e) => go(Number(e.target.value))}
-          aria-label="Position in scene" />
-        <button className="hub-btn" onClick={forward} disabled={i >= beats.length - 1 && !next} aria-label="Next line">›</button>
-        <span className="scn-count muted">{i + 1} / {beats.length}</span>
+        <button className="hub-btn" onClick={back} disabled={pictures ? shot <= 0 : i === 0}
+          aria-label={pictures ? "Previous picture" : "Previous line"}>‹</button>
+        {pictures
+          ? <input type="range" min={0} max={shots.length - 1} value={shot} onChange={(e) => go(shots[Number(e.target.value)])}
+            aria-label="Picture in scene" />
+          : <input type="range" min={0} max={beats.length - 1} value={i} onChange={(e) => go(Number(e.target.value))}
+            aria-label="Position in scene" />}
+        <button className="hub-btn" onClick={forward} disabled={atEnd && !next} aria-label={pictures ? "Next picture" : "Next line"}>›</button>
+        <span className="scn-count muted">{pictures ? `Picture ${shot + 1} / ${shots.length}` : `${i + 1} / ${beats.length}`}</span>
         <button className="hub-btn" aria-pressed={auto} onClick={() => setAuto((v) => !v)}>{auto ? "Auto ■" : "Auto ▶"}</button>
         <button className="hub-btn" aria-pressed={muted} onClick={() => setMuted((v) => !v)}>{muted ? "Sound off" : "Sound on"}</button>
-        <button className="hub-btn" aria-pressed={hideText} onClick={() => setHideText((v) => !v)}>{hideText ? "Show text" : "Hide text"}</button>
+        <button className="hub-btn" aria-pressed={pictures} onClick={() => setPictures((v) => !v)}
+          title="Pictures only: no text or voice, and each step goes to the next picture (P)">Picture mode</button>
+        {!pictures && <button className="hub-btn" aria-pressed={hideText} onClick={() => setHideText((v) => !v)}>{hideText ? "Show text" : "Hide text"}</button>}
         <button className="hub-btn" aria-pressed={theater} onClick={toggleTheater}
           title="Fill the screen with the scene (Esc to leave)">{theater ? "Exit theater" : "Theater"}</button>
         <button className="hub-btn" aria-pressed={preload} onClick={() => setPreload((v) => !v)}
           title="Which works best depends on the translator. All lines: the whole scene's text is in the page up front (Chrome's built-in translation). Per line: only the current line (some translator extensions)">
           {preload ? "Text: all lines" : "Text: per line"}</button>
+        <button className="hub-btn" onClick={savePicture} disabled={busy || saving}
+          title="Save the picture on screen as a PNG (the CG with its overlays, or the animation's current frame)">{saving ? "Saving…" : "Save picture"}</button>
         {Object.keys(doc.spine).length > 0 && (
           <button className="hub-btn" aria-pressed={animate} onClick={() => setAnimate((v) => !v)}
             title="Play the animated CGs, or show the still images instead">{animate ? "Animation on" : "Animation off"}</button>
         )}
       </div>
       {missing.length > 0 && <p className="muted small scn-missing" translate="no">Not available for this line: {missing.join(", ")}</p>}
-      <p className="muted small scn-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; F for theater.
+      <p className="muted small scn-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; P for picture mode; F for theater.
         Dialogue is the game's Japanese text (your browser's page translation works on it; if lines stay untranslated,
         switch the Text button between "all lines" and "per line").</p>
+      <details className="scn-transcript">
+        <summary translate="no">Transcript</summary>
+        <p className="small"><Link to={transcript}>Open the transcript as its own page</Link></p>
+        <TranscriptView title={doc.title || doc.id} file={doc.id} beats={beats} at={i} go={go} />
+      </details>
     </div>
   );
 }
@@ -313,7 +371,9 @@ function Stage({ doc, art, beats, next }: { doc: SceneDoc; art: SceneArt; beats:
 /** The animated CG layer. Kept mounted across beats so stepping through a
  *  scene's poses only swaps skeleton/animation; the stills underneath show
  *  until the model has loaded, and whenever no <SPINE> is active. */
-function SpineLayer({ art, doc, model, animation }: { art: SceneArt; doc: SceneDoc; model: string | null; animation: string | null }) {
+function SpineLayer({ art, doc, model, animation, snap }: {
+  art: SceneArt; doc: SceneDoc; model: string | null; animation: string | null; snap: { current: (() => HTMLCanvasElement) | null };
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const stage = useRef<SpineStage | null>(null);
   const [shown, setShown] = useState<string | null>(null);
@@ -332,6 +392,10 @@ function SpineLayer({ art, doc, model, animation }: { art: SceneArt; doc: SceneD
     }, (e) => { console.warn("spine", model, e); if (live) setState("error"); });
     return () => { live = false; };
   }, [model, animation, art, doc]);
+  useEffect(() => {
+    snap.current = model && shown === model && stage.current ? () => stage.current!.snapshot() : null;
+    return () => { snap.current = null; };
+  }, [model, shown]);
   return (
     <>
       <canvas ref={canvas} className="scn-spine" hidden={!model || shown !== model} />

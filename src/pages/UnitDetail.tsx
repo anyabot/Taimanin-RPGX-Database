@@ -366,9 +366,16 @@ function ObtainTab({ unit }: { unit: Unit }) {
 
 function ProfileTab({ unit }: { unit: Unit }) {
   const lang = useLang();
+  const hasEn = !!unit.profile?.en;
+  const [shown, setShown] = useState<"ja" | "en">(lang);
+  const text = shown === "en" && hasEn ? unit.profile!.en! : unit.profile?.ja;
   return (
     <Panel title="Profile">
-      <p className="profile-text">{tr(unit.profile, lang) || "No profile."}</p>
+      {hasEn && (
+        <SegmentedButtons label="Profile text" selected={[shown]} onToggle={(v) => setShown(v as "ja" | "en")}
+          options={[{ value: "ja", label: "Japanese (original)" }, { value: "en", label: "English (machine translation)" }]} />
+      )}
+      <p className="profile-text" lang={shown === "en" && hasEn ? "en" : "ja"}>{text || "No profile."}</p>
       <dl className="credits">
         {unit.illustrator && <><dt>Illustrator</dt><dd><CreditLinks raw={unit.illustrator} role="artist" /></dd></>}
         {unit.voiceActor && <><dt>Voice</dt><dd><CreditLinks raw={unit.voiceActor} role="cv" /></dd></>}
@@ -441,5 +448,10 @@ function ScenesTab({ unit }: { unit: Unit }) {
 function SceneLink({ sid, unitId }: { sid: string; unitId: string }) {
   const { data, error } = useData<SceneDoc>(`scenes/${sid}`);
   if (error) return <span className="muted">{sid} (not available)</span>;
-  return <Link to={`/scenes/${sid}?unit=${unitId}`} lang="ja">{data?.title || sid}</Link>;
+  return (
+    <>
+      <Link to={`/scenes/${sid}?unit=${unitId}`} lang="ja">{data?.title || sid}</Link>
+      <Link className="scene-transcript-link small" to={`/scenes/${sid}/transcript?unit=${unitId}`}>Transcript</Link>
+    </>
+  );
 }

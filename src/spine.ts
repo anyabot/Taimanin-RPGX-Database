@@ -132,12 +132,27 @@ export class SpineStage {
     this.key = "";
   }
 
+  /** The current frame as a 2D canvas (WebGL clears its buffer after each
+   *  frame, so it is drawn again here and copied in the same task). */
+  snapshot(): HTMLCanvasElement {
+    this.render(0);
+    const c = document.createElement("canvas");
+    c.width = STAGE_W;
+    c.height = STAGE_H;
+    c.getContext("2d")!.drawImage(this.canvas, 0, 0);
+    return c;
+  }
+
   private draw(timeMs: number) {
     if (this.disposed) return;
     this.frame = requestAnimationFrame((t) => this.draw(t));
     const now = timeMs / 1000;
     const delta = Math.min(0.1, Math.max(0, now - this.last));
     this.last = now;
+    this.render(delta);
+  }
+
+  private render(delta: number) {
     const gl = this.gl;
     gl.viewport(0, 0, STAGE_W, STAGE_H);
     gl.clearColor(0, 0, 0, 1);

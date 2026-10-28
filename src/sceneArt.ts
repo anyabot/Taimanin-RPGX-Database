@@ -202,3 +202,48 @@ export async function loadScript(assets: Assets, doc: SceneDoc): Promise<string>
     throw new Error(`script ${doc.id} not in ${bundle}`);
   }
 }
+
+const loadImage = (url: string) => new Promise<HTMLImageElement>((ok, fail) => {
+  const img = new Image();
+  img.onload = () => ok(img);
+  img.onerror = () => fail(new Error(`image ${url}`));
+  img.src = url;
+});
+
+/** What the stage shows, flattened to a 1280x720 PNG laid out as the stage CSS
+ *  lays it out: background, actors (760 high, bottom-aligned, centred at a
+ *  quarter, half or three quarters across), the 960x720 CG pillarboxed on
+ *  black, and an animated CG frame over everything. */
+export async function composeFrame(shown: { bg: string | null; ev: string | null; actors: { x: "LEFT" | "CENTER" | "RIGHT"; url: string }[] },
+  spine: HTMLCanvasElement | null): Promise<Blob> {
+  const W = 1280, H = 720;
+  const c = canvas(W, H);
+  const g = c.getContext("2d")!;
+  g.fillStyle = "#000";
+  g.fillRect(0, 0, W, H);
+  if (spine) g.drawImage(spine, 0, 0, W, H);
+  else {
+    if (shown.bg) g.drawImage(await loadImage(shown.bg), 0, 0, W, H);
+    for (const a of shown.actors) {
+      const cx = a.x === "LEFT" ? W / 4 : a.x === "RIGHT" ? W * 3 / 4 : W / 2;
+      g.drawImage(await loadImage(a.url), cx - ACTOR_W / 2, H - ACTOR_H, ACTOR_W, ACTOR_H);
+    }
+    if (shown.ev) {
+      g.fillRect(0, 0, W, H);
+      g.drawImage(await loadImage(shown.ev), (W - EV_W) / 2, 0, EV_W, EV_H);
+    }
+  }
+  return new Promise((ok, fail) => c.toBlob((b) => (b ? ok(b) : fail(new Error("toBlob"))), "image/png"));
+}
+
+/** Hands the browser a file to save. */
+export function saveBlob(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}

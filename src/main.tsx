@@ -18,6 +18,7 @@ import QuestList, { QuestBattles } from "./pages/Quests";
 import CardList, { CardDetail } from "./pages/Cards";
 import ItemList, { ItemDetail } from "./pages/Items";
 import ScenePlayer from "./pages/ScenePlayer";
+import TranscriptPage from "./pages/Transcript";
 import DecoderLab from "./pages/DecoderLab";
 import "@altterisk/game-hub/hub.css";
 import "@altterisk/game-hub/base.css";
@@ -37,9 +38,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="units" element={<UnitList />} />
           <Route path="units/:id" element={<UnitDetail />} />
           <Route path="scenes/:id" element={<ScenePlayer />} />
+          <Route path="scenes/:id/transcript" element={<TranscriptPage />} />
           <Route path="story" element={<StoryList />} />
           <Route path="story/battles/:id" element={<StoryBattles />} />
           <Route path="story/:id" element={<ScenePlayer source="story" />} />
+          <Route path="story/:id/transcript" element={<TranscriptPage source="story" />} />
           <Route path="quests" element={<QuestList />} />
           <Route path="quests/:id" element={<QuestBattles />} />
           <Route path="cards" element={<CardList />} />

@@ -73,6 +73,7 @@ function StoryCard({ g, kind, lang, open }: { g: StoryGroup; kind: string; lang:
               <span className="muted">{p.section ?? p.id}</span>
               {p.title && <span lang="ja"> · {p.title}</span>}
             </Link>
+            <Link className="scene-transcript-link small" to={`/story/${p.id}/transcript`}>Transcript</Link>
           </li>
         ))}
       </ol>
