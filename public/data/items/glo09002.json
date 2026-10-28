@@ -1,1 +1,1 @@
-{"id":"glo09002","name":{"ja":"無料ガチャチケット"},"description":{"ja":"1枚で「無料チケットガチャ」をプレイできる\n※対象ガチャはヘルプ内「チケットガチャ」の項目をご確認ください"},"type":"global","icon":"glo09002","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo09002","name":{"ja":"無料ガチャチケット","en":"Free Gacha Ticket"},"description":{"ja":"1枚で「無料チケットガチャ」をプレイできる\n※対象ガチャはヘルプ内「チケットガチャ」の項目をご確認ください"},"type":"global","icon":"glo09002","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

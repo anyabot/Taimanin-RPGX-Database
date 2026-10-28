@@ -1,1 +1,1 @@
-{"id":"luc26001","name":{"ja":"ユニット開運の神楽鈴"},"description":{"ja":"ふうま　小太郎のラックを5アップさせるアイテム"},"type":"luckup","icon":"luc26001","sellGold":0,"effect":{"category":"luckup","value":5},"statusCost":0}
+{"id":"luc26001","name":{"ja":"ユニット開運の神楽鈴","en":"Unit Lucky Kagura Bell"},"description":{"ja":"ふうま　小太郎のラックを5アップさせるアイテム"},"type":"luckup","icon":"luc26001","sellGold":0,"effect":{"category":"luckup","value":5},"statusCost":0}

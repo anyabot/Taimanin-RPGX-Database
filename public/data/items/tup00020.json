@@ -1,1 +1,1 @@
-{"id":"tup00020","name":{"ja":"スパークリングジュース"},"description":{"ja":"シュワシュワの炭酸が癖になるスパークリングジュース\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00020","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}
+{"id":"tup00020","name":{"ja":"スパークリングジュース","en":"Sparkling Juice"},"description":{"ja":"シュワシュワの炭酸が癖になるスパークリングジュース\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00020","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}

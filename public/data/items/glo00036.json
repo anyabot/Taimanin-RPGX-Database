@@ -1,1 +1,1 @@
-{"id":"glo00036","name":{"ja":"新生活応援11連ガチャチケット"},"description":{"ja":"新生活応援専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00036","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo00036","name":{"ja":"新生活応援11連ガチャチケット","en":"New Life 11-Pull Gacha Ticket"},"description":{"ja":"新生活応援専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00036","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

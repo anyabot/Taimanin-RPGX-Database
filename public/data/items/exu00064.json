@@ -1,1 +1,1 @@
-{"id":"exu00064","name":{"ja":"メイドスタンプ"},"description":{"ja":"対象の交換所で報酬と交換できる特別なアイテム\n有効期限：2024/05/21 13:59:59まで"},"type":"global","icon":"exu00064","sellGold":0,"sources":[{"page":"quests/mini-2018","title":{"ja":"メイドパンチング"},"kinds":["boss drop","luck drop"]}]}
+{"id":"exu00064","name":{"ja":"メイドスタンプ","en":"Maid Stamp"},"description":{"ja":"対象の交換所で報酬と交換できる特別なアイテム\n有効期限：2024/05/21 13:59:59まで"},"type":"global","icon":"exu00064","sellGold":0,"sources":[{"page":"quests/mini-2018","title":{"ja":"メイドパンチング"},"kinds":["boss drop","luck drop"]}]}

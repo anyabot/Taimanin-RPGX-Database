@@ -1,1 +1,1 @@
-{"id":"glo09003","name":{"ja":"無料11連ガチャチケット"},"description":{"ja":"1枚で「無料11連チケットガチャ」をプレイできる\n※対象ガチャはヘルプ内「チケットガチャ」の項目をご確認ください"},"type":"global","icon":"glo09003","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo09003","name":{"ja":"無料11連ガチャチケット","en":"Free 11-Pull Gacha Ticket"},"description":{"ja":"1枚で「無料11連チケットガチャ」をプレイできる\n※対象ガチャはヘルプ内「チケットガチャ」の項目をご確認ください"},"type":"global","icon":"glo09003","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

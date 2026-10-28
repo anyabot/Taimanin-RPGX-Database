@@ -1,1 +1,1 @@
-{"id":"glo00049","name":{"ja":"バレンタイン11連ガチャチケット"},"description":{"ja":"2022バレンタイン専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00049","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo00049","name":{"ja":"バレンタイン11連ガチャチケット","en":"Valentine 11-Pull Gacha Ticket"},"description":{"ja":"2022バレンタイン専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00049","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

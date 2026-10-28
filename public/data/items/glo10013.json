@@ -1,1 +1,1 @@
-{"id":"glo10013","name":{"ja":"【バジリスク】11連ガチャチケット"},"description":{"ja":"【バジリスク】コラボ専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10013","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10013","name":{"ja":"【バジリスク】11連ガチャチケット","en":"Basilisk 11-Pull Gacha Ticket"},"description":{"ja":"【バジリスク】コラボ専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10013","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

@@ -1,1 +1,1 @@
-{"id":"glo10015","name":{"ja":"BLACK LAGOON11連ガチャチケット"},"description":{"ja":"BLACK LAGOONコラボ専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10015","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10015","name":{"ja":"BLACK LAGOON11連ガチャチケット","en":"BLACK LAGOON 11-Pull Gacha Ticket"},"description":{"ja":"BLACK LAGOONコラボ専用\n1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10015","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

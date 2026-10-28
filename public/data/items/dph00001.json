@@ -1,1 +1,1 @@
-{"id":"dph00001","name":{"ja":"派遣追加チケット"},"description":{"ja":"派遣クエストの出撃部隊数上限を超えて出撃できるアイテム"},"type":"global","icon":"dph00001","sellGold":0,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2023-04-28","end":"2030-01-01","costs":[["exu00050",1]]}]}
+{"id":"dph00001","name":{"ja":"派遣追加チケット","en":"Extra Dispatch Ticket"},"description":{"ja":"派遣クエストの出撃部隊数上限を超えて出撃できるアイテム"},"type":"global","icon":"dph00001","sellGold":0,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2023-04-28","end":"2030-01-01","costs":[["exu00050",1]]}]}

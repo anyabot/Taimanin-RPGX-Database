@@ -1,1 +1,1 @@
-{"id":"bat09007","name":{"ja":"おせち"},"description":{"ja":"味方全体のHP/SPを回復する"},"type":"battle","icon":"bat09007","sellGold":10,"battleLimit":2,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2023-01-01","end":"2023-01-16","costs":[["exu00045",1]]}]}
+{"id":"bat09007","name":{"ja":"おせち","en":"Osechi"},"description":{"ja":"味方全体のHP/SPを回復する"},"type":"battle","icon":"bat09007","sellGold":10,"battleLimit":2,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2023-01-01","end":"2023-01-16","costs":[["exu00045",1]]}]}

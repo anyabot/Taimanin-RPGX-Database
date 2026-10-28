@@ -1,1 +1,1 @@
-{"id":"evo01003","name":{"ja":"婚礼の至宝"},"description":{"ja":"「ジュノ」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01003","sellGold":0,"sources":[{"page":"quests/mini-1003","title":{"ja":"決戦“6月の女神”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07006"],"bloom":["07006"]}}
+{"id":"evo01003","name":{"ja":"婚礼の至宝","en":"Wedding Treasure"},"description":{"ja":"「ジュノ」専用の覚醒に必要なアイテム"},"type":"evolution","icon":"evo01003","sellGold":0,"sources":[{"page":"quests/mini-1003","title":{"ja":"決戦“6月の女神”"},"kinds":["boss drop","luck drop"]}],"uses":{"evolve":["07006"],"bloom":["07006"]}}

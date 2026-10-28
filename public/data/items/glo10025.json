@@ -1,1 +1,1 @@
-{"id":"glo10025","name":{"ja":"エンハンスド11連ガチャ+チケット"},"description":{"ja":"エンハンスド11連ガチャ+専用\n1枚で「エンハンスド11連ガチャ+」をプレイできる\n(獲得日から180日間有効)"},"type":"global","icon":"glo10025","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10025","name":{"ja":"エンハンスド11連ガチャ+チケット","en":"Enhanced 11-Pull Gacha + Ticket"},"description":{"ja":"エンハンスド11連ガチャ+専用\n1枚で「エンハンスド11連ガチャ+」をプレイできる\n(獲得日から180日間有効)"},"type":"global","icon":"glo10025","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

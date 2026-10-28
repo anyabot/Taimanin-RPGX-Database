@@ -1,1 +1,1 @@
-{"id":"emp00001","name":{"ja":"ボス弱体化アイテム"},"description":{"ja":"獲得数に応じてマップボスのステータスを低下する"},"type":"event_map","icon":"emp00001","sellGold":0}
+{"id":"emp00001","name":{"ja":"ボス弱体化アイテム","en":"Boss Weakening Item"},"description":{"ja":"獲得数に応じてマップボスのステータスを低下する"},"type":"event_map","icon":"emp00001","sellGold":0}

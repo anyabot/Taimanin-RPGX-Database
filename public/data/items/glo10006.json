@@ -1,1 +1,1 @@
-{"id":"glo10006","name":{"ja":"超人SR確定ガチャチケット"},"description":{"ja":"1枚で「超人SR確定ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10006","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10006","name":{"ja":"超人SR確定ガチャチケット","en":"Superhuman SR Guaranteed Gacha Ticket"},"description":{"ja":"1枚で「超人SR確定ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10006","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

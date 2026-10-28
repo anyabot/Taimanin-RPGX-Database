@@ -1,1 +1,1 @@
-{"id":"tup00007","name":{"ja":"おいしいお水"},"description":{"ja":"清らかなおいしいお水\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00007","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}
+{"id":"tup00007","name":{"ja":"おいしいお水","en":"Tasty Water"},"description":{"ja":"清らかなおいしいお水\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00007","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}

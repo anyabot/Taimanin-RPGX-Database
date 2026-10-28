@@ -1,1 +1,1 @@
-{"id":"bat09037","name":{"ja":"リエリ・ビショップの救援要請信号機"},"description":{"ja":"バトル終了時まで、味方全体に混乱状態異常無効を付与する"},"type":"battle","icon":"bat09037","sellGold":10,"battleLimit":1}
+{"id":"bat09037","name":{"ja":"リエリ・ビショップの救援要請信号機","en":"Rieri Bishop's Rescue Beacon"},"description":{"ja":"バトル終了時まで、味方全体に混乱状態異常無効を付与する"},"type":"battle","icon":"bat09037","sellGold":10,"battleLimit":1}

@@ -1,1 +1,1 @@
-{"id":"bat09012","name":{"ja":"ブーケ"},"description":{"ja":"味方単体のSPを全回復する"},"type":"battle","icon":"bat09012","sellGold":10,"battleLimit":4}
+{"id":"bat09012","name":{"ja":"ブーケ","en":"Bouquet"},"description":{"ja":"味方単体のSPを全回復する"},"type":"battle","icon":"bat09012","sellGold":10,"battleLimit":4}

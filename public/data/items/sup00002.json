@@ -1,1 +1,1 @@
-{"id":"sup00002","name":{"ja":"スキルの書(中)"},"description":{"ja":"スキルLvを30%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup00002","sellGold":200,"effect":{"category":"skillup","value":30},"statusCost":500}
+{"id":"sup00002","name":{"ja":"スキルの書(中)","en":"Skill Book (Intermediate)"},"description":{"ja":"スキルLvを30%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup00002","sellGold":200,"effect":{"category":"skillup","value":30},"statusCost":500}

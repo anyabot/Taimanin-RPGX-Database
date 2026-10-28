@@ -1,1 +1,1 @@
-{"id":"tup00017","name":{"ja":"チェリージュース"},"description":{"ja":"口当たりが良いジュース\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00017","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}
+{"id":"tup00017","name":{"ja":"チェリージュース","en":"Cherry Juice"},"description":{"ja":"口当たりが良いジュース\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00017","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}

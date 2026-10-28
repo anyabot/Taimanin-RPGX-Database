@@ -1,1 +1,1 @@
-{"id":"sup10747","name":{"ja":"ユニットスキルの書(秘伝)"},"description":{"ja":"心願寺　楓のスキルLvを100%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup10747","sellGold":0,"effect":{"category":"skillup","value":100},"statusCost":5000}
+{"id":"sup10747","name":{"ja":"ユニットスキルの書(秘伝)","en":"Unit Skill Book (Secret)"},"description":{"ja":"心願寺　楓のスキルLvを100%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup10747","sellGold":0,"effect":{"category":"skillup","value":100},"statusCost":5000}

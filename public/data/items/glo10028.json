@@ -1,1 +1,1 @@
-{"id":"glo10028","name":{"ja":"五車祭11連ガチャチケット"},"description":{"ja":"1枚で「五車祭ガチャ※ガチャチケット」をプレイできる（獲得日から180日間有効）"},"type":"global","icon":"glo10028","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10028","name":{"ja":"五車祭11連ガチャチケット","en":"Gosha Fes 11-Pull Gacha Ticket"},"description":{"ja":"1枚で「五車祭ガチャ※ガチャチケット」をプレイできる（獲得日から180日間有効）"},"type":"global","icon":"glo10028","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

@@ -1,1 +1,1 @@
-{"id":"pex00104","name":{"ja":"ランダム交換チケット"},"description":{"ja":"指定ユニットから1体ランダムで交換できるチケット"},"type":"presentboxexchange","icon":"pex00104","sellGold":0,"units":["00410","00387","00351","00339"]}
+{"id":"pex00104","name":{"ja":"ランダム交換チケット","en":"Random Exchange Ticket"},"description":{"ja":"指定ユニットから1体ランダムで交換できるチケット"},"type":"presentboxexchange","icon":"pex00104","sellGold":0,"units":["00410","00387","00351","00339"]}

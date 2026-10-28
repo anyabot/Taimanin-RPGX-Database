@@ -1,1 +1,1 @@
-{"id":"glo10003","name":{"ja":"精神SR確定ガチャチケット"},"description":{"ja":"1枚で「精神SR確定ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10003","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10003","name":{"ja":"精神SR確定ガチャチケット","en":"Spiritual SR Guaranteed Gacha Ticket"},"description":{"ja":"1枚で「精神SR確定ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo10003","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

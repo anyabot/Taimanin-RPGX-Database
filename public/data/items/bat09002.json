@@ -1,1 +1,1 @@
-{"id":"bat09002","name":{"ja":"ハロウィンケーキ"},"description":{"ja":"味方全体のSPを回復する"},"type":"battle","icon":"bat09002","sellGold":10,"battleLimit":4}
+{"id":"bat09002","name":{"ja":"ハロウィンケーキ","en":"Halloween Cake"},"description":{"ja":"味方全体のSPを回復する"},"type":"battle","icon":"bat09002","sellGold":10,"battleLimit":4}

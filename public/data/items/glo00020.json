@@ -1,1 +1,1 @@
-{"id":"glo00020","name":{"ja":"クリスマス11連ガチャチケット"},"description":{"ja":"1枚で「クリスマス11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00020","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo00020","name":{"ja":"クリスマス11連ガチャチケット","en":"Christmas 11-Pull Gacha Ticket"},"description":{"ja":"1枚で「クリスマス11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00020","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

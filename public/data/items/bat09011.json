@@ -1,1 +1,1 @@
-{"id":"bat09011","name":{"ja":"チャーシューメン"},"description":{"ja":"味方単体のHPを全回復する"},"type":"battle","icon":"bat09011","sellGold":10,"battleLimit":4}
+{"id":"bat09011","name":{"ja":"チャーシューメン","en":"Chashu Ramen"},"description":{"ja":"味方単体のHPを全回復する"},"type":"battle","icon":"bat09011","sellGold":10,"battleLimit":4}

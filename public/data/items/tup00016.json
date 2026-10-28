@@ -1,1 +1,1 @@
-{"id":"tup00016","name":{"ja":"ジンジャージュース"},"description":{"ja":"さわやかなジンジャージュース\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00016","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}
+{"id":"tup00016","name":{"ja":"ジンジャージュース","en":"Ginger Juice"},"description":{"ja":"さわやかなジンジャージュース\nユニットの信頼度を10アップさせるアイテム"},"type":"trustup","icon":"tup00016","sellGold":100,"effect":{"category":"trustup","value":10},"statusCost":0}

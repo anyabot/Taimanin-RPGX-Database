@@ -1,1 +1,1 @@
-{"id":"bat09028","name":{"ja":"エプロン"},"description":{"ja":"味方単体の会心率を1ターンの間、超特大アップする"},"type":"battle","icon":"bat09028","sellGold":10,"battleLimit":1,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2024-08-16","end":"2024-09-16","costs":[["exu00065",25]]}]}
+{"id":"bat09028","name":{"ja":"エプロン","en":"Apron"},"description":{"ja":"味方単体の会心率を1ターンの間、超特大アップする"},"type":"battle","icon":"bat09028","sellGold":10,"battleLimit":1,"sources":[{"page":null,"title":null,"kinds":["exchange"],"start":"2024-08-16","end":"2024-09-16","costs":[["exu00065",25]]}]}

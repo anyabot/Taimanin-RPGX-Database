@@ -1,1 +1,1 @@
-{"id":"glo10029","name":{"ja":"10月傭兵参陣11連ガチャチケット"},"description":{"ja":"1枚で「10月傭兵参陣ガチャ※ガチャチケット」をプレイできる（獲得日から180日間有効）"},"type":"global","icon":"glo10029","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10029","name":{"ja":"10月傭兵参陣11連ガチャチケット","en":"October Mercenary 11-Pull Gacha Ticket"},"description":{"ja":"1枚で「10月傭兵参陣ガチャ※ガチャチケット」をプレイできる（獲得日から180日間有効）"},"type":"global","icon":"glo10029","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

@@ -1,1 +1,1 @@
-{"id":"bat09008","name":{"ja":"義理"},"description":{"ja":"味方全体のHP/SPを少し回復する"},"type":"battle","icon":"bat09008","sellGold":10,"battleLimit":4}
+{"id":"bat09008","name":{"ja":"義理","en":"Obligation Chocolate"},"description":{"ja":"味方全体のHP/SPを少し回復する"},"type":"battle","icon":"bat09008","sellGold":10,"battleLimit":4}

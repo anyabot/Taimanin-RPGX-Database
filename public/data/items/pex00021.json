@@ -1,1 +1,1 @@
-{"id":"pex00021","name":{"ja":"選択交換チケット"},"description":{"ja":"指定ユニットから1体選択して交換できるチケット"},"type":"presentboxexchange","icon":"pex00021","sellGold":0,"units":["00004","00233","00246","00281","00308"]}
+{"id":"pex00021","name":{"ja":"選択交換チケット","en":"Select Exchange Ticket"},"description":{"ja":"指定ユニットから1体選択して交換できるチケット"},"type":"presentboxexchange","icon":"pex00021","sellGold":0,"units":["00004","00233","00246","00281","00308"]}

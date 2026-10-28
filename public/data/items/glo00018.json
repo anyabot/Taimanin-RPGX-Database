@@ -1,1 +1,1 @@
-{"id":"glo00018","name":{"ja":"属性限定SR確定ガチャチケット"},"description":{"ja":"1枚で「1周年記念属性限定SR確定ガチャ」をプレイできる\n有効期限：2019/9/25 17:00:00～10/13 23:59:59"},"type":"global","icon":"glo00018","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo00018","name":{"ja":"属性限定SR確定ガチャチケット","en":"Element SR Guaranteed Gacha Ticket"},"description":{"ja":"1枚で「1周年記念属性限定SR確定ガチャ」をプレイできる\n有効期限：2019/9/25 17:00:00～10/13 23:59:59"},"type":"global","icon":"glo00018","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

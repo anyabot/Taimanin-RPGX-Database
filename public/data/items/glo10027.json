@@ -1,1 +1,1 @@
-{"id":"glo10027","name":{"ja":"初獲得限定ユニット確定ガチャチケット"},"description":{"ja":"1枚で「初獲得限定ユニット確定ガチャ」をプレイできる（獲得日から180日間有効）"},"type":"global","icon":"glo10027","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo10027","name":{"ja":"初獲得限定ユニット確定ガチャチケット","en":"New Limited Unit Guaranteed Gacha Ticket"},"description":{"ja":"1枚で「初獲得限定ユニット確定ガチャ」をプレイできる（獲得日から180日間有効）"},"type":"global","icon":"glo10027","sellGold":0,"effect":{"category":"draw_gacha","value":0}}

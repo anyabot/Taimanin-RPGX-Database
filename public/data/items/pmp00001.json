@@ -1,1 +1,1 @@
-{"id":"pmp00001","name":{"ja":"レイドポイント"},"description":{"ja":"レイドイベント交換所で使用できるポイント"},"type":"event_raid","icon":"erb00009","sellGold":0}
+{"id":"pmp00001","name":{"ja":"レイドポイント","en":"Raid Points"},"description":{"ja":"レイドイベント交換所で使用できるポイント"},"type":"event_raid","icon":"erb00009","sellGold":0}

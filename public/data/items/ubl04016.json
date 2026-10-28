@@ -1,1 +1,1 @@
-{"id":"ubl04016","name":{"ja":"専用メモリー"},"description":{"ja":"「[&Tbl_Unit_name_uni04016_1]」専用のメモリー"},"type":"evolution","icon":"ubl04016","sellGold":0,"uses":{"bloom":["04016"]}}
+{"id":"ubl04016","name":{"ja":"専用メモリー","en":"Unique Memory"},"description":{"ja":"「[&Tbl_Unit_name_uni04016_1]」専用のメモリー"},"type":"evolution","icon":"ubl04016","sellGold":0,"uses":{"bloom":["04016"]}}

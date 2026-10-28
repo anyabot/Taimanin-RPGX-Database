@@ -1,1 +1,1 @@
-{"id":"bat09001","name":{"ja":"パンプキンクッキー"},"description":{"ja":"味方全体のHPを回復する"},"type":"battle","icon":"bat09001","sellGold":10,"battleLimit":4}
+{"id":"bat09001","name":{"ja":"パンプキンクッキー","en":"Pumpkin Cookie"},"description":{"ja":"味方全体のHPを回復する"},"type":"battle","icon":"bat09001","sellGold":10,"battleLimit":4}

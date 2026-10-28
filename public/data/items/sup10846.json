@@ -1,1 +1,1 @@
-{"id":"sup10846","name":{"ja":"ユニットスキルの書(秘伝)"},"description":{"ja":"【メタルストーム】ミラベル・ベルのスキルLvを100%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup10846","sellGold":0,"effect":{"category":"skillup","value":100},"statusCost":5000}
+{"id":"sup10846","name":{"ja":"ユニットスキルの書(秘伝)","en":"Unit Skill Book (Secret)"},"description":{"ja":"【メタルストーム】ミラベル・ベルのスキルLvを100%の確率で強化させる素材アイテム"},"type":"skillup","icon":"sup10846","sellGold":0,"effect":{"category":"skillup","value":100},"statusCost":5000}

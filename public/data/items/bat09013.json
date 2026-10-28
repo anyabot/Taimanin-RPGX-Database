@@ -1,1 +1,1 @@
-{"id":"bat09013","name":{"ja":"ウェディングドレス"},"description":{"ja":"1ターンの間、味方全体の受けるダメージを中カットする"},"type":"battle","icon":"bat09013","sellGold":10,"battleLimit":2}
+{"id":"bat09013","name":{"ja":"ウェディングドレス","en":"Wedding Dress"},"description":{"ja":"1ターンの間、味方全体の受けるダメージを中カットする"},"type":"battle","icon":"bat09013","sellGold":10,"battleLimit":2}

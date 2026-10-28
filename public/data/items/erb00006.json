@@ -1,1 +1,1 @@
-{"id":"erb00006","name":{"ja":"証のメダル(銀)"},"description":{"ja":"レイドイベントアイテム交換所でユニットやアイテムと交換するためのアイテム"},"type":"event_raid","icon":"erb00006","sellGold":0}
+{"id":"erb00006","name":{"ja":"証のメダル(銀)","en":"Proof Medal (Silver)"},"description":{"ja":"レイドイベントアイテム交換所でユニットやアイテムと交換するためのアイテム"},"type":"event_raid","icon":"erb00006","sellGold":0}

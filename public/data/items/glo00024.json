@@ -1,1 +1,1 @@
-{"id":"glo00024","name":{"ja":"AP回復薬+100"},"description":{"ja":"1個でAPを100回復する"},"type":"global","icon":"glo00024","sellGold":0,"effect":{"category":"ap","value":100}}
+{"id":"glo00024","name":{"ja":"AP回復薬+100","en":"AP Potion +100"},"description":{"ja":"1個でAPを100回復する"},"type":"global","icon":"glo00024","sellGold":0,"effect":{"category":"ap","value":100}}

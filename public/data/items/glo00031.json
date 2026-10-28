@@ -1,1 +1,1 @@
-{"id":"glo00031","name":{"ja":"夏祭り限定11連ガチャチケット"},"description":{"ja":"1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00031","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
+{"id":"glo00031","name":{"ja":"夏祭り限定11連ガチャチケット","en":"Summer Festival Limited 11-Pull Gacha Ticket"},"description":{"ja":"1枚で「限定ユニット確定11連ガチャ」をプレイできる\n(購入日から180日間有効)"},"type":"global","icon":"glo00031","sellGold":0,"effect":{"category":"draw_gacha","value":0}}
