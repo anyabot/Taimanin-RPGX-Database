@@ -21,3 +21,7 @@
 .formula-table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
 .formula-table th, .formula-table td { padding: 2px 10px 2px 0; text-align: left; }
 .formula-table th { font-weight: 600; opacity: .75; }
+.formula-where li { display: list-item; font-size: 12.5px; }
+.effect-formula { max-width: 100%; }
+.effect-formula .formula-table { display: block; max-width: 100%; overflow-x: auto; }
+.effect-list > li:has(.effect-formula[open]) { align-items: start; }
