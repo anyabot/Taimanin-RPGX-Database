@@ -23,6 +23,7 @@ export default function App() {
             <NavLink to="/units">Units</NavLink>
             <NavLink to="/events">Events</NavLink>
             <NavLink to="/banners">Banners</NavLink>
+            <NavLink to="/gacha">Gacha sim</NavLink>
             <NavLink to="/buffs">Buffs</NavLink>
             <NavLink to="/statuses">Statuses</NavLink>
             <NavLink to="/story">Story</NavLink>

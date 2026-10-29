@@ -9,6 +9,7 @@ const SECTIONS: [string, string, string][] = [
   ["/units", "Units", "Stats, skills, abilities, bloom, voices and scenes"],
   ["/events", "Events", "Story, raid and map events: rewards, shops, battles"],
   ["/banners", "Gacha banners", "Limited banners and their featured units"],
+  ["/gacha", "Gacha simulator", "Pull on any banner with the game's own odds"],
   ["/story", "Story", "Main and event story, played from the game's files"],
   ["/quests", "Quests", "Arena towers, daily quests, mini events, dispatch"],
   ["/buffs", "Buffs", "Every unit's buffs and debuffs, ranked"],

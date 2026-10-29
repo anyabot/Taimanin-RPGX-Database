@@ -45,6 +45,7 @@ From `D:\Download\Taimanin`:
     py -3 tools/web_export/catalog_snapshot.py   # public/data/bundles.json
     py -3 tools/web_export/tables.py             # units, runes, icons, UI art
     py -3 tools/web_export/scenes.py             # public/data/scenes, adv_se.json (after tables.py)
+    py -3 tools/web_export/gacha.py              # public/data/gacha.json for #/gacha (after tables.py)
     py -3 tools/web_export/buffs.py              # public/data/buffs.json for #/buffs (after tables.py)
     py -3 tools/web_export/stories.py            # public/data/stories for #/story (after scenes.py)
     py -3 tools/web_export/translations.py       # public/data/tl: English scene text (after stories.py)

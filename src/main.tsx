@@ -13,6 +13,7 @@ import StoryList from "./pages/StoryList";
 import Home from "./pages/Home";
 import EventList, { EventPage } from "./pages/Events";
 import BannerList from "./pages/Banners";
+import GachaSim from "./pages/Gacha";
 import StoryBattles from "./pages/StoryBattles";
 import QuestList, { QuestBattles } from "./pages/Quests";
 import CardList, { CardDetail } from "./pages/Cards";
@@ -35,6 +36,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="events" element={<EventList />} />
           <Route path="events/:id" element={<EventPage />} />
           <Route path="banners" element={<BannerList />} />
+          <Route path="gacha" element={<GachaSim />} />
           <Route path="units" element={<UnitList />} />
           <Route path="units/:id" element={<UnitDetail />} />
           <Route path="scenes/:id" element={<ScenePlayer />} />
