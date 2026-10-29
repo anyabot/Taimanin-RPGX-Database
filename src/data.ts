@@ -320,6 +320,29 @@ export function tr(t: Text | null | undefined, l: Lang = lang): string {
   if (!t) return "";
   return (l === "en" && t.en) || t.ja;
 }
+// ---- English scene text (public/data/tl, tools/web_export/translations.py)
+/** Per Japanese beat of the script: [name, text], or 0 where the translation has no line. */
+export type SceneLine = [string, string] | 0;
+export interface SceneTranslation { id: string; n: number; versions: { by: string; lines: SceneLine[] }[] }
+export interface TranslationIndex { source: string; scenes: Record<string, string[]>; units: Record<string, number> }
+/** The patch's translator credit, as a reader-facing phrase. */
+export const creditOf = (by: string) =>
+  by === "Official" ? "Official English release" : by === "Fan Translation" ? "Fan translation" : by;
+
+const SCENE_EN_KEY = "taimanin.scene.english";
+let sceneEnglish = (() => { try { return localStorage.getItem(SCENE_EN_KEY) !== "0"; } catch { return true; } })();
+const englishListeners = new Set<() => void>();
+/** Whether scenes show their English translation where one exists: on unless
+ *  turned off, and remembered for every scene. */
+export function useSceneEnglish(): [boolean, (v: boolean) => void] {
+  const on = useSyncExternalStore((l) => { englishListeners.add(l); return () => englishListeners.delete(l); }, () => sceneEnglish);
+  return [on, (v) => {
+    sceneEnglish = v;
+    try { localStorage.setItem(SCENE_EN_KEY, v ? "1" : "0"); } catch { /* private mode */ }
+    englishListeners.forEach((l) => l());
+  }];
+}
+
 /** The bare name; the title is shown separately (displayName = 【title】 name). */
 export const unitName = (u: { name: Text | null; displayName?: Text | null }, l: Lang) =>
   tr(u.name, l) || tr(u.displayName, l) || "?";

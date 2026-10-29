@@ -4,6 +4,7 @@ import { LoadState, PageHeader, SearchBox, SegmentedButtons } from "@altterisk/g
 import { textMatch } from "@altterisk/game-hub/filters";
 import { tr, useData, useLang, type BundleRef, type StoryGroup, type StorySection } from "../data";
 import { BundleImage } from "../bundleImage";
+import { EnglishBadge } from "../sceneText";
 
 const KIND_NOUN: Record<string, string> = {
   main: "Chapter", event: "Event", raid: "Raid", map: "Map event", special: "Special", tutorial: "Tutorial",
@@ -74,6 +75,7 @@ function StoryCard({ g, kind, lang, open }: { g: StoryGroup; kind: string; lang:
               {p.title && <span lang="ja"> · {p.title}</span>}
             </Link>
             <Link className="scene-transcript-link small" to={`/story/${p.id}/transcript`}>Transcript</Link>
+            <EnglishBadge sid={p.id} />
           </li>
         ))}
       </ol>

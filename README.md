@@ -26,6 +26,18 @@ voices are direct `.ogg` downloads. Animated CGs play through the vendored
 Spine 3.6 runtime in `public/vendor/spine-3.6` (the local viewer's patched copy;
 see `src/spine.ts`).
 
+## English scene text
+
+`public/data/tl/<scene>.json` holds English lines for 641 scenes (262 unit
+H-scenes, 379 story parts) from the RPGX English Patch (official English
+release plus fan translations, credited per scene). The player keeps the
+current Japanese script's stage commands and swaps only the text, one line
+per beat; `translations.py` pairs the patch's beats with the Japanese ones
+(alignment on voice / CG / background where the counts differ). Beats with no
+English keep the Japanese; a file whose beat count no longer matches the
+script is ignored. Viewers turn English off with the "English text" box,
+which is remembered.
+
 ## Refresh the data after a game update
 
 From `D:\Download\Taimanin`:
@@ -35,6 +47,7 @@ From `D:\Download\Taimanin`:
     py -3 tools/web_export/scenes.py             # public/data/scenes, adv_se.json (after tables.py)
     py -3 tools/web_export/buffs.py              # public/data/buffs.json for #/buffs (after tables.py)
     py -3 tools/web_export/stories.py            # public/data/stories for #/story (after scenes.py)
+    py -3 tools/web_export/translations.py       # public/data/tl: English scene text (after stories.py)
 
 Even without a refresh, the site checks the live catalog `.hash` files and
 rescans a changed catalog itself, so renamed bundles keep loading.

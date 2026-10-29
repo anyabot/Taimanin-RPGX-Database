@@ -5,6 +5,7 @@ import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit
 import { beats as toBeats, parseScript, type Actor, type Beat, type SceneDoc } from "../adv";
 import { SceneArt, composeFrame, loadScript, saveBlob, type SeIndex } from "../sceneArt";
 import { TranscriptView } from "./Transcript";
+import { useSceneText } from "../sceneText";
 import { SpineStage, spineRuntime } from "../spine";
 
 const MUTE_KEY = "taimanin.scene.muted";
@@ -52,6 +53,7 @@ export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "st
     return () => { live = false; };
   }, [assets, doc]);
 
+  const text = useSceneText(id, script && doc && script.id === doc.id ? script.beats : null);
   const art = useMemo(() => (assets && doc ? new SceneArt(assets, doc, se ?? null) : null), [assets, doc, se]);
   const siblings = useMemo(() => (story ? story.g.parts.map((p) => p.id) : unit?.scenes.flat() ?? []), [unit, story]);
   const at = siblings.indexOf(id);
@@ -81,12 +83,13 @@ export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "st
           </div>
         )}
       </div>
-      {(!doc || !script) && (
-        <LoadState loading={(loading || !assets || !script) && !error && !scriptError && !assetsError}
+      {(!doc || !script || !text.beats) && (
+        <LoadState loading={(loading || !assets || !script || !text.beats) && !error && !scriptError && !assetsError}
           error={error || scriptError || assetsError} />
       )}
-      {doc && art && script?.id === doc.id && (
-        <Stage key={doc.id} doc={doc} art={art} beats={script.beats}
+      {text.bar}
+      {doc && art && script?.id === doc.id && text.beats && (
+        <Stage key={doc.id} doc={doc} art={art} beats={text.beats}
           next={at >= 0 && at < siblings.length - 1 ? sceneLink(siblings[at + 1]) : null}
           transcript={`${source === "story" ? `/story/${id}` : `/scenes/${id}`}/transcript${unitId ? `?unit=${unitId}` : ""}`} />
       )}
@@ -267,7 +270,8 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   // (a fixed pause per picture in picture mode).
   useEffect(() => {
     if (!auto || loaded.i !== i) return;
-    const wait = pictures ? 3500 : Math.max(1800, b.text.length * 90);
+    // English runs about twice the characters of the Japanese for the same line
+    const wait = pictures ? 3500 : Math.max(1800, b.text.length * (b.en ? 45 : 90));
     const t = setTimeout(forward, wait);
     const v = voice.current;
     const onEnd = () => { clearTimeout(t); setTimeout(forward, 700); };
@@ -292,6 +296,8 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   });
 
   const textOn = b.textBox && !hideText && !pictures && !!(b.text || b.name);
+  // switching languages swaps every line, so the box is rebuilt (see below)
+  const english = beats.some((x) => x.en);
   return (
     <div ref={playerRef} className={`scene-player${theater ? " theater" : ""}`}>
       {/* The frame holds the stage and the dialogue: over the picture on wide
@@ -314,14 +320,14 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
             untranslated by Chrome.
             Per line: only the current line, keyed so each is a fresh element
             (an in-place update of a node a translator replaced would never show). */}
-        <div key={preload ? "all" : "one"} className={`scn-text${textOn ? "" : " off"}`} lang="ja">
+        <div key={`${preload ? "all" : "one"}-${english ? "en" : "ja"}`} className={`scn-text${textOn ? "" : " off"}`} lang="ja">
           {preload ? beats.map((x, k) => (x.text || x.name) && (
-            <div key={k} className={`scn-say${k === i ? " on" : ""}`} aria-hidden={k !== i}>
+            <div key={k} className={`scn-say${k === i ? " on" : ""}`} aria-hidden={k !== i} lang={x.en ? "en" : undefined}>
               {x.name && <div className="scn-name">{x.name}</div>}
               <div className="scn-line">{x.text}</div>
             </div>
           )) : textOn && (
-            <div key={i} className="scn-say on">
+            <div key={i} className="scn-say on" lang={b.en ? "en" : undefined}>
               {b.name && <div className="scn-name">{b.name}</div>}
               <div className="scn-line">{b.text}</div>
             </div>
@@ -357,8 +363,8 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
       </div>
       {missing.length > 0 && <p className="muted small scn-missing" translate="no">Not available for this line: {missing.join(", ")}</p>}
       <p className="muted small scn-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; P for picture mode; F for theater.
-        Dialogue is the game's Japanese text (your browser's page translation works on it; if lines stay untranslated,
-        switch the Text button between "all lines" and "per line").</p>
+        {english ? " Dialogue is the English translation credited above the player." : <> Dialogue is the game's Japanese text (your browser's page translation works on it; if lines stay untranslated,
+        switch the Text button between "all lines" and "per line").</>}</p>
       <details className="scn-transcript">
         <summary translate="no">Transcript</summary>
         <p className="small"><Link to={transcript}>Open the transcript as its own page</Link></p>

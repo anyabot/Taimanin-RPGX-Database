@@ -44,6 +44,8 @@ export interface Beat {
   se: string[];
   flash: boolean;
   quake: boolean;
+  /** the text is a translation's English, not the script's Japanese */
+  en?: boolean;
 }
 
 export function parseScript(text: string): Op[] {
@@ -111,4 +113,13 @@ export function beats(ops: Op[]): Beat[] {
   }
   if (s.text || s.name) push();
   return out;
+}
+
+/** The beats with a translation's name and text in place of the Japanese
+ *  (one line per beat, public/data/tl); beats it has no line for keep theirs. */
+export function translated(beats: Beat[], lines: ([string, string] | 0)[]): Beat[] {
+  return beats.map((b, k) => {
+    const l = lines[k];
+    return l ? { ...b, name: l[0], text: l[1], en: true } : b;
+  });
 }

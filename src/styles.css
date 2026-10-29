@@ -182,6 +182,14 @@ html.scn-theater-open { overflow: hidden; }
 .transcript-page .scn-tr-list { max-height: none; }
 .scene-transcript-link { opacity: .8; }
 .story-parts .scene-transcript-link { margin-left: 10px; }
+/* English translation: the badge on lists, the credit bar over the player */
+.tl-badge { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 0 5px; border-radius: 5px; line-height: 16px;
+  border: 1px solid var(--hub-accent, #7aa2ff); color: var(--hub-accent, #7aa2ff); }
+.story-parts .tl-badge { margin-left: 8px; }
+.scn-tl { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 4px auto 8px;
+  max-width: max(280px, calc((100vh - 220px) * 16 / 9)); }
+.scn-tl-toggle { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; cursor: pointer; }
+.scn-tl select { margin: 0 2px; }
 @media (prefers-reduced-motion: reduce) { .scn-stage.quake-0, .scn-stage.quake-1 { animation: none; } .scn-flash { animation-duration: .2s; } }
 .art-actions { position: absolute; right: 8px; bottom: 8px; opacity: 0; transition: opacity .15s; }
 .art-item:hover .art-actions, .art-item:focus-within .art-actions { opacity: 1; }

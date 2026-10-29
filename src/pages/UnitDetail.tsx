@@ -15,6 +15,7 @@ import { ArtGallery, SceneStills } from "../art";
 import { BundleImage } from "../bundleImage";
 import { EffectList, ElementIcon, RarityIcon } from "../components";
 import type { SceneDoc } from "../adv";
+import { EnglishBadge } from "../sceneText";
 import { AbilityPanel, BloomTab } from "./growth";
 import type { Growth } from "../data";
 
@@ -455,6 +456,7 @@ function SceneLink({ sid, unitId }: { sid: string; unitId: string }) {
     <>
       <Link to={`/scenes/${sid}?unit=${unitId}`} lang="ja">{data?.title || sid}</Link>
       <Link className="scene-transcript-link small" to={`/scenes/${sid}/transcript?unit=${unitId}`}>Transcript</Link>
+      <EnglishBadge sid={sid} />
     </>
   );
 }

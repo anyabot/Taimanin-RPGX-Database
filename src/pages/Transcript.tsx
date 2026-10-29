@@ -4,6 +4,7 @@ import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
 import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Beat, type SceneDoc } from "../adv";
 import { loadScript, saveBlob } from "../sceneArt";
+import { useSceneText } from "../sceneText";
 
 /** Every line of a scene, to read, copy or save as a text file. In the player
  *  (`at` and `go` given) the current line is marked and a line jumps to it. */
@@ -12,7 +13,7 @@ export function TranscriptView({ title, file, beats, at, go }: {
 }) {
   const list = useRef<HTMLOListElement>(null);
   const [copied, setCopied] = useState<"" | "ok" | "fail">("");
-  const lines = beats.flatMap((x, k) => (x.text ? [{ k, name: x.name, text: x.text }] : []));
+  const lines = beats.flatMap((x, k) => (x.text ? [{ k, name: x.name, text: x.text, en: x.en }] : []));
   // keep the current line in view inside the list, without scrolling the page
   useEffect(() => {
     const ol = list.current;
@@ -56,7 +57,7 @@ export function TranscriptView({ title, file, beats, at, go }: {
       </div>
       <ol ref={list} className={`scn-tr-list${go ? " jump" : ""}`} lang="ja">
         {lines.map((l) => (
-          <li key={l.k} data-k={l.k} className={l.k === at ? "on" : ""} onClick={go && (() => go(l.k))}>
+          <li key={l.k} data-k={l.k} className={l.k === at ? "on" : ""} onClick={go && (() => go(l.k))} lang={l.en ? "en" : undefined}>
             {l.name && <span className="scn-tr-name">{l.name}</span>}
             <span className="scn-tr-line">{l.text}</span>
           </li>
@@ -92,6 +93,7 @@ export default function TranscriptPage({ source = "unit" }: { source?: "unit" | 
     }
     return null;
   }, [stories, id]);
+  const text = useSceneText(id, beats);
 
   const player = source === "story" ? `/story/${id}` : `/scenes/${id}${unitId ? `?unit=${unitId}` : ""}`;
   const groupTitle = story ? tr(story.g.title, lang) || story.g.id : "";
@@ -114,9 +116,10 @@ export default function TranscriptPage({ source = "unit" }: { source?: "unit" | 
         <h1 lang="ja">{title} <span className="muted scene-sub">transcript</span></h1>
         <div className="scene-siblings"><Link className="hub-btn" to={player}>Open in the scene player</Link></div>
       </div>
-      {!beats && <LoadState loading={!error && !scriptError && !assetsError} error={error || scriptError || assetsError} />}
-      {beats && <TranscriptView title={title} file={id} beats={beats} />}
-      <p className="muted small">The game's Japanese text; your browser's page translation works on it.</p>
+      {!text.beats && <LoadState loading={!error && !scriptError && !assetsError} error={error || scriptError || assetsError} />}
+      {text.bar}
+      {text.beats && <TranscriptView title={title} file={id} beats={text.beats} />}
+      {text.beats && !text.beats.some((b) => b.en) && <p className="muted small">The game's Japanese text; your browser's page translation works on it.</p>}
     </div>
   );
 }
