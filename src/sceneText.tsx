@@ -1,13 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
 import { translated, type Beat } from "./adv";
-import { creditOf, useData, useSceneEnglish, type SceneTranslation, type TranslationIndex } from "./data";
+import { creditOf, isAi, useData, useSceneEnglish, type SceneTranslation, type TranslationIndex } from "./data";
+
+/** A line with the translations' <i>...</i> emphasis as italics; any other
+ *  text, unbalanced tags included, stays plain text. */
+export function RichLine({ text }: { text: string }) {
+  if (!text.includes("<i>") && !text.includes("</i>")) return <>{text}</>;
+  let italic = false;
+  return <>{text.split(/(<\/?i>)/).map((part, k) => {
+    if (part === "<i>") { italic = true; return null; }
+    if (part === "</i>") { italic = false; return null; }
+    return part && (italic ? <em key={k}>{part}</em> : part);
+  })}</>;
+}
 
 /** "EN" next to a scene that has an English translation, naming who made it. */
 export function EnglishBadge({ sid }: { sid: string }) {
   const { data: index } = useData<TranslationIndex>("tl/index");
   const by = index?.scenes[sid];
   if (!by) return null;
-  return <span className="tl-badge" title={`English: ${by.map(creditOf).join(", ")}`}>EN</span>;
+  return by.every(isAi)
+    ? <span className="tl-badge ai" title={`English: ${by.join(", ")}. Machine-made, expect mistakes`}>AI</span>
+    : <span className="tl-badge" title={`English: ${by.map(creditOf).join(", ")}`}>EN</span>;
 }
 
 /** A scene's beats in English where a translation exists and English is on
@@ -48,7 +62,7 @@ export function useSceneText(id: string, beats: Beat[] | null) {
             {usable.versions.map((x, k) => <option key={k} value={k}>{creditOf(x.by)}</option>)}
           </select>
         ) : creditOf(v.by)}
-        {" "}· via the {index?.source}
+        {isAi(v.by) ? <>{" "}· <span className="tl-badge ai">AI</span> machine-made, expect mistakes</> : <>{" "}· via the {index?.source}</>}
         {english && untranslated > 0 && ` · ${untranslated} line${untranslated === 1 ? "" : "s"} without English show the Japanese`}
       </span>
     </div>

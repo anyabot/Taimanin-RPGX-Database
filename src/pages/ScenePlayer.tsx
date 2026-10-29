@@ -5,7 +5,7 @@ import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit
 import { beats as toBeats, parseScript, type Actor, type Beat, type SceneDoc } from "../adv";
 import { SceneArt, composeFrame, loadScript, saveBlob, type SeIndex } from "../sceneArt";
 import { TranscriptView } from "./Transcript";
-import { useSceneText } from "../sceneText";
+import { RichLine, useSceneText } from "../sceneText";
 import { SpineStage, spineRuntime } from "../spine";
 
 const MUTE_KEY = "taimanin.scene.muted";
@@ -324,12 +324,12 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
           {preload ? beats.map((x, k) => (x.text || x.name) && (
             <div key={k} className={`scn-say${k === i ? " on" : ""}`} aria-hidden={k !== i} lang={x.en ? "en" : undefined}>
               {x.name && <div className="scn-name">{x.name}</div>}
-              <div className="scn-line">{x.text}</div>
+              <div className="scn-line"><RichLine text={x.text} /></div>
             </div>
           )) : textOn && (
             <div key={i} className="scn-say on" lang={b.en ? "en" : undefined}>
               {b.name && <div className="scn-name">{b.name}</div>}
-              <div className="scn-line">{b.text}</div>
+              <div className="scn-line"><RichLine text={b.text} /></div>
             </div>
           )}
         </div>

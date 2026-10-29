@@ -4,7 +4,7 @@ import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
 import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Beat, type SceneDoc } from "../adv";
 import { loadScript, saveBlob } from "../sceneArt";
-import { useSceneText } from "../sceneText";
+import { RichLine, useSceneText } from "../sceneText";
 
 /** Every line of a scene, to read, copy or save as a text file. In the player
  *  (`at` and `go` given) the current line is marked and a line jumps to it. */
@@ -59,7 +59,7 @@ export function TranscriptView({ title, file, beats, at, go }: {
         {lines.map((l) => (
           <li key={l.k} data-k={l.k} className={l.k === at ? "on" : ""} onClick={go && (() => go(l.k))} lang={l.en ? "en" : undefined}>
             {l.name && <span className="scn-tr-name">{l.name}</span>}
-            <span className="scn-tr-line">{l.text}</span>
+            <span className="scn-tr-line"><RichLine text={l.text} /></span>
           </li>
         ))}
       </ol>

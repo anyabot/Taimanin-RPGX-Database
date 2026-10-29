@@ -186,6 +186,8 @@ html.scn-theater-open { overflow: hidden; }
 .tl-badge { font-size: 10px; font-weight: 700; letter-spacing: .04em; padding: 0 5px; border-radius: 5px; line-height: 16px;
   border: 1px solid var(--hub-accent, #7aa2ff); color: var(--hub-accent, #7aa2ff); }
 .story-parts .tl-badge { margin-left: 8px; }
+.tl-badge.ai { border-style: dashed; border-color: var(--hub-text-muted, #9aa3b5); color: var(--hub-text-muted, #9aa3b5); }
+.scn-tl .tl-badge { margin-right: 4px; }
 .scn-tl { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 4px auto 8px;
   max-width: max(280px, calc((100vh - 220px) * 16 / 9)); }
 .scn-tl-toggle { display: inline-flex; gap: 6px; align-items: center; font-weight: 600; cursor: pointer; }

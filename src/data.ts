@@ -324,7 +324,13 @@ export function tr(t: Text | null | undefined, l: Lang = lang): string {
 /** Per Japanese beat of the script: [name, text], or 0 where the translation has no line. */
 export type SceneLine = [string, string] | 0;
 export interface SceneTranslation { id: string; n: number; versions: { by: string; lines: SceneLine[] }[] }
-export interface TranslationIndex { source: string; scenes: Record<string, string[]>; units: Record<string, number> }
+export interface TranslationIndex {
+  source: string; scenes: Record<string, string[]>;
+  /** per unit: scenes translated by people, and scenes with only an AI translation */
+  units: Record<string, number>; ai?: Record<string, number>;
+}
+/** A machine translation (translation/tools/translate_scenes.py), not a person's. */
+export const isAi = (by: string) => by.startsWith("AI translation");
 /** The patch's translator credit, as a reader-facing phrase. */
 export const creditOf = (by: string) =>
   by === "Official" ? "Official English release" : by === "Fan Translation" ? "Fan translation" : by;

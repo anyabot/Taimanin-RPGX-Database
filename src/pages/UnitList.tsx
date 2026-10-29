@@ -43,6 +43,7 @@ export default function UnitList() {
   const showUpcoming = params.get("upcoming") === "1";
   const skinF = params.get("skin") === "1";
   const englishF = params.get("english") === "1";
+  const aiF = params.get("ai") === "1";
   const setParam = (k: string, v: string | null) => {
     const next = new URLSearchParams(params);
     if (v) next.set(k, v); else next.delete(k);
@@ -65,6 +66,7 @@ export default function UnitList() {
       (!originF.length || originF.includes(u.origin || NO_ORIGIN)) &&
       (!skinF || !!u.skin) &&
       (!englishF || !!tl?.units[u.id]) &&
+      (!aiF || !!tl?.ai?.[u.id]) &&
       (!q || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en, u.displayName?.en, u.displayName?.ja,
         u.illustrator, u.voiceActor, ...(u.aliases ?? [])])));
     const by: Record<string, (a: UnitIndexEntry, b: UnitIndexEntry) => number> = {
@@ -74,15 +76,16 @@ export default function UnitList() {
     };
     const cmp = by[sort] || ((a: UnitIndexEntry, b: UnitIndexEntry) => (b.stats[sort as "atk"] || 0) - (a.stats[sort as "atk"] || 0));
     return [...list].sort(cmp);
-  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), sourceF.join(), originF.join(), showUpcoming, skinF, englishF, tl]);
+  }, [units, q, sort, rarityF.join(), elementF.join(), traitF.join(), sourceF.join(), originF.join(), showUpcoming, skinF, englishF, aiF, tl]);
 
   const pages = Math.max(1, Math.ceil(shown.length / PAGE));
-  const active = rarityF.length + elementF.length + traitF.length + sourceF.length + originF.length + (showUpcoming ? 1 : 0) + (skinF ? 1 : 0) + (englishF ? 1 : 0);
+  const active = rarityF.length + elementF.length + traitF.length + sourceF.length + originF.length + (showUpcoming ? 1 : 0) + (skinF ? 1 : 0) + (englishF ? 1 : 0) + (aiF ? 1 : 0);
   const originCount = (o: string) => (units || []).filter((u) => (u.origin || NO_ORIGIN) === o && (showUpcoming || !isUpcoming(u))).length;
   // every origin in the data shows, in ORIGINS order, unlisted ones after it, then the units with none
   const originList = [...ORIGINS, ...[...new Set((units || []).map((u) => u.origin).filter((o): o is string => !!o && !ORIGINS.includes(o)))].sort(), NO_ORIGIN];
   const skinCount = useMemo(() => (units || []).filter((u) => u.skin).length, [units]);
   const englishCount = useMemo(() => (units || []).filter((u) => tl?.units[u.id] && (showUpcoming || !isUpcoming(u))).length, [units, tl, showUpcoming]);
+  const aiCount = useMemo(() => (units || []).filter((u) => tl?.ai?.[u.id] && (showUpcoming || !isUpcoming(u))).length, [units, tl, showUpcoming]);
   const upcomingCount = useMemo(() => (units || []).filter(isUpcoming).length, [units]);
 
   return (
@@ -111,13 +114,15 @@ export default function UnitList() {
             selected={sourceF} onToggle={(v) => toggle("source", sourceF, v)} />
           <CheckboxGroup title="Origin" options={originList.filter((o) => originCount(o) > 0).map((o) => ({ value: o, label: `${o} (${originCount(o)})` }))}
             selected={originF} onToggle={(v) => toggle("origin", originF, v)} />
-          {(skinCount > 0 || englishCount > 0) && (
+          {(skinCount > 0 || englishCount > 0 || aiCount > 0) && (
             <CheckboxGroup title="Extras" options={[
               ...(skinCount > 0 ? [{ value: "skin", label: `Has a skin (${skinCount})` }] : []),
               ...(englishCount > 0 ? [{ value: "english", label: `English scenes (${englishCount})` }] : []),
+              ...(aiCount > 0 ? [{ value: "ai", label: `AI-translated scenes (${aiCount})` }] : []),
             ]}
-              selected={[...(skinF ? ["skin"] : []), ...(englishF ? ["english"] : [])]}
-              onToggle={(v) => v === "skin" ? setParam("skin", skinF ? null : "1") : setParam("english", englishF ? null : "1")} />
+              selected={[...(skinF ? ["skin"] : []), ...(englishF ? ["english"] : []), ...(aiF ? ["ai"] : [])]}
+              onToggle={(v) => v === "skin" ? setParam("skin", skinF ? null : "1")
+                : v === "ai" ? setParam("ai", aiF ? null : "1") : setParam("english", englishF ? null : "1")} />
           )}
           {upcomingCount > 0 && (
             <CheckboxGroup title="Release" options={[{ value: "1", label: `Upcoming (${upcomingCount})` }]}
@@ -137,7 +142,8 @@ export default function UnitList() {
               <RarityIcon rarity={u.rarity} />
               <ElementIcon element={u.element} />
               {isUpcoming(u) && <span className="hub-badge">{u.release}</span>}
-              {tl?.units[u.id] && <span className="tl-badge" title="Has scenes with an English translation">EN</span>}
+              {tl?.units[u.id] ? <span className="tl-badge" title="Has scenes with an English translation">EN</span>
+                : tl?.ai?.[u.id] ? <span className="tl-badge ai" title="Has scenes with an AI translation">AI</span> : null}
             </span>
           </Link>
         ))}
