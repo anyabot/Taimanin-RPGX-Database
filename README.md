@@ -68,3 +68,9 @@ file (Pages allows 20,000 files per deployment; the build prints the count and
 warns near the limit): the SPA fallback serves them and they set their meta at
 runtime. Page text lives in `src/meta.ts`, shared by both; the site URL used
 for canonicals and the sitemap is `SITE_URL` there.
+
+## License
+
+The code is licensed under the [GNU Affero General Public License v3.0](LICENSE)
+(AGPL-3.0-or-later). The license covers the code only: Taimanin RPGX art, audio,
+text and data shown by the site belong to their rights holders and are not covered.

@@ -26,10 +26,10 @@ const noHScroll = () => cdp.eval(`return document.documentElement.scrollWidth <=
 
 await cdp.viewport(1300, 900);
 // pass the age gate once (it remembers the answer in localStorage)
-await cdp.goto(`${SITE}/`, `!!document.querySelector(".age-gate, .app")`);
+await cdp.goto(`${SITE}/`, `!!document.querySelector(".hub-gate, .hub-shell")`);
 await cdp.eval(`localStorage.setItem("taimanin.adult", "1")`);
 await cdp.send("Page.reload");
-await waitFor(() => cdp.eval(`return !!document.querySelector(".app")`), 30000, "app after age gate");
+await waitFor(() => cdp.eval(`return !!document.querySelector(".hub-shell")`), 30000, "app after age gate");
 await step("units", async () => {
   await cdp.goto(`${SITE}/units`, `document.querySelectorAll(".unit-card").length > 0`);
   await waitFor(() => cdp.eval(`return [...document.querySelectorAll(".unit-card img")].slice(0, 12).every(i => i.complete && i.naturalWidth > 0)`), 20000, "icons");

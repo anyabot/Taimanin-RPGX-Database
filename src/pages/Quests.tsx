@@ -1,11 +1,12 @@
 import { useMemo } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Breadcrumbs, LoadState, PageHeader, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { useParams, useSearchParams } from "react-router-dom";
+import { Breadcrumbs, EntityTile, LoadState, PageHeader, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { tr, useData, useLang, type Battles, type QuestGroup, type QuestSection } from "../data";
 import { BattleBody } from "../battles";
 import { DispatchView } from "./Dispatch";
 import { LIST_META, questMeta } from "../meta";
+import { renderLink } from "../links";
 import { usePageMeta } from "../usePageMeta";
 
 const today = new Date().toISOString().slice(0, 10);
@@ -16,13 +17,9 @@ export default function QuestList() {
   const { data: index, loading, error } = useData<QuestSection[]>("quests/index");
   const lang = useLang();
   const [params, setParams] = useSearchParams();
-  const section = params.get("section") || "tower";
-  const q = params.get("q") || "";
-  const set = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params);
-    if (v) next.set(k, v); else next.delete(k);
-    setParams(next, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const section = url.text("section") || "tower";
+  const q = url.text("q");
   const dispatch = section === "dispatch";
   const sec = dispatch ? undefined : index?.find((s) => s.key === section) ?? index?.[0];
   const groups = useMemo(() => (sec?.groups ?? []).filter((g) =>
@@ -35,10 +32,10 @@ export default function QuestList() {
         subtitle="Arena towers, daily quests, mini events and dispatch: stages, enemies, rules and drops from the game's own data." />
       <SegmentedButtons label="Section" selected={[dispatch ? "dispatch" : sec?.key ?? ""]}
         options={[...index.map((s) => ({ value: s.key, label: `${s.label} (${s.groups.length})` })), { value: "dispatch", label: "Dispatch" }]}
-        onToggle={(v) => { const next = new URLSearchParams(params); next.set("section", v); setParams(next, { replace: true }); }} />
+        onToggle={(v) => url.setText("section", v)} />
       {dispatch ? <DispatchView /> : (
         <>
-          <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search titles" />
+          <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Search titles" />
           <div className="quest-groups">
             {groups.map((g) => <QuestCard key={g.id} g={g} lang={lang} />)}
             {!groups.length && <p className="muted">No titles match.</p>}
@@ -60,12 +57,11 @@ function QuestCard({ g, lang }: { g: QuestGroup; lang: "en" | "ja" }) {
   const when = dates(g);
   const upcoming = !!g.start && g.start > today;
   return (
-    <Link className="quest-card" to={`/quests/${g.id}`}>
-      <span className="quest-card-title" lang="ja">{tr(g.title, lang) || g.id}{g.kind ? ` · ${g.kind}` : ""}</span>
-      {g.label && <span className="muted" lang="ja">{tr(g.label, lang)}</span>}
-      <span className="muted">{[g.note, `${g.quests} quest${g.quests === 1 ? "" : "s"}`, when, upcoming && "upcoming"]
-        .filter(Boolean).join(" · ")}</span>
-    </Link>
+    <EntityTile href={`/quests/${g.id}`} renderLink={renderLink}
+      title={<span lang="ja">{tr(g.title, lang) || g.id}{g.kind ? ` · ${g.kind}` : ""}</span>}
+      subtitle={g.label && <span lang="ja">{tr(g.label, lang)}</span>}
+      badges={<span className="muted small">{[g.note, `${g.quests} quest${g.quests === 1 ? "" : "s"}`, when, upcoming && "upcoming"]
+        .filter(Boolean).join(" · ")}</span>} />
   );
 }
 

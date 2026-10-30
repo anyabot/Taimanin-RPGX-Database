@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { LoadState, PageHeader, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { tr, useData, useLang, type BundleRef, type StoryGroup, type StorySection } from "../data";
 import { BundleImage } from "../bundleImage";
 import { EnglishBadge } from "../sceneText";
@@ -18,14 +18,10 @@ export default function StoryList() {
   const { data: index, loading, error } = useData<StorySection[]>("stories/index");
   const lang = useLang();
   const [params, setParams] = useSearchParams();
-  const section = params.get("section") || "main";
-  const q = params.get("q") || "";
-  const open = params.get("open");
-  const set = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params);
-    if (v) next.set(k, v); else next.delete(k);
-    setParams(next, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const section = url.text("section") || "main";
+  const q = url.text("q");
+  const open = url.text("open") || null;
   const sec = index?.find((s) => s.key === section) ?? index?.[0];
   const groups = useMemo(() => (sec?.groups ?? []).filter((g) =>
     !q || textMatch(q, [g.id, g.title?.ja, g.title?.en, ...g.parts.map((p) => p.title)])), [sec, q]);
@@ -37,8 +33,8 @@ export default function StoryList() {
         subtitle="Main story chapters and event stories, played from the game's own files. Text is the game's Japanese (browser page translation works on it)." />
       <SegmentedButtons label="Section" selected={[sec?.key ?? ""]}
         options={index.map((s) => ({ value: s.key, label: `${s.label} (${s.groups.length})` }))}
-        onToggle={(v) => { const next = new URLSearchParams(params); next.set("section", v); next.delete("open"); setParams(next, { replace: true }); }} />
-      <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search titles" />
+        onToggle={(v) => searchParamsAdapter(params, setParams).set({ section: v, open: null })} />
+      <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Search titles" />
       <div className="story-groups">
         {groups.map((g) => (
           <StoryCard key={g.id} g={g} kind={sec!.key} lang={lang} open={open === g.id || (!!q && groups.length <= 3)} />

@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
-import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
+import { saveBlob } from "@altterisk/game-hub/persist";
+import { flagSetting, tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Actor, type Beat, type SceneDoc } from "../adv";
-import { SceneArt, composeFrame, loadScript, saveBlob, type SeIndex } from "../sceneArt";
+import { SceneArt, composeFrame, loadScript, type SeIndex } from "../sceneArt";
 import { TranscriptView } from "./Transcript";
 import { RichLine, useSceneText } from "../sceneText";
 import { SpineStage, spineRuntime } from "../spine";
 import { sceneMeta, storyPartMeta } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 
-const MUTE_KEY = "taimanin.scene.muted";
-const SPINE_KEY = "taimanin.scene.spine";
-const PRELOAD_KEY = "taimanin.scene.preload";
-const PICTURES_KEY = "taimanin.scene.pictures";
+const MUTED = flagSetting("taimanin.scene.muted", false);
+const SPINE = flagSetting("taimanin.scene.spine", true);
+const PRELOAD = flagSetting("taimanin.scene.preload", true);
+const PICTURES = flagSetting("taimanin.scene.pictures", false);
 
 /** Beats with something to look at: a CG, an animation or an actor, not a
  *  blank stage or a bare background. */
@@ -111,14 +112,14 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   const [busy, setBusy] = useState(false);
   const [missing, setMissing] = useState<string[]>([]);
   const [hideText, setHideText] = useState(false);
-  const [animate, setAnimate] = useState(() => { try { return localStorage.getItem(SPINE_KEY) !== "0"; } catch { return true; } });
+  const [animate, setAnimate] = SPINE.use();
   // Text mode: every line in the page up front (page translators reach them all),
   // or only the current line (for translators that handle new text themselves).
-  const [preload, setPreload] = useState(() => { try { return localStorage.getItem(PRELOAD_KEY) !== "0"; } catch { return true; } });
+  const [preload, setPreload] = PRELOAD.use();
   // Picture mode: no text or voice, and stepping goes from picture to picture.
-  const [pictures, setPictures] = useState(() => { try { return localStorage.getItem(PICTURES_KEY) === "1"; } catch { return false; } });
+  const [pictures, setPictures] = PICTURES.use();
   const [auto, setAuto] = useState(false);
-  const [muted, setMuted] = useState(() => { try { return localStorage.getItem(MUTE_KEY) === "1"; } catch { return false; } });
+  const [muted, setMuted] = MUTED.use();
   const [fx, setFx] = useState({ flash: 0, quake: 0 });
   // the animated CG's current frame, while one is showing
   const spineSnap = useRef<(() => HTMLCanvasElement) | null>(null);
@@ -262,11 +263,7 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   }, [b.bgm, muted, art]);
 
   useEffect(() => () => { voice.current?.pause(); bgm.current?.el.pause(); }, []);
-  useEffect(() => { try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch { /* private mode */ } }, [muted]);
-  useEffect(() => { try { localStorage.setItem(SPINE_KEY, animate ? "1" : "0"); } catch { /* private mode */ } }, [animate]);
-  useEffect(() => { try { localStorage.setItem(PRELOAD_KEY, preload ? "1" : "0"); } catch { /* private mode */ } }, [preload]);
   useEffect(() => {
-    try { localStorage.setItem(PICTURES_KEY, pictures ? "1" : "0"); } catch { /* private mode */ }
     if (pictures) { voice.current?.pause(); voice.current = null; }
   }, [pictures]);
 

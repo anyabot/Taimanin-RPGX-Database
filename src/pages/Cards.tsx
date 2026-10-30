@@ -1,13 +1,16 @@
 import { useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Breadcrumbs, FallbackImage, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import {
+  Breadcrumbs, EntityTile, FallbackImage, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons, StatRow, StatRows,
+} from "@altterisk/game-hub";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { RARITY, cardIconUrl, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
 import { CreditLinks, RarityIcon } from "../components";
 import { ArtGallery, SceneStills } from "../art";
 import type { SceneDoc } from "../adv";
 import "../battles.css";
 import { LIST_META, cardMeta } from "../meta";
+import { renderLink } from "../links";
 import { usePageMeta } from "../usePageMeta";
 
 const UNIONS = ["Taimanin", "UFS", "Demon"];
@@ -18,14 +21,10 @@ export default function CardList() {
   const { data, loading, error } = useData<ArenaCard[]>("cards");
   const lang = useLang();
   const [params, setParams] = useSearchParams();
-  const union = params.get("union") || "";
-  const rarity = params.get("rarity") || "";
-  const q = params.get("q") || "";
-  const set = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params);
-    if (v) next.set(k, v); else next.delete(k);
-    setParams(next, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const union = url.text("union");
+  const rarity = url.text("rarity");
+  const q = url.text("q");
   const cards = useMemo(() => (data ?? []).filter((c) =>
     (!union || c.union === union) && (!rarity || String(c.rarity) === rarity) &&
     (!q || textMatch(q, [c.id, c.name?.ja, c.name?.en, c.title?.ja, c.title?.en, c.illustrator, c.voiceActor]))),
@@ -36,11 +35,11 @@ export default function CardList() {
     <div className="story-page">
       <PageHeader title="Arena cards" subtitle="The 決戦アリーナ cards in RPGX: art and scenes from the game's own files." />
       <div className="filter-row">
-      <SegmentedButtons label="Union" selected={[union]} onToggle={(v) => set("union", v === union ? null : v)}
+      <SegmentedButtons label="Union" selected={[union]} onToggle={(v) => url.setText("union", v === union ? "" : v)}
         options={UNIONS.map((u) => ({ value: u, label: u }))} />
-      <SegmentedButtons label="Rarity" selected={[rarity]} onToggle={(v) => set("rarity", v === rarity ? null : v)}
+      <SegmentedButtons label="Rarity" selected={[rarity]} onToggle={(v) => url.setText("rarity", v === rarity ? "" : v)}
         options={rarities.map((r) => ({ value: String(r), label: RARITY[r] ?? String(r) }))} />
-      <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search names, illustrators, voices" />
+      <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Search names, illustrators, voices" />
       </div>
       <p className="muted small">{cards.length} / {data.length}</p>
       <div className="quest-groups">
@@ -57,14 +56,11 @@ export default function CardList() {
 export function CardTile({ card: c, detail }: { card: ArenaCard; detail?: string }) {
   const lang = useLang();
   return (
-    <Link className="quest-card card-tile" to={`/cards/${c.id}`}>
-      <FallbackImage srcs={[cardIconUrl(c.id)]} alt="" loading="lazy" width={56} height={56} missingClassName="card-tile-noicon" />
-      <span className="card-tile-text">
-        <span className="quest-card-title" lang="ja"><RarityIcon rarity={c.rarity} height={14} /> {tr(c.name, lang) || c.id}</span>
-        {c.title && <span className="muted" lang="ja">{tr(c.title, lang)}</span>}
-        {detail && <span className="muted">{detail}</span>}
-      </span>
-    </Link>
+    <EntityTile href={`/cards/${c.id}`} renderLink={renderLink}
+      icon={<FallbackImage srcs={[cardIconUrl(c.id)]} alt="" loading="lazy" width={56} height={56} missingClassName="card-tile-noicon" />}
+      title={<span lang="ja"><RarityIcon rarity={c.rarity} height={14} /> {tr(c.name, lang) || c.id}</span>}
+      subtitle={c.title && <span lang="ja">{tr(c.title, lang)}</span>}
+      badges={detail && <span className="muted small">{detail}</span>} />
   );
 }
 
@@ -95,12 +91,12 @@ export function CardDetail() {
         </div>
       </div>
       <Panel title="Card">
-        <dl className="credits">
-          {card.union && <><dt>Union</dt><dd>{card.union}</dd></>}
-          {card.illustrator && <><dt>Illustrator</dt><dd><CreditLinks raw={card.illustrator} role="artist" /></dd></>}
-          {card.voiceActor && <><dt>Voice</dt><dd><CreditLinks raw={card.voiceActor} role="cv" /></dd></>}
-          {card.sale && <><dt>On sale from</dt><dd>{card.sale}</dd></>}
-        </dl>
+        <StatRows columns={1}>
+          {card.union && <StatRow label="Union" value={card.union} />}
+          {card.illustrator && <StatRow label="Illustrator" value={<CreditLinks raw={card.illustrator} role="artist" />} />}
+          {card.voiceActor && <StatRow label="Voice" value={<CreditLinks raw={card.voiceActor} role="cv" />} />}
+          {card.sale && <StatRow label="On sale from" value={card.sale} />}
+        </StatRows>
       </Panel>
       {card.scenes.length > 0 && (
         <Panel title="Scenes" note="Played in the browser from the game's own files; each scene loads when opened.">

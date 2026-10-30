@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, CardGrid, FallbackImage, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
 import { iconUrl, isUpcoming, tr, unitName, useData, useLang, type ArenaCard, type UnitIndexEntry } from "../data";
 import { CardTile } from "./Cards";
@@ -23,13 +23,9 @@ export default function PeopleIndex() {
   usePageMeta(LIST_META["/people"]);
   const { people, loading, error } = usePeople();
   const [params, setParams] = useSearchParams();
-  const role = (params.get("role") as Role) || "artist";
-  const q = params.get("q") || "";
-  const set = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params);
-    if (v) next.set(k, v); else next.delete(k);
-    setParams(next, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const role = (url.text("role") as Role) || "artist";
+  const q = url.text("q");
   if (!people) return <LoadState loading={loading} error={error} />;
   const all = [...people.values()];
   const list = all.filter((p) => p.role === role && (!q || textMatch(q, [p.name])))
@@ -38,9 +34,9 @@ export default function PeopleIndex() {
     <div className="people-page">
       <PageHeader title="Artists & voice actors" subtitle="Everyone credited on a unit or an Arena card, from the game's own credits." />
       <div className="filter-row">
-        <SegmentedButtons label="Role" selected={[role]} onToggle={(v) => set("role", v === "artist" ? null : v)}
+        <SegmentedButtons label="Role" selected={[role]} onToggle={(v) => url.setText("role", v === "artist" ? "" : v)}
           options={ROLES.map((r) => ({ value: r, label: `${ROLE_LABEL[r]}s (${all.filter((p) => p.role === r).length})` }))} />
-        <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search names" />
+        <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Search names" />
       </div>
       <ul className="people-list">
         {list.map((p) => (

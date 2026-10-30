@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
-  Breadcrumbs, LevelControl, LoadState, MetaChip, MetaChips, PageHeader, Panel, SegmentedButtons, TabPanel, UrlTabs,
+  Breadcrumbs, LevelControl, LoadState, MetaChip, MetaChips, PageHeader, Panel, SegmentedButtons, StatRow, StatRows, TabPanel,
+  UrlTabs, VoiceLineList, tabParam,
 } from "@altterisk/game-hub";
+import { createPlayer } from "@altterisk/game-hub/audio";
 import { searchParamsAdapter } from "@altterisk/game-hub/filters";
-import { tabParam } from "@altterisk/game-hub";
 import {
   RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
   type UnitIndexEntry, type ObtainEntry,
@@ -272,19 +273,13 @@ function LeaderTab({ unit }: { unit: Unit }) {
   );
 }
 
+/** One voice clip at a time, across the voice tabs. */
+const voices = createPlayer();
+
 function VoicesTab({ unit }: { unit: Unit }) {
   const lang = useLang();
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const [playing, setPlaying] = useState<string | null>(null);
-  const play = (clip: string) => {
-    audio.current?.pause();
-    const a = new Audio(voiceUrl(clip));
-    audio.current = a;
-    setPlaying(clip);
-    a.onended = () => setPlaying(null);
-    a.play().catch(() => setPlaying(null));
-  };
-  useEffect(() => () => audio.current?.pause(), []);
+  const playing = voices.useNowPlaying();
+  useEffect(() => () => voices.stop(), []);
   const groups = [["base", "Voice lines"], ["r18", "R18 voice lines"]] as const;
   return (
     <>
@@ -293,18 +288,14 @@ function VoicesTab({ unit }: { unit: Unit }) {
         if (!list.length) return null;
         return (
           <Panel key={variant} title={title} note={unit.voiceActor ? `CV: ${unit.voiceActor}` : undefined}>
-            <ul className="voice-list">
-              {list.map((v, i) => (
-                <li key={i}>
-                  <button className="hub-btn voice-play" disabled={!v.clip} onClick={() => v.clip && play(v.clip)}
-                    aria-label={`Play ${v.label} ${v.index}`}>
-                    {playing === v.clip ? "■" : "▶"}
-                  </button>
-                  <span className="voice-label">{v.label} {v.index}</span>
-                  <span className="voice-text">{tr(v.text, lang) || <i className="muted">(no text)</i>}</span>
-                </li>
-              ))}
-            </ul>
+            <VoiceLineList playing={playing} onStop={voices.stop}
+              onPlay={(clip) => voices.play(clip, async () => voiceUrl(clip))}
+              items={list.map((v, i) => ({
+                id: v.clip ?? `${variant}-${i}`,
+                tag: `${v.label} ${v.index}`,
+                text: tr(v.text, lang) || <i className="muted">(no text)</i>,
+                available: !!v.clip,
+              }))} />
           </Panel>
         );
       })}
@@ -383,12 +374,12 @@ function ProfileTab({ unit }: { unit: Unit }) {
           options={[{ value: "ja", label: "Japanese (original)" }, { value: "en", label: "English (machine translation)" }]} />
       )}
       <p className="profile-text" lang={shown === "en" && hasEn ? "en" : "ja"}>{text || "No profile."}</p>
-      <dl className="credits">
-        {unit.illustrator && <><dt>Illustrator</dt><dd><CreditLinks raw={unit.illustrator} role="artist" /></dd></>}
-        {unit.voiceActor && <><dt>Voice</dt><dd><CreditLinks raw={unit.voiceActor} role="cv" /></dd></>}
-        {unit.trust.length > 0 && <><dt>Scene unlocks</dt><dd>Trust {unit.trust.join(", ")}</dd></>}
-        {unit.skin && <><dt>Skin</dt><dd lang="ja"><Link to={`/units/${unit.id}?tab=art`}>{tr(unit.skin.name, lang) || unit.skin.item}</Link> (preview on the Art tab)</dd></>}
-      </dl>
+      <StatRows columns={1}>
+        {unit.illustrator && <StatRow label="Illustrator" value={<CreditLinks raw={unit.illustrator} role="artist" />} />}
+        {unit.voiceActor && <StatRow label="Voice" value={<CreditLinks raw={unit.voiceActor} role="cv" />} />}
+        {unit.trust.length > 0 && <StatRow label="Scene unlocks" value={<>Trust {unit.trust.join(", ")}</>} />}
+        {unit.skin && <StatRow label="Skin" value={<span lang="ja"><Link to={`/units/${unit.id}?tab=art`}>{tr(unit.skin.name, lang) || unit.skin.item}</Link> (preview on the Art tab)</span>} />}
+      </StatRows>
     </Panel>
   );
 }

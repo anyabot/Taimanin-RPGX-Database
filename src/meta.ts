@@ -2,8 +2,11 @@
 // exported JSON (no React, no fetch, no import.meta.env): the pages set them at
 // runtime through usePageMeta, and the build (prerender.ts) writes the same text
 // into each page's static HTML, so the two never disagree.
+import { clip as clipTo, createSiteMeta, sentence, type PageMeta } from "@altterisk/game-hub/meta";
 import type { ArenaCard, Item, QuestGroup, QuestSection, StoryGroup, StoryPart, StorySection, Text, UnitIndexEntry } from "./data";
 import { ROLE_LABEL, type Person } from "./people";
+
+export type { PageMeta };
 
 /** Where the site is served; canonical URLs, the sitemap and og:url use it. */
 export const SITE_URL = "https://taimanin.altterisk.cc";
@@ -13,30 +16,27 @@ export const RARITY = ["", "N", "R", "HR", "SR", "UR", "LR"];
 /** Story-index sections that are events; specials only when the client dates them. */
 export const EVENT_KINDS: Record<string, string> = { event: "Story event", raid: "Raid event", map: "Map event", special: "Special event" };
 
-export interface PageMeta {
-  /** without the site name: fullTitle adds it */
-  title: string;
-  description: string;
-  /** a site path (/icons/00001.webp) for og:image */
-  image?: string;
-  /** keep out of search results (an unknown URL, which the SPA fallback answers with 200) */
-  noindex?: boolean;
-}
-
 export const DEFAULT_META: PageMeta = {
   title: "",
   description: "Units, events, gacha banners, story, quests, items and runes of Taimanin RPGX, read from the game's own data.",
 };
 
-export const fullTitle = (title: string) => (title ? `${title} | ${SITE_NAME}` : SITE_NAME);
+export const site = createSiteMeta({
+  game: "taimanin",
+  url: SITE_URL,
+  name: SITE_NAME,
+  format: (t, s) => `${t} | ${s.name}`,
+  defaultDescription: DEFAULT_META.description,
+});
+
+export const fullTitle = site.fullTitle;
 /** Each path segment encoded once (people pages carry Japanese names). */
-export const sitePath = (path: string) => path.split("/").map((s) => encodeURIComponent(decodeURIComponent(s))).join("/");
-export const canonicalUrl = (path: string) => SITE_URL + sitePath(path);
+export const sitePath = site.sitePath;
+export const canonicalUrl = (path: string) => site.canonicalUrl(path);
 
 const en = (t: Text | null | undefined) => t?.en || t?.ja || "";
-const clip = (s: string, n = 200) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
+const clip = (s: string) => clipTo(s, 200);
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
-const sentence = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ");
 
 /** Index pages, keyed by path. */
 export const LIST_META: Record<string, PageMeta> = {

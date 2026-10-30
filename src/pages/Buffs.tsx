@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckboxGroup, FallbackImage, FilterChip, FilterRow, GroupCard, LoadState, PageHeader } from "@altterisk/game-hub";
+import { listState, searchParamsAdapter } from "@altterisk/game-hub/filters";
 import { ELEMENTS, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 import { ElementIcon, RarityIcon, StackBadge, StackRules } from "../components";
 import type { StackTag } from "../data";
@@ -82,20 +83,14 @@ export default function Buffs() {
   const lang = useLang();
   const [params, setParams] = useSearchParams();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const csv = (key: string) => (params.get(key) || "").split(",").filter(Boolean);
-  const set = (key: string, value: string | null) => {
-    const next = new URLSearchParams(params);
-    if (value) next.set(key, value); else next.delete(key);
-    setParams(next, { replace: true });
-  };
-  const toggle = (key: string, list: string[], value: string) =>
-    set(key, (list.includes(value) ? list.filter((x) => x !== value) : [...list, value]).join(",") || null);
+  const adapter = searchParamsAdapter(params, setParams);
+  const url = listState(adapter);
 
-  const cat = CATEGORIES.some((c) => c.k === params.get("cat")) ? params.get("cat")! : "stat";
-  const sources = csv("source");
-  const showUpcoming = params.get("upcoming") === "1";
+  const cat = CATEGORIES.find((c) => c.k === url.text("cat"))?.k ?? "stat";
+  const sources = url.list("source");
+  const showUpcoming = url.text("upcoming") === "1";
   // receiver: "" any, "all", "self", "el:<element>", "tr:<trait>"
-  const to = params.get("to") || "";
+  const to = url.text("to");
   const enemySide = cat === "debuff" || cat === "ailment";
 
   const units = useMemo(() => new Map((index || []).map((u) => [u.id, u])), [index]);
@@ -120,7 +115,7 @@ export default function Buffs() {
     for (const r of byCat.get(cat) || []) m.set(r.k, [...(m.get(r.k) || []), r]);
     return [...m.entries()].sort((a, b) => unitsIn(b[1]) - unitsIn(a[1]));
   }, [byCat, cat]);
-  const key = keys.some(([k]) => k === params.get("k")) ? params.get("k")! : keys[0]?.[0];
+  const key = keys.find(([k]) => k === url.text("k"))?.[0] ?? keys[0]?.[0];
 
   const groups = useMemo(() => {
     const list = keys.find(([k]) => k === key)?.[1] || [];
@@ -164,27 +159,27 @@ export default function Buffs() {
         {CATEGORIES.map((c) => (
           <FilterChip key={c.k} active={c.k === cat} count={unitsIn(byCat.get(c.k) || [])}
             color={c.k === "debuff" || c.k === "ailment" ? DEBUFF_COLOR : undefined}
-            onClick={() => { const next = new URLSearchParams(params); next.set("cat", c.k); next.delete("k"); setParams(next, { replace: true }); }}>
+            onClick={() => adapter.set({ cat: c.k, k: null })}>
             {c.label}
           </FilterChip>
         ))}
       </FilterRow>
       <FilterRow label="Effect">
         {keys.map(([k, list]) => (
-          <FilterChip key={k} active={k === key} count={unitsIn(list)} onClick={() => set("k", k)}>{k}</FilterChip>
+          <FilterChip key={k} active={k === key} count={unitsIn(list)} onClick={() => url.setText("k", k)}>{k}</FilterChip>
         ))}
         {!keys.length && <span className="muted small">Nothing matches these filters.</span>}
       </FilterRow>
       {!enemySide && (
         <>
           <FilterRow label="Receiver">
-            <FilterChip active={!to} count={receivers.any} onClick={() => set("to", null)}>Any</FilterChip>
-            <FilterChip active={to === "all"} count={receivers.all} onClick={() => set("to", "all")}>All allies</FilterChip>
-            <FilterChip active={to === "self"} count={receivers.self} onClick={() => set("to", "self")}>Self</FilterChip>
+            <FilterChip active={!to} count={receivers.any} onClick={() => url.setText("to", "")}>Any</FilterChip>
+            <FilterChip active={to === "all"} count={receivers.all} onClick={() => url.setText("to", "all")}>All allies</FilterChip>
+            <FilterChip active={to === "self"} count={receivers.self} onClick={() => url.setText("to", "self")}>Self</FilterChip>
           </FilterRow>
           <FilterRow label="Faction">
             {receivers.factions.filter((f) => f.n > 0 || f.value === to).map((f) => (
-              <FilterChip key={f.value} active={to === f.value} count={f.n} onClick={() => set("to", to === f.value ? null : f.value)}>{f.label}</FilterChip>
+              <FilterChip key={f.value} active={to === f.value} count={f.n} onClick={() => url.setText("to", to === f.value ? "" : f.value)}>{f.label}</FilterChip>
             ))}
             {!receivers.factions.some((f) => f.n > 0) && <span className="muted small">No faction-only versions of this effect.</span>}
           </FilterRow>
@@ -192,20 +187,16 @@ export default function Buffs() {
       )}
       {upcomingCount > 0 && (
         <FilterRow label="Release">
-          <FilterChip active={showUpcoming} count={upcomingCount} onClick={() => set("upcoming", showUpcoming ? null : "1")}
+          <FilterChip active={showUpcoming} count={upcomingCount} onClick={() => url.setText("upcoming", showUpcoming ? "" : "1")}
             title="Units already in the game data but not released yet">Include upcoming</FilterChip>
         </FilterRow>
       )}
       <details className="buff-filters" open={sources.length > 0}>
         <summary>Source filter{sources.length ? ` (${sources.length})` : ""}</summary>
         <div className="buff-filter-grid">
-          <CheckboxGroup title="Source" options={SOURCES} selected={sources} onToggle={(v) => toggle("source", sources, v)} />
+          <CheckboxGroup title="Source" options={SOURCES} selected={sources} onToggle={(v) => url.toggle("source", v)} />
           {sources.length > 0 && (
-            <button className="hub-btn" onClick={() => {
-              const next = new URLSearchParams(params);
-              next.delete("source");
-              setParams(next, { replace: true });
-            }}>Clear filters</button>
+            <button className="hub-btn" onClick={() => url.clear(["source"])}>Clear filters</button>
           )}
         </div>
       </details>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { StackBadge, stackRule } from "../components";
 import { iconUrl, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 import "./statuses.css";
@@ -37,13 +37,9 @@ export default function Statuses() {
   const { data, loading, error } = useData<Statuses>("statuses");
   const { data: index } = useData<UnitIndexEntry[]>("units/index");
   const [params, setParams] = useSearchParams();
-  const kind = (params.get("kind") as Kind) || "ailments";
-  const q = params.get("q") || "";
-  const set = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params);
-    if (v) next.set(k, v); else next.delete(k);
-    setParams(next, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const kind = (url.text("kind") as Kind) || "ailments";
+  const q = url.text("q");
   const units = useMemo(() => new Map((index ?? []).map((u) => [u.id, u])), [index]);
   const byKey = useMemo(() => new Map(data ? [...data.ailments, ...data.states, ...data.markers].map((e) => [e.key, e]) : []), [data]);
   if (!data) return <LoadState loading={loading} error={error} />;
@@ -52,9 +48,9 @@ export default function Statuses() {
     <div className="statuses-page">
       <PageHeader title="Status effects"
         subtitle="Ailments, states and markers: what each does in battle, how it stacks, and which units apply it." />
-      <SegmentedButtons label="Kind" selected={[kind]} onToggle={(v) => set("kind", v === "ailments" ? null : v)}
+      <SegmentedButtons label="Kind" selected={[kind]} onToggle={(v) => url.setText("kind", v === "ailments" ? "" : v)}
         options={KINDS.map((k) => ({ value: k.value, label: `${k.label} (${data[k.value].length})` }))} />
-      <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search" />
+      <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Search" />
       <div className="status-list">
         {list.map((e) => <StatusCard key={e.key} e={e} kind={kind} units={units} block={e.block ? byKey.get(e.block) : undefined} />)}
         {!list.length && <p className="muted">Nothing matches.</p>}

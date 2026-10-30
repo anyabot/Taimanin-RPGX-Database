@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { EmptyState, FilterChip, FilterRow, LoadState, SearchBox } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
+import { LiveBadge } from "@altterisk/game-hub/time";
 import {
   gachaArt, iconUrl, phaseOf, phaseText, tr, unitName, useData, useLang, windowOf,
   type GachaBanner, type UnitIndexEntry,
@@ -18,7 +19,6 @@ export const bannerPhase = (b: GachaBanner) => phaseOf(b.start, b.end);
 export function BannerTile({ b, units, highlight }: { b: GachaBanner; units?: Map<string, UnitIndexEntry>; highlight?: boolean }) {
   const lang = useLang();
   const w = windowOf(b.start, b.end);
-  const phase = bannerPhase(b);
   return (
     <article id={`banner-${b.id}`} className={`gacha-banner${highlight ? " highlight" : ""}`}>
       <BundleImage stem={gachaArt(b.image)} className="gacha-art" />
@@ -27,7 +27,7 @@ export function BannerTile({ b, units, highlight }: { b: GachaBanner; units?: Ma
         <p className="gacha-meta">
           <span className={`obtain-type t-${b.type.split(" ")[0]}`}>{b.type}</span>
           {b.pull?.map((p) => <span key={p} className="obtain-pull">{p}</span>)}
-          {phase !== "ended" && <span className={`hub-badge event-phase ${phase}`}>{phase === "running" ? "Running" : "Upcoming"}</span>}
+          <LiveBadge window={w} className="event-phase" />
         </p>
         <p className="muted small">{w.start ? `${w.start} – ${w.end}` : `until ${w.end}`} · {phaseText(b.start, b.end)}</p>
         <ul className="gacha-units">
@@ -55,15 +55,12 @@ export default function BannerList() {
   const { data: unitList } = useData<UnitIndexEntry[]>("units/index");
   const units = new Map((unitList ?? []).map((u) => [u.id, u]));
   const [params, setParams] = useSearchParams();
-  const type = params.get("type") || "";
-  const q = params.get("q") || "";
-  const focus = params.get("id");
-  const set = (k: string, v: string) => {
-    const n = new URLSearchParams(params);
-    if (v) n.set(k, v); else n.delete(k);
-    n.delete("id");
-    setParams(n, { replace: true });
-  };
+  const url = searchParamsAdapter(params, setParams);
+  const type = url.get("type") || "";
+  const q = url.get("q") || "";
+  const focus = url.get("id");
+  // a filter change also drops the ?id= focus
+  const set = (k: string, v: string) => url.set({ [k]: v, id: null });
   useEffect(() => {
     if (focus && banners) document.getElementById(`banner-${focus}`)?.scrollIntoView({ block: "center" });
   }, [focus, banners]);

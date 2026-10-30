@@ -1,7 +1,17 @@
 import { useEffect } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { HubBar, HubFooter } from "@altterisk/game-hub";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { NavMenu, SiteShell, homeLink } from "@altterisk/game-hub";
 import { setLang, useLang } from "./data";
+import { renderLink } from "./links";
+
+/** The less used pages, under "Etc" in the bar. */
+const MORE: [href: string, label: string][] = [
+  ["/statuses", "Statuses"],
+  ["/people", "People"],
+  ["/items", "Items"],
+  ["/runes", "Runes"],
+  ...(import.meta.env.DEV ? [["/lab", "Decoder lab"] as [string, string]] : []),
+];
 
 /** Files served as they are, never routes. */
 const STATIC = /^\/(assets|data|icons|ui|vendor)\/|\.[a-z0-9]+$/i;
@@ -27,41 +37,35 @@ function useRouterLinks() {
 
 export default function App() {
   const lang = useLang();
+  const { pathname } = useLocation();
   useRouterLinks();
   return (
-    <div className="app">
-      <HubBar
-        game="taimanin"
-        renderHomeLink={({ className, children }) => <Link to="/" className={className}>{children}</Link>}
-        nav={<>
-          <NavLink to="/units">Units</NavLink>
-          <NavLink to="/events">Events</NavLink>
-          <NavLink to="/banners">Banners</NavLink>
-          <NavLink to="/gacha">Gacha sim</NavLink>
-          <NavLink to="/buffs">Buffs</NavLink>
-          <NavLink to="/statuses">Statuses</NavLink>
-          <NavLink to="/story">Story</NavLink>
-          <NavLink to="/quests">Quests</NavLink>
-          <NavLink to="/cards">Cards</NavLink>
-          <NavLink to="/people">People</NavLink>
-          <NavLink to="/items">Items</NavLink>
-          <NavLink to="/runes">Runes</NavLink>
-          {import.meta.env.DEV && <NavLink to="/lab">Decoder lab</NavLink>}
-        </>}
-        actions={
-          <button className="hub-btn" onClick={() => setLang(lang === "en" ? "ja" : "en")}
-            title="Text language (English where translated)">
-            {lang === "en" ? "EN" : "JA"}
-          </button>
-        }
-      />
-      <main>
-        <Outlet />
-      </main>
-      <HubFooter
-        game="taimanin"
-        note="Fan-made and unofficial. Game art, audio and text belong to their owners; art and audio load from the game's own servers."
-      />
-    </div>
+    <SiteShell
+      game="taimanin"
+      renderHomeLink={homeLink(Link, "to")}
+      nav={<>
+        <NavLink to="/units">Units</NavLink>
+        <NavLink to="/events">Events</NavLink>
+        <NavLink to="/banners">Banners</NavLink>
+        <NavLink to="/gacha">Gacha sim</NavLink>
+        <NavLink to="/buffs">Buffs</NavLink>
+        <NavLink to="/story">Story</NavLink>
+        <NavLink to="/quests">Quests</NavLink>
+        <NavLink to="/cards">Cards</NavLink>
+        <NavMenu label="Etc" showActiveLabel renderLink={renderLink}
+          items={MORE.map(([href, label]) => ({ href, label, active: pathname === href || pathname.startsWith(`${href}/`) }))} />
+      </>}
+      actions={
+        <button className="hub-btn" onClick={() => setLang(lang === "en" ? "ja" : "en")}
+          title="Text language (English where translated)">
+          {lang === "en" ? "EN" : "JA"}
+        </button>
+      }
+      footer={{ note: "Art and audio load from the game's own servers." }}
+      resetKey={pathname}
+      contentWidth="1280px"
+    >
+      <Outlet />
+    </SiteShell>
   );
 }

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
+import { Breadcrumbs, CopyButton, LoadState } from "@altterisk/game-hub";
+import { downloadText } from "@altterisk/game-hub/persist";
 import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Beat, type SceneDoc } from "../adv";
-import { loadScript, saveBlob } from "../sceneArt";
+import { loadScript } from "../sceneArt";
 import { RichLine, useSceneText } from "../sceneText";
 import { sceneMeta, storyPartMeta } from "../meta";
 import { usePageMeta } from "../usePageMeta";
@@ -14,7 +15,6 @@ export function TranscriptView({ title, file, beats, at, go }: {
   title: string; file: string; beats: Beat[]; at?: number; go?: (n: number) => void;
 }) {
   const list = useRef<HTMLOListElement>(null);
-  const [copied, setCopied] = useState<"" | "ok" | "fail">("");
   const lines = beats.flatMap((x, k) => (x.text ? [{ k, name: x.name, text: x.text, en: x.en }] : []));
   // keep the current line in view inside the list, without scrolling the page
   useEffect(() => {
@@ -34,27 +34,12 @@ export function TranscriptView({ title, file, beats, at, go }: {
     });
     return [title, "", ...rows].join("\n");
   };
-  const copy = () => {
-    const t = text();
-    // the older copy path where the Clipboard API is missing or refused
-    const fallback = () => {
-      const ta = document.createElement("textarea");
-      ta.value = t;
-      document.body.append(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      ta.remove();
-      setCopied(ok ? "ok" : "fail");
-    };
-    (navigator.clipboard?.writeText(t) ?? Promise.reject()).then(() => setCopied("ok"), fallback);
-    setTimeout(() => setCopied(""), 2000);
-  };
-  const download = () => saveBlob(new Blob([text().replace(/\n/g, "\r\n")], { type: "text/plain;charset=utf-8" }), `${file}.txt`);
+  const download = () => downloadText(text().replace(/\n/g, "\r\n"), `${file}.txt`, "text/plain;charset=utf-8");
   return (
     <div className="scn-tr">
       <div className="scn-tr-tools" translate="no">
-        <button className="hub-btn" onClick={copy}>{copied === "ok" ? "Copied" : copied === "fail" ? "Copy failed" : "Copy all"}</button>
-        <button className="hub-btn" onClick={download}>Download .txt</button>
+        <CopyButton value={text} label="Copy all" />
+        <button className="hub-btn hub-btn--sm" onClick={download}>Download .txt</button>
         <span className="muted small">{lines.length} lines. Copies and saves the text as shown, so a page translation is included.</span>
       </div>
       <ol ref={list} className={`scn-tr-list${go ? " jump" : ""}`} lang="ja">

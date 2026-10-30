@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import {
   CardGrid, CheckboxGroup, EmptyState, FallbackImage, FilterPanel, ListToolbar, LoadState, Pager, SearchBox,
 } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
 import { ELEMENTS, NO_ORIGIN, ORIGINS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, type TranslationIndex, type UnitIndexEntry } from "../data";
 import { LIST_META } from "../meta";
@@ -34,28 +34,22 @@ export default function UnitList() {
   const lang = useLang();
   // Filters, search and page live in the URL so back/forward and links keep them.
   const [params, setParams] = useSearchParams();
-  const q = params.get("q") || "";
-  const sort = params.get("sort") || "release";
-  const page = Number(params.get("page") || "1");
-  const csv = (k: string) => (params.get(k) || "").split(",").filter(Boolean);
-  const rarityF = csv("rarity");
-  const elementF = csv("element");
-  const traitF = csv("trait");
-  const sourceF = csv("source");
-  const originF = csv("origin");
-  const showUpcoming = params.get("upcoming") === "1";
-  const skinF = params.get("skin") === "1";
-  const englishF = params.get("english") === "1";
-  const aiF = params.get("ai") === "1";
-  const setParam = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params);
-    if (v) next.set(k, v); else next.delete(k);
-    if (k !== "page") next.delete("page");
-    setParams(next, { replace: true });
-  };
-  const toggle = (k: string, list: string[], v: string) =>
-    setParam(k, (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]).join(","));
-  const [filtersOpen, setFiltersOpen] = [params.get("f") === "1", () => setParam("f", params.get("f") === "1" ? null : "1")];
+  const url = listState(searchParamsAdapter(params, setParams));
+  const q = url.text("q");
+  const sort = url.text("sort") || "release";
+  const page = url.page;
+  const rarityF = url.list("rarity");
+  const elementF = url.list("element");
+  const traitF = url.list("trait");
+  const sourceF = url.list("source");
+  const originF = url.list("origin");
+  const flag = (k: string) => url.text(k) === "1";
+  const flip = (k: string) => url.setText(k, flag(k) ? "" : "1");
+  const showUpcoming = flag("upcoming");
+  const skinF = flag("skin");
+  const englishF = flag("english");
+  const aiF = flag("ai");
+  const [filtersOpen, setFiltersOpen] = [flag("f"), () => flip("f")];
 
   const traits = useMemo(() => [...new Set((units || []).flatMap((u) => u.traits))].sort(), [units]);
 
@@ -95,12 +89,12 @@ export default function UnitList() {
     <div className="units-page">
       <h1>Units</h1>
       <ListToolbar
-        search={<SearchBox value={q} onChange={(v) => setParam("q", v)} placeholder="Name, title, id, artist or CV" />}
+        search={<SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Name, title, id, artist or CV" />}
         count={units ? `${shown.length} / ${units.length}` : undefined}
         activeFilters={active}
         onClearFilters={() => { const n = new URLSearchParams(); if (q) n.set("q", q); setParams(n, { replace: true }); }}
         actions={
-          <select className="hub-select" value={sort} onChange={(e) => setParam("sort", e.target.value)} aria-label="Sort">
+          <select className="hub-select" value={sort} onChange={(e) => url.setText("sort", e.target.value)} aria-label="Sort">
             {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         }
@@ -108,15 +102,15 @@ export default function UnitList() {
       <FilterPanel open={filtersOpen} onToggle={setFiltersOpen} activeCount={active}>
         <div className="filter-groups">
           <CheckboxGroup title="Rarity" options={[6, 5, 4, 3, 2, 1].filter((r) => units?.some((u) => u.rarity === r)).map((r) => ({ value: String(r), label: <RarityIcon rarity={r} height={16} /> }))}
-            selected={rarityF} onToggle={(v) => toggle("rarity", rarityF, v)} />
+            selected={rarityF} onToggle={(v) => url.toggle("rarity", v)} />
           <CheckboxGroup title="Element" options={ELEMENTS.map((e) => ({ value: e, label: <span className="chip-icon"><ElementIcon element={e} size={16} />{e}</span> }))}
-            selected={elementF} onToggle={(v) => toggle("element", elementF, v)} />
+            selected={elementF} onToggle={(v) => url.toggle("element", v)} />
           <CheckboxGroup title="Trait" options={traits.map((t) => ({ value: t, label: t }))}
-            selected={traitF} onToggle={(v) => toggle("trait", traitF, v)} />
+            selected={traitF} onToggle={(v) => url.toggle("trait", v)} />
           <CheckboxGroup title="Source" options={SOURCES.filter((s) => units?.some((u) => u.obtain.includes(s.value)))}
-            selected={sourceF} onToggle={(v) => toggle("source", sourceF, v)} />
+            selected={sourceF} onToggle={(v) => url.toggle("source", v)} />
           <CheckboxGroup title="Origin" options={originList.filter((o) => originCount(o) > 0).map((o) => ({ value: o, label: `${o} (${originCount(o)})` }))}
-            selected={originF} onToggle={(v) => toggle("origin", originF, v)} />
+            selected={originF} onToggle={(v) => url.toggle("origin", v)} />
           {(skinCount > 0 || englishCount > 0 || aiCount > 0) && (
             <CheckboxGroup title="Extras" options={[
               ...(skinCount > 0 ? [{ value: "skin", label: `Has a skin (${skinCount})` }] : []),
@@ -124,12 +118,11 @@ export default function UnitList() {
               ...(aiCount > 0 ? [{ value: "ai", label: `AI-translated scenes (${aiCount})` }] : []),
             ]}
               selected={[...(skinF ? ["skin"] : []), ...(englishF ? ["english"] : []), ...(aiF ? ["ai"] : [])]}
-              onToggle={(v) => v === "skin" ? setParam("skin", skinF ? null : "1")
-                : v === "ai" ? setParam("ai", aiF ? null : "1") : setParam("english", englishF ? null : "1")} />
+              onToggle={(v) => flip(v === "skin" || v === "ai" ? v : "english")} />
           )}
           {upcomingCount > 0 && (
             <CheckboxGroup title="Release" options={[{ value: "1", label: `Upcoming (${upcomingCount})` }]}
-              selected={showUpcoming ? ["1"] : []} onToggle={() => setParam("upcoming", showUpcoming ? null : "1")} />
+              selected={showUpcoming ? ["1"] : []} onToggle={() => flip("upcoming")} />
           )}
         </div>
       </FilterPanel>
@@ -151,7 +144,7 @@ export default function UnitList() {
           </Link>
         ))}
       </CardGrid>
-      <Pager page={page} pages={pages} onPage={(p) => setParam("page", p > 1 ? String(p) : null)} />
+      <Pager page={page} pages={pages} onPage={url.setPage} />
     </div>
   );
 }

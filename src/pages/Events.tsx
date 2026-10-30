@@ -3,7 +3,8 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   BannerCard, Breadcrumbs, CardGrid, EmptyState, FilterChip, FilterRow, LoadState, Panel, SearchBox,
 } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
+import { LiveBadge } from "@altterisk/game-hub/time";
 import {
   phaseOf, phaseText, tr, useData, useLang, windowOf, type Battles, type StoryGroup, type StorySection,
 } from "../data";
@@ -56,13 +57,9 @@ export default function EventList() {
   const { events, loading, error } = useEvents();
   const lang = useLang();
   const [params, setParams] = useSearchParams();
-  const kind = params.get("kind") || "";
-  const q = params.get("q") || "";
-  const set = (k: string, v: string) => {
-    const n = new URLSearchParams(params);
-    if (v) n.set(k, v); else n.delete(k);
-    setParams(n, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const kind = url.text("kind");
+  const q = url.text("q");
   const shown = (events ?? []).filter((e) => (!kind || e.kind === kind)
     && (!q || textMatch(q, [e.g.id, e.g.title?.ja, e.g.title?.en, `${KINDS[e.kind]} ${e.g.num}`])));
   const live = shown.filter((e) => eventPhase(e) !== "ended")
@@ -75,11 +72,11 @@ export default function EventList() {
       <p className="muted">Story, raid and map events with their banners, rewards and battles. Events in the current
         client also list their bonus units, reward shop and box gacha.</p>
       <div className="events-tools">
-        <SearchBox value={q} onChange={(v) => set("q", v)} placeholder="Event name or number" />
+        <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Event name or number" />
         <FilterRow label="Kind">
-          <FilterChip active={!kind} onClick={() => set("kind", "")}>All</FilterChip>
+          <FilterChip active={!kind} onClick={() => url.setText("kind", "")}>All</FilterChip>
           {Object.entries(KINDS).map(([k, label]) => (
-            <FilterChip key={k} active={kind === k} onClick={() => set("kind", kind === k ? "" : k)}
+            <FilterChip key={k} active={kind === k} onClick={() => url.setText("kind", kind === k ? "" : k)}
               count={(events ?? []).filter((e) => e.kind === k).length}>{label}</FilterChip>
           ))}
         </FilterRow>
@@ -124,7 +121,6 @@ export function EventPage() {
   const prev = same[at - 1];
   const next = same[at + 1];
   const title = eventTitle(e, lang);
-  const phase = eventPhase(e);
   const first = e.g.parts[0];
 
   return (
@@ -138,7 +134,7 @@ export function EventPage() {
         {e.g.banner && <StoryBanner banner={e.g.banner} large />}
         <div className="event-head-text">
           <p className="muted">{KINDS[e.kind]} {e.g.num}
-            {phase !== "ended" && <span className={`hub-badge event-phase ${phase}`}>{phase === "running" ? "Running" : "Upcoming"}</span>}
+            {e.g.period && <LiveBadge window={windowOf(e.g.period.start, e.g.period.end)} className="event-phase" />}
           </p>
           <h1 lang={e.g.title?.en && lang === "en" ? "en" : "ja"}>{title}</h1>
           {e.g.period && <p>{periodText(e)} <span className="muted">· {phaseText(e.g.period.start, e.g.period.end)}</span></p>}

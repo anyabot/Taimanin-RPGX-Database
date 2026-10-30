@@ -26,10 +26,10 @@ const CASES = process.argv[2]
 
 const cdp = await launch();
 await cdp.viewport(1300, 900);
-await cdp.goto(`${SITE}/`, `!!document.querySelector(".age-gate, .app")`);
+await cdp.goto(`${SITE}/`, `!!document.querySelector(".hub-gate, .hub-shell")`);
 await cdp.eval(`localStorage.setItem("taimanin.adult", "1")`);
 await cdp.send("Page.reload");
-await waitFor(() => cdp.eval(`return !!document.querySelector(".app")`), 30000, "app after age gate");
+await waitFor(() => cdp.eval(`return !!document.querySelector(".hub-shell")`), 30000, "app after age gate");
 let bytes = 0, ranged = 0, full = 0;
 const cdnIds = new Set();
 cdp.listeners.push(({ method, params }) => {
@@ -46,7 +46,7 @@ for (const c of CASES) {
   try {
     const route = c.story ? `story/${c.story}` : `scenes/${c.scene}${c.unit ? `?unit=${c.unit}` : ""}`;
     c.scene ??= c.story;
-    await cdp.goto(`${SITE}/${route}`, `!!document.querySelector(".app")`);
+    await cdp.goto(`${SITE}/${route}`, `!!document.querySelector(".hub-shell")`);
     await waitFor(() => cdp.eval(`return !!document.querySelector(".scn-stage") || /error|not/i.test(document.querySelector(".scene-page")?.innerText || "")`), 60000, "stage");
     const loaded = Date.now() - t0;
     for (const beat of c.beats) {

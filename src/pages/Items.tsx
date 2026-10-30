@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Breadcrumbs, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { Breadcrumbs, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons, StatRow, StatRows } from "@altterisk/game-hub";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import {
   ITEM_ICONS, iconUrl, tr, useData, useLang, type Item, type ItemIndexEntry, type ItemSource, type UnitIndexEntry,
 } from "../data";
@@ -30,13 +30,9 @@ export default function ItemList() {
   const { data, loading, error } = useData<ItemIndexEntry[]>("items/index");
   const lang = useLang();
   const [params, setParams] = useSearchParams();
-  const group = params.get("group") || "Awakening";
-  const q = params.get("q") || "";
-  const set = (k: string, v: string | null) => {
-    const next = new URLSearchParams(params);
-    if (v) next.set(k, v); else next.delete(k);
-    setParams(next, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const group = url.text("group") || "Awakening";
+  const q = url.text("q");
   const items = useMemo(() => (data ?? []).filter((i) =>
     q ? textMatch(q, [i.id, i.name?.ja, i.name?.en]) : (TYPE_GROUP[i.type] ?? "System") === group), [data, group, q]);
   if (!data) return <LoadState loading={loading} error={error} />;
@@ -44,9 +40,9 @@ export default function ItemList() {
   return (
     <div className="items-page">
       <PageHeader title="Items" subtitle="Every item in the master data: what it does, where it drops or is sold, and what uses it." />
-      <SegmentedButtons label="Kind" selected={q ? [] : [group]} onToggle={(v) => { const n = new URLSearchParams(params); n.set("group", v); n.delete("q"); setParams(n, { replace: true }); }}
+      <SegmentedButtons label="Kind" selected={q ? [] : [group]} onToggle={(v) => searchParamsAdapter(params, setParams).set({ group: v, q: null })}
         options={GROUPS.map((g) => ({ value: g, label: `${g} (${count(g)})` }))} />
-      <SearchBox value={q} onChange={(v) => set("q", v || null)} placeholder="Search all items" />
+      <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Search all items" />
       <ul className="item-grid">
         {items.map((i) => (
           <li key={i.id}>
@@ -86,12 +82,12 @@ export function ItemDetail() {
       </div>
       <Panel title="Item">
         {item.description && <p className="profile-text" lang="ja">{tr(item.description, lang)}</p>}
-        <dl className="credits">
-          {item.effect && <><dt>Use</dt><dd>{EFFECT[item.effect.category] ?? item.effect.category} {item.effect.value.toLocaleString()}</dd></>}
-          {item.statusCost !== undefined && <><dt>Gold per use</dt><dd>{item.statusCost.toLocaleString()}</dd></>}
-          {item.battleLimit !== undefined && <><dt>Per battle</dt><dd>up to {item.battleLimit}</dd></>}
-          {item.sellGold > 0 && <><dt>Sells for</dt><dd>{item.sellGold.toLocaleString()} gold</dd></>}
-        </dl>
+        <StatRows columns={1}>
+          {item.effect && <StatRow label="Use" value={<>{EFFECT[item.effect.category] ?? item.effect.category} {item.effect.value.toLocaleString()}</>} />}
+          {item.statusCost !== undefined && <StatRow label="Gold per use" value={item.statusCost.toLocaleString()} />}
+          {item.battleLimit !== undefined && <StatRow label="Per battle" value={<>up to {item.battleLimit}</>} />}
+          {item.sellGold > 0 && <StatRow label="Sells for" value={<>{item.sellGold.toLocaleString()} gold</>} />}
+        </StatRows>
       </Panel>
       {item.units && item.units.length > 0 && (
         <Panel title={`Exchanges for (${item.units.length})`}>
@@ -130,7 +126,10 @@ function Uses({ uses, unitName }: { uses: NonNullable<Item["uses"]>; unitName: (
 function Sources({ list }: { list: ItemSource[] }) {
   const lang = useLang();
   const { data: items } = useData<ItemIndexEntry[]>("items/index");
-  const costName = (id: string) => id === "jewel" ? "Jewels" : tr(items?.find((x) => x.id === id)?.name, lang) || id;
+  const costItem = (id: string) => {
+    const it = id === "jewel" ? undefined : items?.find((x) => x.id === id);
+    return it ? <Link to={`/items/${id}`} lang="ja">{tr(it.name, lang) || id}</Link> : id === "jewel" ? "Jewels" : id;
+  };
   const battles = list.filter((s) => s.page && !s.kinds.includes("exchange"));
   const shops = list.filter((s) => s.kinds.includes("exchange"));
   return (
@@ -151,8 +150,10 @@ function Sources({ list }: { list: ItemSource[] }) {
             {shops.map((s, i) => (
               <li key={i}>
                 {s.page ? <Link to={`/${s.page}`} lang="ja">{tr(s.title, lang) || s.page}</Link> : <span>Exchange</span>}
-                <span className="muted small"> · {[s.start && `${s.start} – ${s.end ?? ""}`,
-                  s.costs?.map(([c, n]) => `${n.toLocaleString()} × ${costName(c)}`).join(" or ")].filter(Boolean).join(" · ")}</span>
+                <span className="muted small">
+                  {s.start && <> · {s.start} – {s.end ?? ""}</>}
+                  {s.costs?.map(([c, n], k) => <Fragment key={k}>{k ? " or " : " · "}{n.toLocaleString()} × {costItem(c)}</Fragment>)}
+                </span>
               </li>
             ))}
           </ul>

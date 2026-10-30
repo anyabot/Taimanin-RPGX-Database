@@ -11,10 +11,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { Plugin } from "vite";
+import { countFiles, renderStatic, writeRobots, writeSitemap } from "@altterisk/game-hub/build";
+import { escapeHtml as esc } from "@altterisk/game-hub/meta";
 import type { ArenaCard, Item, ItemIndexEntry, QuestSection, StorySection, Text, Unit, UnitIndexEntry } from "./src/data";
 import {
-  DEFAULT_META, EVENT_KINDS, LIST_META, SITE_NAME, SITE_URL, canonicalUrl, cardMeta, eventMeta, eventName, fullTitle,
-  itemMeta, partName, personMeta, questMeta, sitePath, storyBattlesMeta, storyGroupName, unitDisplayName, unitMeta, type PageMeta,
+  DEFAULT_META, EVENT_KINDS, LIST_META, SITE_NAME, SITE_URL, canonicalUrl, cardMeta, eventMeta, eventName,
+  itemMeta, partName, personMeta, questMeta, site, sitePath, storyBattlesMeta, storyGroupName, unitDisplayName, unitMeta, type PageMeta,
 } from "./src/meta";
 import { ROLE_LABEL, gatherPeople, personHref } from "./src/people";
 
@@ -30,7 +32,6 @@ interface Page {
   body?: string;
 }
 
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 const en = (t: Text | null | undefined) => t?.en || t?.ja || "";
 const a = (href: string, label: string) => `<a href="${esc(sitePath(href.split("?")[0]) + (href.includes("?") ? href.slice(href.indexOf("?")) : ""))}">${esc(label)}</a>`;
 const ul = (items: string[]) => (items.length ? `<ul>${items.map((x) => `<li>${x}</li>`).join("")}</ul>` : "");
@@ -136,35 +137,17 @@ function pages(data: string): { files: Page[]; extra: string[] } {
 
 function render(template: string, page: Page, publicDir: string): string {
   const { meta } = page;
-  const url = canonicalUrl(page.path);
-  const title = fullTitle(meta.title);
-  const image = meta.image && fs.existsSync(path.join(publicDir, meta.image)) ? SITE_URL + meta.image : null;
+  const image = meta.image && fs.existsSync(path.join(publicDir, meta.image)) ? meta.image : null;
   const ld = page.path === "/"
-    ? { "@context": "https://schema.org", "@type": "WebSite", name: SITE_NAME, url: `${SITE_URL}/` }
-    : page.crumbs && {
-      "@context": "https://schema.org", "@type": "BreadcrumbList",
-      itemListElement: page.crumbs.map(([name, p], i) => ({ "@type": "ListItem", position: i + 1, name, item: canonicalUrl(p.split("?")[0]) })),
-    };
-  const head = [
-    // index.html is also the SPA fallback for every unlisted route: no canonical
-    // there, the page sets its own at runtime.
-    page.path !== "/" && `<link rel="canonical" href="${esc(url)}" />`,
-    `<meta property="og:title" content="${esc(title)}" />`,
-    `<meta property="og:description" content="${esc(meta.description)}" />`,
-    page.path !== "/" && `<meta property="og:url" content="${esc(url)}" />`,
-    image && `<meta property="og:image" content="${esc(image)}" />`,
-    ld && `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>`,
-  ].filter(Boolean).join("\n    ");
+    ? site.websiteLd()
+    : page.crumbs && site.breadcrumbLd(page.crumbs.map(([name, p]) => ({ name, path: p.split("?")[0] })));
+  // index.html is also the SPA fallback for every unlisted route: no canonical
+  // there, the page sets its own at runtime.
+  const tags = site.headTags({ ...meta, image, jsonLd: ld || undefined }, page.path === "/" ? null : canonicalUrl(page.path));
   const crumbs = page.crumbs && page.crumbs.length > 1
     ? `<nav aria-label="Breadcrumb">${page.crumbs.slice(0, -1).map(([l, p]) => a(p, l)).join(" › ")}</nav>` : "";
-  const body = `<div class="prerender">${crumbs}<h1>${esc(meta.title || SITE_NAME)}</h1><p>${esc(meta.description)}</p>${page.body ?? ""}</div>`;
-  const out = template
-    .replace(/<title>.*?<\/title>/s, `<title>${esc(title)}</title>`)
-    .replace(/<meta name="description" content=".*?" \/>/s, `<meta name="description" content="${esc(meta.description)}" />`)
-    .replace("</head>", `  ${head}\n  </head>`)
-    .replace('<div id="root"></div>', `<div id="root">${body}</div>`);
-  if (!out.includes(body)) throw new Error("prerender: index.html has no empty <div id=\"root\"></div>");
-  return out;
+  return renderStatic(template, tags,
+    `<div class="prerender">${crumbs}<h1>${esc(meta.title || SITE_NAME)}</h1><p>${esc(meta.description)}</p>${page.body ?? ""}</div>`);
 }
 
 /** dist/units/00001.html for /units/00001; null for a path no file can hold. */
@@ -174,9 +157,6 @@ function fileFor(outDir: string, p: string): string | null {
   if (segs.some((s) => !s || s.startsWith(".") || /[\\:*?"<>|\x00-\x1f]/.test(s))) return null;
   return path.join(outDir, ...segs) + ".html";
 }
-
-const countFiles = (dir: string): number =>
-  fs.readdirSync(dir, { withFileTypes: true }).reduce((n, e) => n + (e.isDirectory() ? countFiles(path.join(dir, e.name)) : 1), 0);
 
 export function prerender(): Plugin {
   let outDir = "";
@@ -202,12 +182,10 @@ export function prerender(): Plugin {
         }
         listed.push(page.path);
       }
-      const urls = [...listed, ...extra].map((p) => `<url><loc>${esc(canonicalUrl(p))}</loc></url>`);
-      fs.writeFileSync(path.join(outDir, "sitemap.xml"),
-        `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>\n`);
-      fs.writeFileSync(path.join(outDir, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`);
+      const urls = writeSitemap(outDir, [...listed, ...extra].map(canonicalUrl));
+      writeRobots(outDir, SITE_URL);
       const total = countFiles(outDir);
-      console.log(`prerender: ${written} pages, ${urls.length} URLs in sitemap.xml, ${total} files in ${path.basename(outDir)}`);
+      console.log(`prerender: ${written} pages, ${urls} URLs in sitemap.xml, ${total} files in ${path.basename(outDir)}`);
       if (total > FILE_BUDGET) console.warn(`prerender: ${total} files is close to Cloudflare Pages' 20,000-file limit`);
     },
   };

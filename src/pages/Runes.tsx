@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
 import { RARITY, RUNE_ICONS, tr, useData, useLang, type Growth, type RuneEffect, type RuneSet } from "../data";
 import { BundleImage } from "../bundleImage";
@@ -177,13 +177,9 @@ export default function Runes() {
   usePageMeta(LIST_META["/runes"]);
   const { data: sets, loading, error } = useData<RuneSet[]>("runes");
   const [params, setParams] = useSearchParams();
-  const q = params.get("q") || "";
-  const rarityF = (params.get("rarity") || "").split(",").filter(Boolean);
-  const setParam = (k: string, v: string | null) => {
-    const n = new URLSearchParams(params);
-    if (v) n.set(k, v); else n.delete(k);
-    setParams(n, { replace: true });
-  };
+  const url = listState(searchParamsAdapter(params, setParams));
+  const q = url.text("q");
+  const rarityF = url.list("rarity");
   // Each rarity tier is its own group id in the tables; show them per family.
   const families = useMemo(() => {
     const m = new Map<string, RuneSet[]>();
@@ -203,11 +199,11 @@ export default function Runes() {
       <h1>Runes</h1>
       <p className="muted">Equipment: six slots α–ζ, with two- and four-piece set bonuses. Each family comes in rarity tiers; piece values are the range over every enhancement level.</p>
       <ListToolbar
-        search={<SearchBox value={q} onChange={(v) => setParam("q", v)} placeholder="Set name or bonus" />}
+        search={<SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Set name or bonus" />}
         count={sets ? `${families.length} / ${total} sets` : undefined}
       />
       <CheckboxGroup title="Rarity" options={[1, 2, 3, 4, 5].map((r) => ({ value: String(r), label: <RarityIcon rarity={r} height={16} /> }))}
-        selected={rarityF} onToggle={(v) => setParam("rarity", (rarityF.includes(v) ? rarityF.filter((x) => x !== v) : [...rarityF, v]).join(","))} />
+        selected={rarityF} onToggle={(v) => url.toggle("rarity", v)} />
       <Costs />
       <LoadState loading={loading} error={error} />
       {sets && !families.length && <EmptyState title="No rune sets match" />}

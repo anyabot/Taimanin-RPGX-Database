@@ -1,8 +1,10 @@
 // Static game data (public/data, written by tools/web_export/tables.py) and
 // small helpers shared by the pages.
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { createJsonLoader, useJson } from "@altterisk/game-hub/data";
+import { createSetting } from "@altterisk/game-hub/persist";
+import { phaseOf as windowPhase } from "@altterisk/game-hub/time";
 import { Assets } from "./unity/client";
 import { DIRECT_ROOT } from "./unity/catalog";
 
@@ -303,20 +305,10 @@ export const voiceUrl = (clip: string) => `${DIRECT_ROOT}/${clip}`;
 
 // ---- language: English where the translation pipeline has it, else Japanese.
 type Lang = "en" | "ja";
-const LANG_KEY = "taimanin.lang";
-let lang: Lang = (() => {
-  try { return (localStorage.getItem(LANG_KEY) as Lang) || "en"; } catch { return "en"; }
-})();
-const listeners = new Set<() => void>();
-export function setLang(next: Lang) {
-  lang = next;
-  try { localStorage.setItem(LANG_KEY, next); } catch { /* private mode */ }
-  listeners.forEach((l) => l());
-}
-export function useLang(): Lang {
-  return useSyncExternalStore((l) => { listeners.add(l); return () => listeners.delete(l); }, () => lang);
-}
-export function tr(t: Text | null | undefined, l: Lang = lang): string {
+const langSetting = createSetting<Lang>({ key: "taimanin.lang", initial: "en", sanitize: (raw) => (raw === "ja" ? "ja" : "en") });
+export const setLang = (next: Lang) => langSetting.set(next);
+export const useLang = (): Lang => langSetting.use()[0];
+export function tr(t: Text | null | undefined, l: Lang = langSetting.get()): string {
   if (!t) return "";
   return (l === "en" && t.en) || t.ja;
 }
@@ -335,19 +327,13 @@ export const isAi = (by: string) => by.startsWith("AI translation");
 export const creditOf = (by: string) =>
   by === "Official" ? "Official English release" : by === "Fan Translation" ? "Fan translation" : by;
 
-const SCENE_EN_KEY = "taimanin.scene.english";
-let sceneEnglish = (() => { try { return localStorage.getItem(SCENE_EN_KEY) !== "0"; } catch { return true; } })();
-const englishListeners = new Set<() => void>();
+/** A saved on/off switch; values stored as bare "0"/"1" before createSetting still read. */
+export const flagSetting = (key: string, initial: boolean) =>
+  createSetting<boolean>({ key, initial, sanitize: (raw) => (raw === true || raw === 1 ? true : raw === false || raw === 0 ? false : initial) });
+const sceneEnglish = flagSetting("taimanin.scene.english", true);
 /** Whether scenes show their English translation where one exists: on unless
  *  turned off, and remembered for every scene. */
-export function useSceneEnglish(): [boolean, (v: boolean) => void] {
-  const on = useSyncExternalStore((l) => { englishListeners.add(l); return () => englishListeners.delete(l); }, () => sceneEnglish);
-  return [on, (v) => {
-    sceneEnglish = v;
-    try { localStorage.setItem(SCENE_EN_KEY, v ? "1" : "0"); } catch { /* private mode */ }
-    englishListeners.forEach((l) => l());
-  }];
-}
+export const useSceneEnglish = (): [boolean, (v: boolean) => void] => sceneEnglish.use();
 
 /** The bare name; the title is shown separately (displayName = 【title】 name). */
 export const unitName = (u: { name: Text | null; displayName?: Text | null }, l: Lang) =>
@@ -367,10 +353,10 @@ export function windowOf(start?: string | null, end?: string | null): { start?: 
   return { start: start && !long ? start : undefined, end };
 }
 export type Phase = "upcoming" | "running" | "ended";
+/** The phase of the trimmed window (an end date runs through that whole day, UTC). */
 export function phaseOf(start?: string | null, end?: string | null): Phase {
-  const w = windowOf(start, end);
-  if (w.start && w.start > today) return "upcoming";
-  return !w.end || w.end >= today ? "running" : "ended";
+  const p = windowPhase(windowOf(start, end), Date.parse(today));
+  return p === "exchange" ? "running" : p;
 }
 /** "ends in 5 days" / "starts in 2 days" / "ended 2026-10-21" */
 export function phaseText(start?: string | null, end?: string | null): string {

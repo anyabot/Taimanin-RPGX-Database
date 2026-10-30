@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { RichText, resetTag, type MarkupRule } from "@altterisk/game-hub/text";
 import { translated, type Beat } from "./adv";
 import { creditOf, isAi, useData, useSceneEnglish, type SceneTranslation, type TranslationIndex } from "./data";
 
-/** A line with the translations' <i>...</i> emphasis as italics; any other
- *  text, unbalanced tags included, stays plain text. */
-export function RichLine({ text }: { text: string }) {
-  if (!text.includes("<i>") && !text.includes("</i>")) return <>{text}</>;
-  let italic = false;
-  return <>{text.split(/(<\/?i>)/).map((part, k) => {
-    if (part === "<i>") { italic = true; return null; }
-    if (part === "</i>") { italic = false; return null; }
-    return part && (italic ? <em key={k}>{part}</em> : part);
-  })}</>;
-}
+/** The translations' <i>...</i> emphasis; any other text stays plain. */
+const EMPHASIS: MarkupRule[] = [
+  { kind: "style", re: /<i>/, apply: (_m, cur) => ({ ...cur, italic: true }) },
+  resetTag(/<\/i>/),
+];
+
+/** A scene line with its emphasis as italics. */
+export const RichLine = ({ text }: { text: string }) => <RichText text={text} rules={EMPHASIS} />;
 
 /** "EN" next to a scene that has an English translation, naming who made it. */
 export function EnglishBadge({ sid }: { sid: string }) {
