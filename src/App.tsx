@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { NavMenu, SiteShell, homeLink } from "@altterisk/game-hub";
+import { NavMenu, SiteShell, homeLink, rightsText } from "@altterisk/game-hub";
 import { setLang, useLang } from "./data";
 import { renderLink } from "./links";
 
@@ -61,7 +61,7 @@ export default function App() {
           {lang === "en" ? "EN" : "JA"}
         </button>
       }
-      footer={{ note: "Art and audio load from the game's own servers." }}
+      footer={{ note: "Art and audio load from the game's own servers.", links: [], legal: rightsText("taimanin") }}
       resetKey={pathname}
       contentWidth="1280px"
     >
