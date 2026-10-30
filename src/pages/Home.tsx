@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { CardGrid, EntityTile, LoadState } from "@altterisk/game-hub";
 import { useData, type GachaBanner, type UnitIndexEntry } from "../data";
-import { SITE_NAME } from "../App";
+import { SITE_NAME } from "../meta";
 import { EventCard, eventPhase, useEvents } from "./Events";
 import { BannerTile, bannerPhase } from "./Banners";
 import { LIST_META } from "../meta";
