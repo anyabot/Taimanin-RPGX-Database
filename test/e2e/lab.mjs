@@ -85,7 +85,7 @@ cdp.listeners.push((m) => {
 });
 await cdp.send("Runtime.enable");
 await cdp.send("Page.enable");
-await cdp.send("Page.navigate", { url: `${SITE}/#/lab` });
+await cdp.send("Page.navigate", { url: `${SITE}/lab` });
 await waitFor(() => cdp.eval(`return document.body.innerText.includes("live bundles known")`), 60000, "catalog snapshot");
 
 // The built site talks to CloudFront directly; prove CORS from a page origin.

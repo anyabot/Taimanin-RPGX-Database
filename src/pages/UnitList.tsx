@@ -6,6 +6,8 @@ import {
 import { textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
 import { ELEMENTS, NO_ORIGIN, ORIGINS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, type TranslationIndex, type UnitIndexEntry } from "../data";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const PAGE = 72;
 const SOURCES = [
@@ -26,6 +28,7 @@ const SORTS = [
 ];
 
 export default function UnitList() {
+  usePageMeta(LIST_META["/units"]);
   const { data: units, loading, error } = useData<UnitIndexEntry[]>("units/index");
   const { data: tl } = useData<TranslationIndex>("tl/index");
   const lang = useLang();

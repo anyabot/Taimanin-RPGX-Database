@@ -31,7 +31,7 @@ export function credits(raw: string | null | undefined, role: Role): Credit[] {
   });
 }
 
-export const personHref = (role: Role, name: string) => `#/people/${role}/${encodeURIComponent(name)}`;
+export const personHref = (role: Role, name: string) => `/people/${role}/${encodeURIComponent(name)}`;
 
 export interface Person {
   key: string;

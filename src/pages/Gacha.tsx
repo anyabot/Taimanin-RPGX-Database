@@ -9,6 +9,8 @@ import {
   SR, draw, drawKey, emptyTally, rarityRates, unitRates,
   type GachaData, type GachaDraw, type Pull, type SimBanner, type Tally,
 } from "../gacha";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const pct = (v: number) => `${v < 0.1 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : +v.toFixed(2)}%`;
 // pulls an SR took: at 3% one comes every 33 pulls on average
@@ -17,6 +19,7 @@ const drawName = (d: GachaDraw) => (d.n === 1 ? "Single pull" : `${d.n}-pull`);
 
 /** Gacha simulator: the game's own rates and lineups per banner; ?id= picks a banner. */
 export default function GachaSim() {
+  usePageMeta(LIST_META["/gacha"]);
   const lang = useLang();
   const { data, loading, error } = useData<GachaData>("gacha");
   const { data: unitList } = useData<UnitIndexEntry[]>("units/index");

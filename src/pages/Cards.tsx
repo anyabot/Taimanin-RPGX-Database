@@ -7,11 +7,14 @@ import { CreditLinks, RarityIcon } from "../components";
 import { ArtGallery, SceneStills } from "../art";
 import type { SceneDoc } from "../adv";
 import "../battles.css";
+import { LIST_META, cardMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const UNIONS = ["Taimanin", "UFS", "Demon"];
 
 /** Arena cards (BattleArenas): the 決戦アリーナ cards, with art and scenes. */
 export default function CardList() {
+  usePageMeta(LIST_META["/cards"]);
   const { data, loading, error } = useData<ArenaCard[]>("cards");
   const lang = useLang();
   const [params, setParams] = useSearchParams();
@@ -71,6 +74,7 @@ export function CardDetail() {
   const { data, loading, error } = useData<ArenaCard[]>("cards");
   const lang = useLang();
   const card = data?.find((c) => c.id === id);
+  usePageMeta(card && cardMeta(card));
   const { assets } = useAssets();
   const stems = useMemo(() => {
     if (!assets) return [];
@@ -82,7 +86,7 @@ export function CardDetail() {
   const name = tr(card.name, lang) || card.id;
   return (
     <div className="battles-page">
-      <Breadcrumbs items={[{ label: "Arena cards", href: "#/cards" }, { label: name }]} />
+      <Breadcrumbs items={[{ label: "Arena cards", href: "/cards" }, { label: name }]} />
       <div className="battles-head">
         <div>
           <h1 lang="ja" className="card-head"><img src={cardIconUrl(card.id)} alt="" width={64} height={64} />

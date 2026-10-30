@@ -7,6 +7,8 @@ import { SceneArt, composeFrame, loadScript, saveBlob, type SeIndex } from "../s
 import { TranscriptView } from "./Transcript";
 import { RichLine, useSceneText } from "../sceneText";
 import { SpineStage, spineRuntime } from "../spine";
+import { sceneMeta, storyPartMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const MUTE_KEY = "taimanin.scene.muted";
 const SPINE_KEY = "taimanin.scene.spine";
@@ -19,8 +21,8 @@ const hasPicture = (b: Beat) => !!(b.ev || b.spine || b.actors.length);
 /** What is on screen at a beat, to tell where the picture changes. */
 const pictureKey = (b: Beat) => JSON.stringify([b.bg, b.ev, b.actors.map((a) => [a.slot, a.name, a.x]), b.spine, b.spineAnim]);
 
-/** A scene played in the browser: a unit H-scene (#/scenes/:id) or a story
- *  part (#/story/:id). Script, CGs, actors, BGM, SE and voice all come from
+/** A scene played in the browser: a unit H-scene (/scenes/:id) or a story
+ *  part (/story/:id). Script, CGs, actors, BGM, SE and voice all come from
  *  the game CDN when it is opened. */
 export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "story" }) {
   const { id = "" } = useParams();
@@ -60,16 +62,18 @@ export default function ScenePlayer({ source = "unit" }: { source?: "unit" | "st
   const sceneLink = (sid: string) => source === "story" ? `/story/${sid}` : `/scenes/${sid}${unitId ? `?unit=${unitId}` : ""}`;
   const heading = story ? [story.part.section, story.part.title].filter(Boolean).join(" · ") || id : doc?.title || id;
   const groupTitle = story ? tr(story.g.title, lang) || story.g.id : "";
+  usePageMeta(source === "story" ? story && storyPartMeta(story.sec, story.g, story.part)
+    : doc && sceneMeta(id, doc.title, unit ? unitName(unit, "en") : undefined));
 
   return (
     <div className="scene-page">
       <Breadcrumbs items={story ? [
-        { label: "Story", href: `#/story?section=${story.sec.key}` },
-        { label: groupTitle, href: `#/story?section=${story.sec.key}&open=${story.g.id}` },
+        { label: "Story", href: `/story?section=${story.sec.key}` },
+        { label: groupTitle, href: `/story?section=${story.sec.key}&open=${story.g.id}` },
         { label: heading },
       ] : [
-        { label: "Units", href: "#/units" },
-        ...(unit ? [{ label: unitName(unit, lang), href: `#/units/${unit.id}?tab=scenes` }] : []),
+        { label: "Units", href: "/units" },
+        ...(unit ? [{ label: unitName(unit, lang), href: `/units/${unit.id}?tab=scenes` }] : []),
         { label: doc?.title || id },
       ]} />
       <div className="scene-head">

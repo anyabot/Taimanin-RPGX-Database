@@ -412,3 +412,6 @@ html.scn-theater-open { overflow: hidden; }
 .sim-gap.good { background: #16a34a; }
 .sim-gap.ok { background: #ca8a04; }
 .sim-gap.bad { background: #dc2626; }
+
+/* prerender.ts: the static summary in #root, shown until React replaces it */
+.prerender { max-width: 960px; margin: 0 auto; padding: 16px; }

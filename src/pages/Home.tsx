@@ -4,6 +4,8 @@ import { useData, type GachaBanner, type UnitIndexEntry } from "../data";
 import { SITE_NAME } from "../App";
 import { EventCard, eventPhase, useEvents } from "./Events";
 import { BannerTile, bannerPhase } from "./Banners";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const SECTIONS: [string, string, string][] = [
   ["/units", "Units", "Stats, skills, abilities, bloom, voices and scenes"],
@@ -22,6 +24,7 @@ const SECTIONS: [string, string, string][] = [
 
 /** What is on now: running events and gacha banners, then the site's sections. */
 export default function Home() {
+  usePageMeta(LIST_META["/"]);
   const { events, loading, error } = useEvents();
   const { data: banners } = useData<GachaBanner[]>("banners");
   const { data: unitList } = useData<UnitIndexEntry[]>("units/index");
@@ -57,7 +60,7 @@ export default function Home() {
         <h2>Browse</h2>
         <CardGrid min={240}>
           {SECTIONS.map(([href, title, subtitle]) => (
-            <EntityTile key={href} href={`#${href}`} title={title} subtitle={subtitle} />
+            <EntityTile key={href} href={href} title={title} subtitle={subtitle} />
           ))}
         </CardGrid>
       </section>

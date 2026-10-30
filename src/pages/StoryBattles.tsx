@@ -4,6 +4,8 @@ import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
 import { tr, useData, useLang, type BattleQuest, type Battles, type StorySection } from "../data";
 import { BattleBody } from "../battles";
 import { StoryBanner } from "./StoryList";
+import { storyBattlesMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 /** Quests, enemies and raid bosses of one story chapter / event. */
 export default function StoryBattles() {
@@ -16,6 +18,7 @@ export default function StoryBattles() {
     return null;
   }, [index, id]);
   const title = found ? tr(found.g.title, lang) || found.g.id : id;
+  usePageMeta(found && storyBattlesMeta(found.sec, found.g));
   const partTitle = useCallback((sid: string) => {
     const p = found?.g.parts.find((x) => x.id === sid);
     return p ? [p.section, p.title].filter(Boolean).join(" · ") : sid;
@@ -29,8 +32,8 @@ export default function StoryBattles() {
   return (
     <div className="battles-page">
       <Breadcrumbs items={[
-        { label: "Story", href: `#/story${found ? `?section=${found.sec.key}` : ""}` },
-        { label: title, href: found ? `#/story?section=${found.sec.key}&open=${found.g.id}` : undefined },
+        { label: "Story", href: `/story${found ? `?section=${found.sec.key}` : ""}` },
+        { label: title, href: found ? `/story?section=${found.sec.key}&open=${found.g.id}` : undefined },
         { label: "Battles" },
       ]} />
       <div className="battles-head">

@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import { prerender } from "./prerender";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CDN = "https://dntgnyxcho2sk.cloudfront.net";
@@ -75,7 +76,7 @@ function cdnCache(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), cdnCache()],
+  plugins: [react(), cdnCache(), prerender()],
   base: "/",
   worker: { format: "es" },
 });

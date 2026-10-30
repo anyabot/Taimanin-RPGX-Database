@@ -18,6 +18,8 @@ import type { SceneDoc } from "../adv";
 import { EnglishBadge } from "../sceneText";
 import { AbilityPanel, BloomTab } from "./growth";
 import type { Growth } from "../data";
+import { unitMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const TABS = [
   { id: "stats", label: "Stats" },
@@ -45,13 +47,14 @@ export default function UnitDetail() {
   const [tab, setTab] = tabParam(searchParamsAdapter(params, setParams), TABS);
   const [formIdx, setFormIdx] = useState<number | null>(null);
   const form = unit ? unit.forms[formIdx ?? unit.forms.length - 1] : null;
+  usePageMeta(unit && unitMeta(unit));
 
   if (!unit || !form) return <LoadState loading={loading} error={error} />;
   const name = unitName(unit, lang);
 
   return (
     <div className="unit-page">
-      <Breadcrumbs items={[{ label: "Units", href: "#/units" }, { label: name }]} />
+      <Breadcrumbs items={[{ label: "Units", href: "/units" }, { label: name }]} />
       <PageHeader
         art={<img src={iconUrl(unit.id)} alt="" width={96} height={96} />}
         title={name}
@@ -74,9 +77,9 @@ export default function UnitDetail() {
           {isUpcoming(unit) && <span className="hub-badge">Upcoming</span>}
         </>}
         meta={<MetaChips>
-          {unit.traits.map((t) => <MetaChip key={t} label="Trait" value={t} href={`#/units?trait=${encodeURIComponent(t)}`} />)}
+          {unit.traits.map((t) => <MetaChip key={t} label="Trait" value={t} href={`/units?trait=${encodeURIComponent(t)}`} />)}
           {unit.roles.map((r) => <MetaChip key={r} label="Role" value={r} />)}
-          {unit.origin && <MetaChip label="Origin" value={unit.origin} href={`#/units?origin=${encodeURIComponent(unit.origin)}`} />}
+          {unit.origin && <MetaChip label="Origin" value={unit.origin} href={`/units?origin=${encodeURIComponent(unit.origin)}`} />}
           {unit.release && <MetaChip label="Released" value={unit.release} />}
           {credits(unit.illustrator, "artist").map((c) => <MetaChip key={c.key} label={c.note ? "Design" : "Artist"} value={c.name}
             title="Everything by this artist" href={personHref("artist", c.name)} />)}

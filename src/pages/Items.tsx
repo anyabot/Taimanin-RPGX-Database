@@ -7,6 +7,8 @@ import {
 } from "../data";
 import { BundleImage } from "../bundleImage";
 import "./items.css";
+import { LIST_META, itemMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 // eItemType -> a readable group (several types share one)
 const TYPE_GROUP: Record<string, string> = {
@@ -24,6 +26,7 @@ const EFFECT: Record<string, string> = {
 
 /** Every item: icon, name, kind; filter by group, search names. */
 export default function ItemList() {
+  usePageMeta(LIST_META["/items"]);
   const { data, loading, error } = useData<ItemIndexEntry[]>("items/index");
   const lang = useLang();
   const [params, setParams] = useSearchParams();
@@ -64,6 +67,7 @@ export default function ItemList() {
 export function ItemDetail() {
   const { id = "" } = useParams();
   const { data: item, loading, error } = useData<Item>(`items/${id}`);
+  usePageMeta(item && itemMeta(item));
   const { data: units } = useData<UnitIndexEntry[]>("units/index");
   const lang = useLang();
   const unitName = (u: string) => tr(units?.find((x) => x.id === u)?.name, lang) || u;
@@ -72,7 +76,7 @@ export function ItemDetail() {
   const group = TYPE_GROUP[item.type] ?? "System";
   return (
     <div className="items-page">
-      <Breadcrumbs items={[{ label: "Items", href: `#/items?group=${group}` }, { label: name }]} />
+      <Breadcrumbs items={[{ label: "Items", href: `/items?group=${group}` }, { label: name }]} />
       <div className="battles-head">
         <BundleImage stem={ITEM_ICONS} name={`${item.icon}_s`} width={72} height={72} className="item-icon" />
         <div>

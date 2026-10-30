@@ -5,6 +5,8 @@ import { textMatch } from "@altterisk/game-hub/filters";
 import { tr, useData, useLang, type BundleRef, type StoryGroup, type StorySection } from "../data";
 import { BundleImage } from "../bundleImage";
 import { EnglishBadge } from "../sceneText";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const KIND_NOUN: Record<string, string> = {
   main: "Chapter", event: "Event", raid: "Raid", map: "Map event", special: "Special", tutorial: "Tutorial",
@@ -12,6 +14,7 @@ const KIND_NOUN: Record<string, string> = {
 
 /** Main story chapters and event stories, played in the scene player. */
 export default function StoryList() {
+  usePageMeta(LIST_META["/story"]);
   const { data: index, loading, error } = useData<StorySection[]>("stories/index");
   const lang = useLang();
   const [params, setParams] = useSearchParams();

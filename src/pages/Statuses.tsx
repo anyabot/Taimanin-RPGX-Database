@@ -5,6 +5,8 @@ import { textMatch } from "@altterisk/game-hub/filters";
 import { StackBadge, stackRule } from "../components";
 import { iconUrl, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 import "./statuses.css";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 interface StatusEntry {
   key: string;
@@ -31,6 +33,7 @@ const ui = (name: string) => `${import.meta.env.BASE_URL}ui/${name}.webp`;
 
 /** Every status ailment, state and marker: what it does, how it stacks, who applies it. */
 export default function Statuses() {
+  usePageMeta(LIST_META["/statuses"]);
   const { data, loading, error } = useData<Statuses>("statuses");
   const { data: index } = useData<UnitIndexEntry[]>("units/index");
   const [params, setParams] = useSearchParams();

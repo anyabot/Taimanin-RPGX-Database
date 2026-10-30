@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import AgeGate from "./AgeGate";
 import UnitList from "./pages/UnitList";
@@ -21,15 +21,24 @@ import ItemList, { ItemDetail } from "./pages/Items";
 import ScenePlayer from "./pages/ScenePlayer";
 import TranscriptPage from "./pages/Transcript";
 import DecoderLab from "./pages/DecoderLab";
+import NotFound from "./pages/NotFound";
 import "@altterisk/game-hub/hub.css";
 import "@altterisk/game-hub/base.css";
 import "@altterisk/game-hub/components.css";
 import "./styles.css";
 
+// Links from when the site used hash routes: /#/units/1?tab=art -> /units/1?tab=art
+// (a query outside the hash, the age gate's ?enter=1, is kept).
+if (window.location.hash.startsWith("#/")) {
+  const url = new URL(window.location.hash.slice(1), window.location.origin);
+  new URLSearchParams(window.location.search).forEach((v, k) => url.searchParams.set(k, v));
+  window.history.replaceState(null, "", url);
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <AgeGate>
-    <HashRouter>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
           <Route index element={<Home />} />
@@ -57,9 +66,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="people" element={<PeopleIndex />} />
           <Route path="people/:role/:name" element={<PersonPage />} />
           {import.meta.env.DEV && <Route path="lab" element={<DecoderLab />} />}
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
     </AgeGate>
   </React.StrictMode>
 );

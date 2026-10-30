@@ -5,6 +5,8 @@ import { textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
 import { RARITY, RUNE_ICONS, tr, useData, useLang, type Growth, type RuneEffect, type RuneSet } from "../data";
 import { BundleImage } from "../bundleImage";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const fmtRange = ([a, b]: [number, number]) => (a === b ? `${a}` : `${a}–${b}`);
 const ui = (name: string) => `${import.meta.env.BASE_URL}ui/${name}.webp`;
@@ -172,6 +174,7 @@ function Family({ family, tiers }: { family: string; tiers: RuneSet[] }) {
 }
 
 export default function Runes() {
+  usePageMeta(LIST_META["/runes"]);
   const { data: sets, loading, error } = useData<RuneSet[]>("runes");
   const [params, setParams] = useSearchParams();
   const q = params.get("q") || "";

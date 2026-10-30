@@ -5,6 +5,8 @@ import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit
 import { beats as toBeats, parseScript, type Beat, type SceneDoc } from "../adv";
 import { loadScript, saveBlob } from "../sceneArt";
 import { RichLine, useSceneText } from "../sceneText";
+import { sceneMeta, storyPartMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 /** Every line of a scene, to read, copy or save as a text file. In the player
  *  (`at` and `go` given) the current line is marked and a line jumps to it. */
@@ -67,7 +69,7 @@ export function TranscriptView({ title, file, beats, at, go }: {
   );
 }
 
-/** A scene's text on its own page: #/scenes/:id/transcript, #/story/:id/transcript. */
+/** A scene's text on its own page: /scenes/:id/transcript, /story/:id/transcript. */
 export default function TranscriptPage({ source = "unit" }: { source?: "unit" | "story" }) {
   const { id = "" } = useParams();
   const [params] = useSearchParams();
@@ -99,17 +101,19 @@ export default function TranscriptPage({ source = "unit" }: { source?: "unit" | 
   const groupTitle = story ? tr(story.g.title, lang) || story.g.id : "";
   const partTitle = story ? [story.part.section, story.part.title].filter(Boolean).join(" · ") || id : "";
   const title = story ? `${groupTitle} ${partTitle}` : doc?.title || id;
+  usePageMeta(source === "story" ? story && storyPartMeta(story.sec, story.g, story.part, true)
+    : doc && sceneMeta(id, doc.title, unit ? unitName(unit, "en") : undefined, true));
   return (
     <div className="scene-page transcript-page">
       <Breadcrumbs items={story ? [
-        { label: "Story", href: `#/story?section=${story.sec.key}` },
-        { label: groupTitle, href: `#/story?section=${story.sec.key}&open=${story.g.id}` },
-        { label: partTitle, href: `#${player}` },
+        { label: "Story", href: `/story?section=${story.sec.key}` },
+        { label: groupTitle, href: `/story?section=${story.sec.key}&open=${story.g.id}` },
+        { label: partTitle, href: `${player}` },
         { label: "Transcript" },
       ] : [
-        { label: "Units", href: "#/units" },
-        ...(unit ? [{ label: unitName(unit, lang), href: `#/units/${unit.id}?tab=scenes` }] : []),
-        { label: doc?.title || id, href: `#${player}` },
+        { label: "Units", href: "/units" },
+        ...(unit ? [{ label: unitName(unit, lang), href: `/units/${unit.id}?tab=scenes` }] : []),
+        { label: doc?.title || id, href: `${player}` },
         { label: "Transcript" },
       ]} />
       <div className="scene-head">

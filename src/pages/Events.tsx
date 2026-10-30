@@ -9,9 +9,10 @@ import {
 } from "../data";
 import { EventInfo } from "../battles";
 import { StoryBanner } from "./StoryList";
+import { EVENT_KINDS, LIST_META, eventMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
-/** Story-index sections that are events; specials only when the client dates them. */
-const KINDS: Record<string, string> = { event: "Story event", raid: "Raid event", map: "Map event", special: "Special event" };
+const KINDS = EVENT_KINDS;
 
 export interface EventEntry { g: StoryGroup; kind: string }
 
@@ -41,7 +42,7 @@ export function EventCard({ e, highlight }: { e: EventEntry; highlight?: boolean
   const lang = useLang();
   const phase = eventPhase(e);
   return (
-    <BannerCard href={`#/events/${e.g.id}`} highlight={highlight}
+    <BannerCard href={`/events/${e.g.id}`} highlight={highlight}
       art={e.g.banner ? <StoryBanner banner={e.g.banner} /> : undefined}
       title={<span lang={e.g.title?.en && lang === "en" ? "en" : "ja"}>{eventTitle(e, lang)}</span>}
       badge={phase === "running" ? "Running" : phase === "upcoming" ? "Upcoming" : undefined}
@@ -51,6 +52,7 @@ export function EventCard({ e, highlight }: { e: EventEntry; highlight?: boolean
 
 /** All events: running ones first, then by kind; ?kind= and ?q= filter. */
 export default function EventList() {
+  usePageMeta(LIST_META["/events"]);
   const { events, loading, error } = useEvents();
   const lang = useLang();
   const [params, setParams] = useSearchParams();
@@ -107,6 +109,7 @@ export function EventPage() {
   const lang = useLang();
   const { events, loading, error } = useEvents();
   const e = events?.find((x) => x.g.id === id);
+  usePageMeta(e && eventMeta(e.g, e.kind));
   const { data: battles } = useData<Battles>(e?.g.battles ? `stories/battles/${id}` : null);
   if (!e) {
     return (
@@ -126,7 +129,7 @@ export function EventPage() {
 
   return (
     <div className="events-page event-page">
-      <Breadcrumbs items={[{ label: "Events", href: "#/events" }, { label: KINDS[e.kind], href: `#/events?kind=${e.kind}` }, { label: title }]} />
+      <Breadcrumbs items={[{ label: "Events", href: "/events" }, { label: KINDS[e.kind], href: `/events?kind=${e.kind}` }, { label: title }]} />
       <nav className="event-nav">
         {prev ? <Link to={`/events/${prev.g.id}`} lang="ja">‹ {eventTitle(prev, lang)}</Link> : <span />}
         {next && <Link to={`/events/${next.g.id}`} lang="ja">{eventTitle(next, lang)} ›</Link>}

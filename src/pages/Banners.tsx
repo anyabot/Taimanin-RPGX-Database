@@ -7,6 +7,8 @@ import {
   type GachaBanner, type UnitIndexEntry,
 } from "../data";
 import { BundleImage } from "../bundleImage";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const TYPES = ["Gosha Festival", "Yomihara Festival", "Yomihara & Gosha Festival", "Collab Festival", "Limited", "Collab", "Pickup", "Kessen"];
 
@@ -48,6 +50,7 @@ export function BannerTile({ b, units, highlight }: { b: GachaBanner; units?: Ma
 
 /** Limited gacha banners, newest first; ?type=, ?q=, ?id= (scrolls to one). */
 export default function BannerList() {
+  usePageMeta(LIST_META["/banners"]);
   const { data: banners, loading, error } = useData<GachaBanner[]>("banners");
   const { data: unitList } = useData<UnitIndexEntry[]>("units/index");
   const units = new Map((unitList ?? []).map((u) => [u.id, u]));

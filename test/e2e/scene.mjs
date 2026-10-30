@@ -46,7 +46,7 @@ for (const c of CASES) {
   try {
     const route = c.story ? `story/${c.story}` : `scenes/${c.scene}${c.unit ? `?unit=${c.unit}` : ""}`;
     c.scene ??= c.story;
-    await cdp.goto(`${SITE}/#/${route}`, `!!document.querySelector(".app")`);
+    await cdp.goto(`${SITE}/${route}`, `!!document.querySelector(".app")`);
     await waitFor(() => cdp.eval(`return !!document.querySelector(".scn-stage") || /error|not/i.test(document.querySelector(".scene-page")?.innerText || "")`), 60000, "stage");
     const loaded = Date.now() - t0;
     for (const beat of c.beats) {

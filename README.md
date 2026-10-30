@@ -58,3 +58,13 @@ rescans a changed catalog itself, so renamed bundles keep loading.
 Cloudflare Pages builds this repo on push: build command `npm run build`,
 output directory `dist`, environment variable `NODE_VERSION=22`.
 Response headers (caching) are in `public/_headers`.
+
+Pages have real paths (`/units/00001`); old `/#/...` links are redirected on
+load. `npm run build` also runs `prerender.ts`: a static HTML file per unit,
+card, item, event, quest, story-battles and person page (title, description,
+canonical, Open Graph and a text summary that React replaces), plus
+`sitemap.xml` and `robots.txt`. Scenes, story parts and transcripts have no
+file (Pages allows 20,000 files per deployment; the build prints the count and
+warns near the limit): the SPA fallback serves them and they set their meta at
+runtime. Page text lives in `src/meta.ts`, shared by both; the site URL used
+for canonicals and the sitemap is `SITE_URL` there.

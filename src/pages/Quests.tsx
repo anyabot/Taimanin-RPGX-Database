@@ -5,11 +5,14 @@ import { textMatch } from "@altterisk/game-hub/filters";
 import { tr, useData, useLang, type Battles, type QuestGroup, type QuestSection } from "../data";
 import { BattleBody } from "../battles";
 import { DispatchView } from "./Dispatch";
+import { LIST_META, questMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 const today = new Date().toISOString().slice(0, 10);
 
 /** Battle content with no story: Arena towers, daily quests, mini events (tools/web_export/quests.py). */
 export default function QuestList() {
+  usePageMeta(LIST_META["/quests"]);
   const { data: index, loading, error } = useData<QuestSection[]>("quests/index");
   const lang = useLang();
   const [params, setParams] = useSearchParams();
@@ -77,11 +80,12 @@ export function QuestBattles() {
     return null;
   }, [index, id]);
   const title = found ? tr(found.g.title, lang) || id : id;
+  usePageMeta(found && questMeta(found.sec, found.g));
   return (
     <div className="battles-page">
       <Breadcrumbs items={[
-        { label: "Quests", href: `#/quests${found ? `?section=${found.sec.key}` : ""}` },
-        { label: found?.sec.label ?? "…", href: found ? `#/quests?section=${found.sec.key}` : undefined },
+        { label: "Quests", href: `/quests${found ? `?section=${found.sec.key}` : ""}` },
+        { label: found?.sec.label ?? "…", href: found ? `/quests?section=${found.sec.key}` : undefined },
         { label: title },
       ]} />
       <div className="battles-head">

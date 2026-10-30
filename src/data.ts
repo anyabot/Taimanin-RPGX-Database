@@ -292,7 +292,7 @@ const base = import.meta.env.BASE_URL;
 export const loader = createJsonLoader({ urls: (name) => [`${base}data/${name}.json`] });
 export const useData = <T,>(name: string | null) => useJson<T>(loader, name);
 
-export const RARITY = ["", "N", "R", "HR", "SR", "UR", "LR"];
+export { RARITY } from "./meta";
 export const ELEMENTS = ["Superhuman", "Devilish", "Spiritual", "Natural", "Science"];
 export const STATS: [StatKey, string][] = [["hp", "HP"], ["sp", "SP"], ["atk", "ATK"], ["def", "DEF"], ["spd", "SPD"], ["luck", "Luck"]];
 

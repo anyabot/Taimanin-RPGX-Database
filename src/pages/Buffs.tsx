@@ -4,6 +4,8 @@ import { CheckboxGroup, FallbackImage, FilterChip, FilterRow, GroupCard, LoadSta
 import { ELEMENTS, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 import { ElementIcon, RarityIcon, StackBadge, StackRules } from "../components";
 import type { StackTag } from "../data";
+import { LIST_META } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 /** One row of public/data/buffs.json (tools/web_export/buffs.py). */
 interface BuffRow {
@@ -74,6 +76,7 @@ const fmtTurns = (r: BuffRow) => (r.t > 0 ? `${r.t} turn${r.t === 1 ? "" : "s"}`
 /** Who gives the biggest X to whom: one ranked list per effect, split into
  *  timed skill effects and always-on leader effects (not comparable). */
 export default function Buffs() {
+  usePageMeta(LIST_META["/buffs"]);
   const { data: rows, loading, error } = useData<BuffRow[]>("buffs");
   const { data: index } = useData<UnitIndexEntry[]>("units/index");
   const lang = useLang();

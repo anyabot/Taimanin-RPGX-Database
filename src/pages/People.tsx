@@ -6,6 +6,8 @@ import { ElementIcon, RarityIcon } from "../components";
 import { iconUrl, isUpcoming, tr, unitName, useData, useLang, type ArenaCard, type UnitIndexEntry } from "../data";
 import { CardTile } from "./Cards";
 import { ROLE_LABEL, gatherPeople, personHref, personKey, type Person, type Role } from "../people";
+import { LIST_META, personMeta } from "../meta";
+import { usePageMeta } from "../usePageMeta";
 
 function usePeople() {
   const units = useData<UnitIndexEntry[]>("units/index");
@@ -18,6 +20,7 @@ const ROLES: Role[] = ["artist", "cv"];
 
 /** Every artist and voice actor, with how much they worked on. */
 export default function PeopleIndex() {
+  usePageMeta(LIST_META["/people"]);
   const { people, loading, error } = usePeople();
   const [params, setParams] = useSearchParams();
   const role = (params.get("role") as Role) || "artist";
@@ -64,8 +67,9 @@ export function PersonPage() {
   const lang = useLang();
   const [upcoming, setUpcoming] = useState(false);
   const [shown, setShown] = useState(PAGE);
+  const p = people?.get(`${role}:${personKey(name)}`);
+  usePageMeta(p && personMeta(p));
   if (!people) return <LoadState loading={loading} error={error} />;
-  const p = people.get(`${role}:${personKey(name)}`);
   const label = ROLE_LABEL[role as Role] ?? role;
   if (!p) return <p className="muted">No {label.toLowerCase()} named {name}.</p>;
   const units = p.units.filter((x) => upcoming || !isUpcoming(x.unit))
@@ -73,7 +77,7 @@ export function PersonPage() {
   const upcomingCount = p.units.filter((x) => isUpcoming(x.unit)).length;
   return (
     <div className="people-page">
-      <Breadcrumbs items={[{ label: "Artists & voice actors", href: `#/people${role === "cv" ? "?role=cv" : ""}` }, { label: p.name }]} />
+      <Breadcrumbs items={[{ label: "Artists & voice actors", href: `/people${role === "cv" ? "?role=cv" : ""}` }, { label: p.name }]} />
       <PageHeader title={<span lang="ja">{p.name}</span>} subtitle={`${label} · ${count(p)}`} />
       {p.units.length > 0 && (
         <Panel title={`Units (${units.length})`} note={upcomingCount > 0 && (
