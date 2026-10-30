@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
@@ -115,9 +115,9 @@ function Evolve({ list }: { list: string }) {
   return (
     <div className="rune-evolve small"><span className="muted">Evolve:</span>{" "}
       {items.map(([id, n]) => (
-        <span key={id} className="rune-evolve-item" title={tr(growth!.items[id]?.name ?? null, lang) || id}>
+        <Link key={id} to={`/items/${id}`} className="rune-evolve-item" title={tr(growth!.items[id]?.name ?? null, lang) || id}>
           <BundleImage stem={ITEM_ICONS} name={`${growth!.items[id]?.icon ?? id}_s`} width={20} height={20} /> ×{n.toLocaleString()}
-        </span>
+        </Link>
       ))}
     </div>
   );
@@ -150,7 +150,8 @@ function Costs() {
         <thead><tr><th>Refine</th><th>Stat</th><th>Chip</th><th>Chips (main / sub)</th><th>Cost (main / sub)</th></tr></thead>
         <tbody>{growth.rune.refine.map((r, i) => (
           <tr key={i}><th scope="row"><RarityIcon rarity={r.rarity} height={14} /></th><td>{REFINE_STAT[r.category] ?? r.category}</td>
-            <td lang="ja">{r.refine_chip_id ? tr(growth.items[r.refine_chip_id]?.name ?? null, lang) || r.refine_chip_id : "—"}</td>
+            <td lang="ja">{r.refine_chip_id
+              ? <Link to={`/items/${r.refine_chip_id}`}>{tr(growth.items[r.refine_chip_id]?.name ?? null, lang) || r.refine_chip_id}</Link> : "—"}</td>
             <td>{r.main_chip_cost} / {r.sub_chip_cost}</td><td>{r.main_refine_cost} / {r.sub_refine_cost}</td></tr>
         ))}</tbody>
       </table></div>

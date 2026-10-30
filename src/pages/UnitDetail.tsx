@@ -190,7 +190,7 @@ function GrowthPanel({ form, lv }: { form: UnitForm; lv: number }) {
               return (
                 <li key={item} title={item}>
                   <BundleImage stem={ITEM_ICONS} name={`${it?.icon ?? item}_s`} width={40} height={40} className="item-icon" />
-                  <span lang="ja">{tr(it?.name ?? null, lang) || item}</span>
+                  <Link to={`/items/${item}`} lang="ja">{tr(it?.name ?? null, lang) || item}</Link>
                   <b>×{num.toLocaleString()}</b>
                 </li>
               );

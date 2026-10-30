@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { LevelControl, Panel } from "@altterisk/game-hub";
 import { tr, useData, useLang, type Growth, type Unit, type UnitForm } from "../data";
 import { EffectList } from "../components";
@@ -112,7 +113,7 @@ export function BloomTab({ unit, form }: { unit: Unit; form: UnitForm }) {
             return (
               <li key={item} title={item}>
                 <BundleImage stem={ITEM_ICONS} name={`${it?.icon ?? item}_s`} width={40} height={40} className="item-icon" />
-                <span lang="ja">{tr(it?.name ?? null, lang) || item}</span>
+                <Link to={`/items/${item}`} lang="ja">{tr(it?.name ?? null, lang) || item}</Link>
                 <b>×{fmt(num)}</b>
               </li>
             );
