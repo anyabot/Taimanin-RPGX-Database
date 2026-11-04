@@ -1,6 +1,5 @@
 node_modules
 dist
 .cdn-cache
-.review
 test/golden/bundles
 test/e2e/out

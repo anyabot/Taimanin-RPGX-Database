@@ -1,6 +1,6 @@
 // Animated (Spine) event CGs on the 1280x720 ADV stage. A port of the stage
-// path of the local viewer's TaimaninSpinePlayer (D:\Download\Taimanin\
-// taimanin_spine.js); the rules and the reasons for them are in HANDOFF.md
+// path of the local viewer's TaimaninSpinePlayer (taimanin_spine.js in the
+// exporter toolkit); the rules and the reasons for them are in HANDOFF.md
 // "Spine behavior":
 //  - runtime: the vendored, locally patched spine-webgl 3.6
 //    (public/vendor/spine-3.6, see the TAIMANIN LOCAL PATCH note inside it)

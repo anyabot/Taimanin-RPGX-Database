@@ -7,8 +7,10 @@ import { ClassID } from "../src/unity/serialized";
 
 // Range reads against a real aggregate bundle, served by a fake fetch that
 // honours "Range: bytes=a-b" the way CloudFront does. Uses the exporter's
-// download cache; skipped when it is not on this machine.
-const DIRS = ["web_export", "adv"].map((d) => `D:/Download/Taimanin/taimanin_assets/bundles/${d}`);
+// download cache (TAIMANIN_BUNDLES=<toolkit>/taimanin_assets/bundles); skipped
+// when it is not set or not on this machine.
+const ROOT = process.env.TAIMANIN_BUNDLES;
+const DIRS = ROOT ? ["web_export", "adv"].map((d) => path.join(ROOT, d)) : [];
 const find = (stem: string) => {
   for (const dir of DIRS) {
     if (!existsSync(dir)) continue;

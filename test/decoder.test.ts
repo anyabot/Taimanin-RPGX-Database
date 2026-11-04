@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { AssetBundle } from "../src/unity/assets";
 
-// Golden hashes come from UnityPy via D:\Download\Taimanin\tools\web_export\golden.py.
+// Golden hashes come from UnityPy via the exporter toolkit's tools/web_export/golden.py.
 const dir = path.resolve(__dirname, "golden");
 const golden: any[] = existsSync(path.join(dir, "golden.json"))
   ? JSON.parse(readFileSync(path.join(dir, "golden.json"), "utf8"))

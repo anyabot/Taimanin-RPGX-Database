@@ -2,15 +2,25 @@
 
 https://github.com/anyabot/Taimanin-RPGX-Database
 
-Static site: unit stats, skills, runes and art for Taimanin RPGX. It ships only
-metadata, small icons and UI art (~27 MB). Full art and audio are fetched from
-the game's own CDN and decoded in the browser (`src/unity/`).
+Static site: unit stats, skills, runes, stories and transcripts for Taimanin
+RPGX. The deployed site serves only its own files: game data, unit and item
+icons, banners and scene scripts. The game's CDN only answers requests from the
+game's own sites and from `localhost`, so full art, scene playback and audio
+work in local builds only (`npm run dev` and `npm run preview`), which fetch
+bundles from the CDN and decode them in the browser (`src/unity/`).
+
+Everything under `public/data` (and `.review`, below) is written by a separate
+Python exporter toolkit that reads the game's tables and bundles; it is not
+part of this repo. The site itself needs only Node 22.
 
 ## Develop
 
     npm install
-    npm run dev          # http://localhost:5173  (/cdn proxy caches bundles in .cdn-cache)
-    npm test             # decoder golden tests (needs test/golden from golden.py)
+    npm run dev          # http://localhost:5173, LIVE game files (/cdn proxy caches bundles in .cdn-cache)
+    npm run preview      # http://localhost:4173, the next update (see below)
+    npm run build        # what the deployed site is: no game CDN, no upcoming units
+    npm test             # decoder golden tests (test/golden, from the toolkit's golden.py);
+                         # set TAIMANIN_BUNDLES=<toolkit>/taimanin_assets/bundles for the range-read test
     node test/e2e/pages.mjs   # headless Chrome pass over the pages (dev server running)
     SITE=http://localhost:4173 node test/e2e/scene.mjs   # scene player against the built site + live CDN
 
@@ -40,7 +50,7 @@ which is remembered.
 
 ## Refresh the data after a game update
 
-From `D:\Download\Taimanin`:
+From the exporter toolkit's folder:
 
     py -3 tools/web_export/catalog_snapshot.py   # public/data/bundles.json
     py -3 tools/web_export/tables.py             # units, runes, icons, UI art
@@ -52,19 +62,20 @@ From `D:\Download\Taimanin`:
     py -3 tools/web_export/atlases.py            # public/atlas: item, rune, enemy, boss icon sheets
     py -3 tools/web_export/banner_art.py         # public/art: gacha and story banners (after stories.py)
 
-Even without a refresh, the site checks the live catalog `.hash` files and
-rescans a changed catalog itself, so renamed bundles keep loading.
+In local builds the site also checks the catalog `.hash` files and rescans a
+changed catalog itself, so renamed bundles keep loading between refreshes.
 
 ## Preview the next update locally
 
-`npm run preview` builds in `review` mode: bundles come from the game's REVIEW
-tree, and `.review/public` (git-ignored) is laid over `dist` with the icons and
-scene files only REVIEW has. To refresh it, from `D:\Download\Taimanin`:
+`npm run preview` builds in `review` mode and serves it on port 4173: bundles
+come from the game's REVIEW tree (the next update while it is in store review),
+upcoming units are shown, and `.review/public` is laid over `dist`. That folder
+is committed, so a fresh clone previews what the last refresh saw: the REVIEW
+catalogs, and the icons and scene files of units only REVIEW has. It is
+refreshed with the toolkit's `fetch_new_units.bat review` and then
+`tools/web_export/review_overlay.py`.
 
-    fetch_new_units.bat review
-    py -3 tools/web_export/review_overlay.py
-
-`npm run build`, which Cloudflare runs, ignores all of this.
+`npm run build`, which Cloudflare runs, ignores `.review`.
 
 ## Deploy (Cloudflare Pages)
 
