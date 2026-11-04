@@ -12,6 +12,8 @@ export interface SceneDoc {
   id: string;
   title: string | null;
   script: { bundle: string; pathId: string };
+  /** the script without comments and blank lines (tools/web_export/scenes.py), so no CDN read is needed */
+  text?: string;
   /** direct-download folder of the voice clips, e.g. "Adv/Voice_r18/chr_0001_1" */
   voice?: string;
   /** <EV> group -> layers [sprite, x, y, w, h, alpha]: centre offsets on the 960x720 frame, y up */

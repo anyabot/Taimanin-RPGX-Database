@@ -139,7 +139,7 @@ export function EventPage() {
           <h1 lang={e.g.title?.en && lang === "en" ? "en" : "ja"}>{title}</h1>
           {e.g.period && <p>{periodText(e)} <span className="muted">· {phaseText(e.g.period.start, e.g.period.end)}</span></p>}
           <div className="event-actions">
-            {GAME_CDN && first && <Link className="hub-btn" to={`/story/${first.id}`}>Read the story · {e.g.parts.length} part{e.g.parts.length === 1 ? "" : "s"}</Link>}
+            {first && <Link className="hub-btn" to={`/story/${first.id}${GAME_CDN ? "" : "/transcript"}`}>Read the story · {e.g.parts.length} part{e.g.parts.length === 1 ? "" : "s"}</Link>}
             {e.g.battles && (
               <Link className="hub-btn" to={`/story/battles/${e.g.id}`}>
                 Battles · {e.g.battles.quests} quests{e.g.battles.bosses ? ` · ${e.g.battles.bosses} raid bosses` : ""}
@@ -163,10 +163,10 @@ export function EventPage() {
                   {p.title && <span lang="ja"> · {p.title}</span>}
                 </Link>
               ) : (
-                <span>
+                <Link to={`/story/${p.id}/transcript`}>
                   <span className="muted">{p.section ?? p.id}</span>
                   {p.title && <span lang="ja"> · {p.title}</span>}
-                </span>
+                </Link>
               )}
             </li>
           ))}

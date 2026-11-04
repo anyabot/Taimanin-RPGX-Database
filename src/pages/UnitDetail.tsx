@@ -33,7 +33,7 @@ const TABS = [
   { id: "profile", label: "Profile" },
   { id: "art", label: "Art" },
   { id: "scenes", label: "Scenes" },
-].filter((t) => GAME_CDN || (t.id !== "art" && t.id !== "scenes"));
+].filter((t) => GAME_CDN || t.id !== "art");
 
 const SLOT_LABEL: Record<Skill["slot"], string> = { attack: "Normal attack", skill1: "Skill 1", skill2: "Skill 2", ultimate: "Ultimate" };
 
@@ -109,7 +109,7 @@ export default function UnitDetail() {
         {tab === "obtain" && <ObtainTab unit={unit} />}
         {tab === "profile" && <ProfileTab unit={unit} />}
         {GAME_CDN && tab === "art" && <ArtTab unit={unit} />}
-        {GAME_CDN && tab === "scenes" && <ScenesTab unit={unit} />}
+        {tab === "scenes" && <ScenesTab unit={unit} />}
       </TabPanel>
     </div>
   );
@@ -433,7 +433,8 @@ function artFileName(stem: string) {
 function ScenesTab({ unit }: { unit: Unit }) {
   if (!unit.scenes.length) return <p className="muted">This unit has no scenes.</p>;
   return (
-    <Panel title="Scenes" note="Played in the browser from the game's own files; each scene loads when opened.">
+    <Panel title="Scenes" note={GAME_CDN ? "Played in the browser from the game's own files; each scene loads when opened."
+      : "Transcripts of the game's scripts, in English where translated."}>
       <ol className="scene-list">
         {unit.scenes.map((group, g) => group.map((sid, k) => (
           <li key={sid}>
@@ -452,8 +453,10 @@ function SceneLink({ sid, unitId }: { sid: string; unitId: string }) {
   if (error) return <span className="muted">{sid} (not available)</span>;
   return (
     <>
-      <Link to={`/scenes/${sid}?unit=${unitId}`} lang="ja">{data?.title || sid}</Link>
-      <Link className="scene-transcript-link small" to={`/scenes/${sid}/transcript?unit=${unitId}`}>Transcript</Link>
+      {GAME_CDN ? <>
+        <Link to={`/scenes/${sid}?unit=${unitId}`} lang="ja">{data?.title || sid}</Link>
+        <Link className="scene-transcript-link small" to={`/scenes/${sid}/transcript?unit=${unitId}`}>Transcript</Link>
+      </> : <Link to={`/scenes/${sid}/transcript?unit=${unitId}`} lang="ja">{data?.title || sid}</Link>}
       <EnglishBadge sid={sid} />
     </>
   );

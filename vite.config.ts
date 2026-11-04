@@ -83,7 +83,7 @@ function reviewOverlay(): Plugin {
     apply: (_, env) => env.command === "build" && env.mode === "review",
     closeBundle() {
       const from = path.resolve(__dirname, ".review/public");
-      if (!fs.existsSync(from)) throw new Error("no .review/public: run tools/web_export/review_overlay.py");
+      if (!fs.existsSync(from)) return console.warn("review-overlay: no .review/public (tools/web_export/review_overlay.py), so no REVIEW-only icons or scenes");
       fs.cpSync(from, path.resolve(__dirname, "dist"), { recursive: true });
     },
   };

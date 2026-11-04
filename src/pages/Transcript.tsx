@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, CopyButton, LoadState } from "@altterisk/game-hub";
 import { downloadText } from "@altterisk/game-hub/persist";
-import { tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
+import { GAME_CDN, tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Beat, type SceneDoc } from "../adv";
 import { loadScript } from "../sceneArt";
 import { RichLine, useSceneText } from "../sceneText";
@@ -11,8 +11,8 @@ import { usePageMeta } from "../usePageMeta";
 
 /** Every line of a scene, to read, copy or save as a text file. In the player
  *  (`at` and `go` given) the current line is marked and a line jumps to it. */
-export function TranscriptView({ title, file, beats, at, go }: {
-  title: string; file: string; beats: Beat[]; at?: number; go?: (n: number) => void;
+export function TranscriptView({ title, file, beats, script, at, go }: {
+  title: string; file: string; beats: Beat[]; script?: string; at?: number; go?: (n: number) => void;
 }) {
   const list = useRef<HTMLOListElement>(null);
   const lines = beats.flatMap((x, k) => (x.text ? [{ k, name: x.name, text: x.text, en: x.en }] : []));
@@ -40,6 +40,10 @@ export function TranscriptView({ title, file, beats, at, go }: {
       <div className="scn-tr-tools" translate="no">
         <CopyButton value={text} label="Copy all" />
         <button className="hub-btn hub-btn--sm" onClick={download}>Download .txt</button>
+        {script && (
+          <button className="hub-btn hub-btn--sm" title="The game's script with its stage tags (backgrounds, music, voices, transitions)"
+            onClick={() => downloadText(script.replace(/\n/g, "\r\n"), `${file}_script.txt`, "text/plain;charset=utf-8")}>Download script</button>
+        )}
         <span className="muted small">{lines.length} lines. Copies and saves the text as shown, so a page translation is included.</span>
       </div>
       <ol ref={list} className={`scn-tr-list${go ? " jump" : ""}`} lang="ja">
@@ -67,7 +71,7 @@ export default function TranscriptPage({ source = "unit" }: { source?: "unit" | 
   const [beats, setBeats] = useState<Beat[] | null>(null);
   const [scriptError, setScriptError] = useState<unknown>(null);
   useEffect(() => {
-    if (!assets || !doc) return;
+    if (!doc || (!doc.text && !assets)) return;
     let live = true;
     setBeats(null);
     loadScript(assets, doc).then((t) => live && setBeats(toBeats(parseScript(t))), (e) => live && setScriptError(e));
@@ -93,21 +97,21 @@ export default function TranscriptPage({ source = "unit" }: { source?: "unit" | 
       <Breadcrumbs items={story ? [
         { label: "Story", href: `/story?section=${story.sec.key}` },
         { label: groupTitle, href: `/story?section=${story.sec.key}&open=${story.g.id}` },
-        { label: partTitle, href: `${player}` },
+        { label: partTitle, ...(GAME_CDN ? { href: player } : {}) },
         { label: "Transcript" },
       ] : [
         { label: "Units", href: "/units" },
         ...(unit ? [{ label: unitName(unit, lang), href: `/units/${unit.id}?tab=scenes` }] : []),
-        { label: doc?.title || id, href: `${player}` },
+        { label: doc?.title || id, ...(GAME_CDN ? { href: player } : {}) },
         { label: "Transcript" },
       ]} />
       <div className="scene-head">
         <h1 lang="ja">{title} <span className="muted scene-sub">transcript</span></h1>
-        <div className="scene-siblings"><Link className="hub-btn" to={player}>Open in the scene player</Link></div>
+        {GAME_CDN && <div className="scene-siblings"><Link className="hub-btn" to={player}>Open in the scene player</Link></div>}
       </div>
-      {!text.beats && <LoadState loading={!error && !scriptError && !assetsError} error={error || scriptError || assetsError} />}
+      {!text.beats && <LoadState loading={!error && !scriptError && (!!doc?.text || !assetsError)} error={error || scriptError || (!doc?.text && assetsError)} />}
       {text.bar}
-      {text.beats && <TranscriptView title={title} file={id} beats={text.beats} />}
+      {text.beats && <TranscriptView title={title} file={id} beats={text.beats} script={doc?.text} />}
       {text.beats && !text.beats.some((b) => b.en) && <p className="muted small">The game's Japanese text; your browser's page translation works on it.</p>}
     </div>
   );

@@ -79,10 +79,13 @@ function StoryCard({ g, kind, lang, open }: { g: StoryGroup; kind: string; lang:
                 <EnglishBadge sid={p.id} />
               </>
             ) : (
-              <span>
-                <span className="muted">{p.section ?? p.id}</span>
-                {p.title && <span lang="ja"> · {p.title}</span>}
-              </span>
+              <>
+                <Link to={`/story/${p.id}/transcript`}>
+                  <span className="muted">{p.section ?? p.id}</span>
+                  {p.title && <span lang="ja"> · {p.title}</span>}
+                </Link>
+                <EnglishBadge sid={p.id} />
+              </>
             )}
           </li>
         ))}

@@ -186,7 +186,9 @@ export class SceneArt {
 
 /** The scene's script text: one object range-read out of the 24 MB scenario
  *  bundle; the whole bundle only if the exported path id no longer matches. */
-export async function loadScript(assets: Assets, doc: SceneDoc): Promise<string> {
+export async function loadScript(assets: Assets | null, doc: SceneDoc): Promise<string> {
+  if (doc.text) return doc.text;
+  if (!assets) throw new Error("The game's files are not available here.");
   const { bundle, pathId } = doc.script;
   try {
     const rb = await assets.remote(bundle);

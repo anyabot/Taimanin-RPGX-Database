@@ -49,7 +49,7 @@ function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   const people = [...gatherPeople(units, cards).values()];
   const unitLink = (u: UnitIndexEntry) => a(`/units/${u.id}`, [unitDisplayName(u), en(u.title)].filter(Boolean).join(" "));
   const files: Page[] = [];
-  const part = (p: Parameters<typeof partName>[0]) => (cdn ? a(`/story/${p.id}`, partName(p)) : esc(partName(p)));
+  const part = (p: Parameters<typeof partName>[0]) => a(cdn ? `/story/${p.id}` : `/story/${p.id}/transcript`, partName(p));
   const list = (p: string, body: string) => files.push({ path: p, meta: LIST_META[p], crumbs: [[LIST_META[p].title, p]], body });
 
   files.push({ path: "/", meta: DEFAULT_META, body: ul(Object.entries(LIST_META).filter(([p]) => p !== "/").map(([p, m]) => a(p, m.title))) });
@@ -65,7 +65,7 @@ function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
         full.profile && `<p>${esc(en(full.profile))}</p>`,
         section("Skills", ul(skills.map(esc))),
         full.leader?.name && section("Leader skill", `<p>${esc(en(full.leader.name))}</p>`),
-        cdn && section("Scenes", ul(full.scenes.flat().map((s) => a(`/scenes/${s}?unit=${u.id}`, s)))),
+        section("Scenes", ul(full.scenes.flat().map((s) => a(cdn ? `/scenes/${s}?unit=${u.id}` : `/scenes/${s}/transcript?unit=${u.id}`, s)))),
         section("Credits", ul([
           ...(u.illustrator ? [`Art: ${a(personHref("artist", u.illustrator), u.illustrator)}`] : []),
           ...(u.voiceActor ? [`CV: ${a(personHref("cv", u.voiceActor), u.voiceActor)}`] : []),
@@ -78,7 +78,7 @@ function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   for (const c of cards) {
     files.push({
       path: `/cards/${c.id}`, meta: cardMeta(c), crumbs: [["Arena cards", "/cards"], [en(c.name) || c.id, `/cards/${c.id}`]],
-      body: cdn ? section("Scenes", ul(c.scenes.map((s) => a(`/scenes/${s}`, s)))) : "",
+      body: section("Scenes", ul(c.scenes.map((s) => a(cdn ? `/scenes/${s}` : `/scenes/${s}/transcript`, s)))),
     });
   }
 
@@ -134,7 +134,7 @@ function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   // served by the SPA fallback: in the sitemap only
   const scenes = fs.readdirSync(path.join(data, "scenes")).filter((f) => f.endsWith(".json")).map((f) => `/scenes/${f.slice(0, -5)}`);
   const parts = stories.flatMap((s) => s.groups.flatMap((g) => g.parts.map((p) => `/story/${p.id}`)));
-  const extra = cdn ? [...scenes, ...parts].flatMap((p) => [p, `${p}/transcript`]) : [];
+  const extra = [...scenes, ...parts].flatMap((p) => (cdn ? [p, `${p}/transcript`] : [`${p}/transcript`]));
   return { files, extra };
 }
 

@@ -369,7 +369,7 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
       <details className="scn-transcript">
         <summary translate="no">Transcript</summary>
         <p className="small"><Link to={transcript}>Open the transcript as its own page</Link></p>
-        <TranscriptView title={doc.title || doc.id} file={doc.id} beats={beats} at={i} go={go} />
+        <TranscriptView title={doc.title || doc.id} file={doc.id} beats={beats} script={doc.text} at={i} go={go} />
       </details>
     </div>
   );

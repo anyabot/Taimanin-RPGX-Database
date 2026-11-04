@@ -80,10 +80,10 @@ function Stage({ quests, data, partTitle }: { quests: BattleQuest[]; data: Battl
   const spends = q.ap || q.userExp || q.unitExp || q.gold;
   return (
     <div className="stage" id={`quest-${q.id}`}>
-      {GAME_CDN && q.scripts.length > 0 && (
+      {q.scripts.length > 0 && (
         <div className="stage-story">
           {q.scripts.map((sc, i) => (
-            <Link key={sc} to={`/story/${sc}`}>{q.scripts.length === 2 ? (i ? "After: " : "Before: ") : "Story: "}
+            <Link key={sc} to={`/story/${sc}${GAME_CDN ? "" : "/transcript"}`}>{q.scripts.length === 2 ? (i ? "After: " : "Before: ") : "Story: "}
               <span lang="ja">{partTitle ? partTitle(sc) : sc}</span></Link>
           ))}
         </div>

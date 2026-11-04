@@ -98,7 +98,7 @@ export function CardDetail() {
           {card.sale && <StatRow label="On sale from" value={card.sale} />}
         </StatRows>
       </Panel>
-      {GAME_CDN && card.scenes.length > 0 && (
+      {card.scenes.length > 0 && (
         <Panel title="Scenes" note="Played in the browser from the game's own files; each scene loads when opened.">
           <ol className="scene-list">
             {card.scenes.map((sid, i) => (
@@ -121,5 +121,5 @@ export function CardDetail() {
 function SceneLink({ sid }: { sid: string }) {
   const { data, error } = useData<SceneDoc>(`scenes/${sid}`);
   if (error) return <span className="muted">{sid} (not available)</span>;
-  return <Link to={`/scenes/${sid}`} lang="ja">{data?.title || sid}</Link>;
+  return <Link to={`/scenes/${sid}${GAME_CDN ? "" : "/transcript"}`} lang="ja">{data?.title || sid}</Link>;
 }

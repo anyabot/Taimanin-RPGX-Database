@@ -50,6 +50,7 @@ From `D:\Download\Taimanin`:
     py -3 tools/web_export/stories.py            # public/data/stories for #/story (after scenes.py)
     py -3 tools/web_export/translations.py       # public/data/tl: English scene text (after stories.py)
     py -3 tools/web_export/atlases.py            # public/atlas: item, rune, enemy, boss icon sheets
+    py -3 tools/web_export/banner_art.py         # public/art: gacha and story banners (after stories.py)
 
 Even without a refresh, the site checks the live catalog `.hash` files and
 rescans a changed catalog itself, so renamed bundles keep loading.

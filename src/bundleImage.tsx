@@ -68,14 +68,37 @@ async function atlasIcon(stem: string | string[], name?: string): Promise<AtlasI
   return null;
 }
 
-/** An icon cut from a sheet by CSS; anything else (banners, stills) is not served here. */
+// Gacha and story banners, one WebP each (tools/web_export/banner_art.py): "<stem>|<name>" -> file.
+const artBase = `${import.meta.env.BASE_URL}art/`;
+let artIndex: Promise<Record<string, string>> | null = null;
+
+async function artUrl(stem: string | string[], name?: string): Promise<string | null> {
+  artIndex ??= fetch(`${artBase}index.json`).then((r) => (r.ok ? r.json() : {}), () => ({}));
+  const index = await artIndex;
+  for (const s of Array.isArray(stem) ? stem : [stem]) {
+    const file = index[`${s}|${name ?? ""}`];
+    if (file) return `${artBase}${file}`;
+  }
+  return null;
+}
+
+/** An icon cut from a sheet by CSS, or a banner picture; nothing else (stills, art) is served here. */
 function AtlasImage({ stem, name, alt = "", className, width, height, style }: BundleImageProps) {
   const [icon, setIcon] = useState<AtlasIcon | null>(null);
+  const [art, setArt] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    atlasIcon(stem, name).then((i) => live && setIcon(i), () => {});
+    atlasIcon(stem, name).then((i) => i ? live && setIcon(i) : artUrl(stem, name).then((u) => live && setArt(u)), () => {});
     return () => { live = false; };
   }, [String(stem), name]);
+  if (art) {
+    return (
+      <span className={`bundle-image ready${className ? ` ${className}` : ""}`}
+        style={{ ...style, ...(width ? { width } : {}), ...(height ? { height } : {}) }}>
+        <img src={art} alt={alt} loading="lazy" />
+      </span>
+    );
+  }
   if (!icon) return null;
   const [x, y, w, h] = icon.rect;
   const sx = (width ?? w) / w, sy = (height ?? h) / h;
