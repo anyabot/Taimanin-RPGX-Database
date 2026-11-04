@@ -75,8 +75,22 @@ function cdnCache(): Plugin {
   };
 }
 
+// `npm run preview` only: lays .review/public (review_overlay.py, git-ignored)
+// over the build, so the next update shows locally and is never deployed.
+function reviewOverlay(): Plugin {
+  return {
+    name: "review-overlay",
+    apply: (_, env) => env.command === "build" && env.mode === "review",
+    closeBundle() {
+      const from = path.resolve(__dirname, ".review/public");
+      if (!fs.existsSync(from)) throw new Error("no .review/public: run tools/web_export/review_overlay.py");
+      fs.cpSync(from, path.resolve(__dirname, "dist"), { recursive: true });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), cdnCache(), prerender()],
+  plugins: [react(), cdnCache(), prerender(), reviewOverlay()],
   base: "/",
   worker: { format: "es" },
 });

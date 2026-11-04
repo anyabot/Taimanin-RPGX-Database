@@ -38,10 +38,61 @@ export function bundleImageUrl(stem: string | string[], name?: string): Promise<
   return p;
 }
 
-export function BundleImage({ stem, name, alt = "", className, width, height, style }: {
+type BundleImageProps = {
   stem: string | string[]; name?: string; alt?: string; className?: string; width?: number; height?: number; style?: CSSProperties;
-}) {
-  if (!GAME_CDN) return null;  // constant per build, so the hook order below never changes
+};
+
+export function BundleImage(props: BundleImageProps) {
+  return GAME_CDN ? <CdnImage {...props} /> : <AtlasImage {...props} />;
+}
+
+// ---- the deployed build: icon sheets it serves itself (tools/web_export/atlases.py)
+const ATLASES = new Set(["image_item_s_assets_all", "image_rune_s_assets_all", "image_ene_s_assets_all", "image_bos_s_assets_all"]);
+interface Atlas { sheets: [number, number][]; icons: Record<string, [number, number, number, number, number]> }
+interface AtlasIcon { url: string; sheet: [number, number]; rect: [number, number, number, number] }
+const atlases = new Map<string, Promise<Atlas>>();
+const atlasBase = `${import.meta.env.BASE_URL}atlas/`;
+
+async function atlasIcon(stem: string | string[], name?: string): Promise<AtlasIcon | null> {
+  for (const s of Array.isArray(stem) ? stem : [stem]) {
+    if (!ATLASES.has(s) || !name) continue;
+    let a = atlases.get(s);
+    if (!a) {
+      a = fetch(`${atlasBase}${s}.json`).then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${s}.json: ${r.status}`))));
+      a.catch(() => atlases.delete(s));
+      atlases.set(s, a);
+    }
+    const r = (await a).icons[name];
+    if (r) return { url: `${atlasBase}${s}_${r[0]}.webp`, sheet: (await a).sheets[r[0]], rect: [r[1], r[2], r[3], r[4]] };
+  }
+  return null;
+}
+
+/** An icon cut from a sheet by CSS; anything else (banners, stills) is not served here. */
+function AtlasImage({ stem, name, alt = "", className, width, height, style }: BundleImageProps) {
+  const [icon, setIcon] = useState<AtlasIcon | null>(null);
+  useEffect(() => {
+    let live = true;
+    atlasIcon(stem, name).then((i) => live && setIcon(i), () => {});
+    return () => { live = false; };
+  }, [String(stem), name]);
+  if (!icon) return null;
+  const [x, y, w, h] = icon.rect;
+  const sx = (width ?? w) / w, sy = (height ?? h) / h;
+  return (
+    <span role={alt ? "img" : undefined} aria-label={alt || undefined}
+      className={`bundle-image ready${className ? ` ${className}` : ""}`}
+      style={{
+        ...style, width: width ?? w, height: height ?? h,
+        backgroundImage: `url(${icon.url})`, backgroundRepeat: "no-repeat",
+        backgroundSize: `${icon.sheet[0] * sx}px ${icon.sheet[1] * sy}px`,
+        backgroundPosition: `${-x * sx}px ${-y * sy}px`,
+      }} />
+  );
+}
+
+// ---- dev and `npm run preview`: decoded from the game CDN
+function CdnImage({ stem, name, alt = "", className, width, height, style }: BundleImageProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);

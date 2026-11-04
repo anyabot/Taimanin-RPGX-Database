@@ -49,9 +49,21 @@ From `D:\Download\Taimanin`:
     py -3 tools/web_export/buffs.py              # public/data/buffs.json for #/buffs (after tables.py)
     py -3 tools/web_export/stories.py            # public/data/stories for #/story (after scenes.py)
     py -3 tools/web_export/translations.py       # public/data/tl: English scene text (after stories.py)
+    py -3 tools/web_export/atlases.py            # public/atlas: item, rune, enemy, boss icon sheets
 
 Even without a refresh, the site checks the live catalog `.hash` files and
 rescans a changed catalog itself, so renamed bundles keep loading.
+
+## Preview the next update locally
+
+`npm run preview` builds in `review` mode: bundles come from the game's REVIEW
+tree, and `.review/public` (git-ignored) is laid over `dist` with the icons and
+scene files only REVIEW has. To refresh it, from `D:\Download\Taimanin`:
+
+    fetch_new_units.bat review
+    py -3 tools/web_export/review_overlay.py
+
+`npm run build`, which Cloudflare runs, ignores all of this.
 
 ## Deploy (Cloudflare Pages)
 

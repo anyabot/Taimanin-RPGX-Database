@@ -10,7 +10,7 @@
     "test": "vitest run",
     "hub:update": "npm install --no-save github:Altterisk/game-hub#main",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --port 4173"
+    "preview": "vite build --mode review && vite preview --port 4173"
   },
   "dependencies": {
     "@altterisk/game-hub": "github:Altterisk/game-hub#main",

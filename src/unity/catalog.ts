@@ -10,7 +10,8 @@
 // visit after an update pays for it.
 
 export const CDN = import.meta.env.DEV ? "/cdn" : "https://dntgnyxcho2sk.cloudfront.net";
-export const LIVE_ROOT = `${CDN}/asset_bundles/WebGL/LIVE`;
+// `npm run preview` builds in "review" mode: the next update, for local use only.
+export const LIVE_ROOT = `${CDN}/asset_bundles/WebGL/${import.meta.env.MODE === "review" ? "REVIEW" : "LIVE"}`;
 export const DIRECT_ROOT = `${CDN}/asset_bundles/DirectDownloadBundles`;
 
 export const CATALOGS = ["catalog_rpgx", "catalog_basicimage", "catalog_r18image", "catalog_table"] as const;
