@@ -3,3 +3,5 @@ dist
 .cdn-cache
 test/golden/bundles
 test/e2e/out
+.review
+CLAUDE.local.md

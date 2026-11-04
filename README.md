@@ -9,7 +9,7 @@ game's own sites and from `localhost`, so full art, scene playback and audio
 work in local builds only (`npm run dev` and `npm run preview`), which fetch
 bundles from the CDN and decode them in the browser (`src/unity/`).
 
-Everything under `public/data` (and `.review`, below) is written by a separate
+Everything under `public/data` is written by a separate
 Python exporter toolkit that reads the game's tables and bundles; it is not
 part of this repo. The site itself needs only Node 22.
 
@@ -69,11 +69,11 @@ changed catalog itself, so renamed bundles keep loading between refreshes.
 
 `npm run preview` builds in `review` mode and serves it on port 4173: bundles
 come from the game's REVIEW tree (the next update while it is in store review),
-upcoming units are shown, and `.review/public` is laid over `dist`. That folder
-is committed, so a fresh clone previews what the last refresh saw: the REVIEW
-catalogs, and the icons and scene files of units only REVIEW has. It is
-refreshed with the toolkit's `fetch_new_units.bat review` and then
-`tools/web_export/review_overlay.py`.
+upcoming units are shown, and `.review/public` (git-ignored, written by the
+toolkit's `fetch_new_units.bat review` and `tools/web_export/review_overlay.py`)
+is laid over `dist` with the icons and scene files of units only REVIEW has.
+Without that folder the preview still runs, from the CDN: units that only
+REVIEW has show without icons or scenes.
 
 `npm run build`, which Cloudflare runs, ignores `.review`.
 
