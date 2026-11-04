@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons, StatRow, StatRows } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import {
-  ITEM_ICONS, iconUrl, tr, useData, useLang, type Item, type ItemIndexEntry, type ItemSource, type UnitIndexEntry,
+  ITEM_ICONS, iconUrl, isHidden, tr, useData, useLang, type Item, type ItemIndexEntry, type ItemSource, type UnitIndexEntry,
 } from "../data";
 import { BundleImage } from "../bundleImage";
 import "./items.css";
@@ -67,7 +67,10 @@ export function ItemDetail() {
   const { data: units } = useData<UnitIndexEntry[]>("units/index");
   const lang = useLang();
   const unitName = (u: string) => tr(units?.find((x) => x.id === u)?.name, lang) || u;
+  const shown = (ids?: string[]) => ids?.filter((id) => { const u = units?.find((x) => x.id === id); return !u || !isHidden(u); });
   if (!item) return <LoadState loading={loading} error={error} />;
+  const exchanges = shown(item.units);
+  const uses = item.uses && { ...item.uses, evolve: shown(item.uses.evolve), bloom: shown(item.uses.bloom), ability: shown(item.uses.ability) };
   const name = tr(item.name, lang) || item.id;
   const group = TYPE_GROUP[item.type] ?? "System";
   return (
@@ -89,16 +92,17 @@ export function ItemDetail() {
           {item.sellGold > 0 && <StatRow label="Sells for" value={<>{item.sellGold.toLocaleString()} gold</>} />}
         </StatRows>
       </Panel>
-      {item.units && item.units.length > 0 && (
-        <Panel title={`Exchanges for (${item.units.length})`}>
+      {exchanges && exchanges.length > 0 && (
+        <Panel title={`Exchanges for (${exchanges.length})`}>
           <ul className="item-units">
-            {item.units.map((u) => (
+            {exchanges.map((u) => (
               <li key={u}><Link to={`/units/${u}`}><img src={iconUrl(u)} alt="" width={40} height={40} /> <span lang="ja">{unitName(u)}</span></Link></li>
             ))}
           </ul>
         </Panel>
       )}
-      {item.uses && <Uses uses={item.uses} unitName={unitName} />}
+      {uses && (uses.evolve?.length || uses.bloom?.length || uses.ability?.length || uses.runeEvolve || uses.refine)
+        ? <Uses uses={uses} unitName={unitName} /> : null}
       {item.sources && item.sources.length > 0 && <Sources list={item.sources} />}
       {!item.sources?.length && <p className="muted small">No drop, reward or shop in the site's data lists this item
         (it may come from gacha, missions, login bonuses or the paid shop, which are not covered).</p>}

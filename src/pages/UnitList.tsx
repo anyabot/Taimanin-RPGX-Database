@@ -5,7 +5,7 @@ import {
 } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
-import { ELEMENTS, NO_ORIGIN, ORIGINS, RARITY, iconUrl, isUpcoming, tr, unitName, useData, useLang, type TranslationIndex, type UnitIndexEntry } from "../data";
+import { ELEMENTS, NO_ORIGIN, ORIGINS, RARITY, SHOW_UPCOMING, iconUrl, isUpcoming, tr, unitName, useData, useLang, type TranslationIndex, type UnitIndexEntry } from "../data";
 import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 
@@ -45,7 +45,7 @@ export default function UnitList() {
   const originF = url.list("origin");
   const flag = (k: string) => url.text(k) === "1";
   const flip = (k: string) => url.setText(k, flag(k) ? "" : "1");
-  const showUpcoming = flag("upcoming");
+  const showUpcoming = SHOW_UPCOMING && flag("upcoming");
   const skinF = flag("skin");
   const englishF = flag("english");
   const aiF = flag("ai");
@@ -120,7 +120,7 @@ export default function UnitList() {
               selected={[...(skinF ? ["skin"] : []), ...(englishF ? ["english"] : []), ...(aiF ? ["ai"] : [])]}
               onToggle={(v) => flip(v === "skin" || v === "ai" ? v : "english")} />
           )}
-          {upcomingCount > 0 && (
+          {SHOW_UPCOMING && upcomingCount > 0 && (
             <CheckboxGroup title="Release" options={[{ value: "1", label: `Upcoming (${upcomingCount})` }]}
               selected={showUpcoming ? ["1"] : []} onToggle={() => flip("upcoming")} />
           )}

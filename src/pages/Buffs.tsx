@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckboxGroup, FallbackImage, FilterChip, FilterRow, GroupCard, LoadState, PageHeader } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter } from "@altterisk/game-hub/filters";
-import { ELEMENTS, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
+import { ELEMENTS, SHOW_UPCOMING, iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 import { ElementIcon, RarityIcon, StackBadge, StackRules } from "../components";
 import type { StackTag } from "../data";
 import { LIST_META } from "../meta";
@@ -88,7 +88,7 @@ export default function Buffs() {
 
   const cat = CATEGORIES.find((c) => c.k === url.text("cat"))?.k ?? "stat";
   const sources = url.list("source");
-  const showUpcoming = url.text("upcoming") === "1";
+  const showUpcoming = SHOW_UPCOMING && url.text("upcoming") === "1";
   // receiver: "" any, "all", "self", "el:<element>", "tr:<trait>"
   const to = url.text("to");
   const enemySide = cat === "debuff" || cat === "ailment";
@@ -185,7 +185,7 @@ export default function Buffs() {
           </FilterRow>
         </>
       )}
-      {upcomingCount > 0 && (
+      {SHOW_UPCOMING && upcomingCount > 0 && (
         <FilterRow label="Release">
           <FilterChip active={showUpcoming} count={upcomingCount} onClick={() => url.setText("upcoming", showUpcoming ? "" : "1")}
             title="Units already in the game data but not released yet">Include upcoming</FilterChip>

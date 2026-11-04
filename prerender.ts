@@ -39,7 +39,9 @@ const section = (title: string, html: string) => (html ? `<h2>${esc(title)}</h2>
 
 function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   const read = <T,>(name: string): T => JSON.parse(fs.readFileSync(path.join(data, `${name}.json`), "utf8"));
-  const units = read<UnitIndexEntry[]>("units/index");
+  // Upcoming units only where the build shows the next update (src/data.ts SHOW_UPCOMING).
+  const today = new Date().toISOString().slice(0, 10);
+  const units = read<UnitIndexEntry[]>("units/index").filter((u) => cdn || !(u.release && u.release > today));
   const cards = read<ArenaCard[]>("cards");
   const items = read<ItemIndexEntry[]>("items/index");
   const stories = read<StorySection[]>("stories/index");

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { StackBadge, stackRule } from "../components";
-import { iconUrl, unitName, useData, useLang, type UnitIndexEntry } from "../data";
+import { iconUrl, isHidden, unitName, useData, useLang, type UnitIndexEntry } from "../data";
 import "./statuses.css";
 import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
@@ -65,7 +65,8 @@ function StatusCard({ e, kind, units, block }: {
   const lang = useLang();
   const [all, setAll] = useState(false);
   const tag = kind === "ailments" ? "ailment" : kind === "markers" ? "marker" : e.stack === "shield" ? "shield" : "state";
-  const shown = all ? e.units : e.units.slice(0, 24);
+  const applied = e.units.filter(([id]) => { const u = units.get(id); return !u || !isHidden(u); });
+  const shown = all ? applied : applied.slice(0, 24);
   return (
     <Panel title={<span className="status-title">
       {e.icon && <img src={ui(`Battle_status_icon_${e.icon}`)} alt="" width={24} height={24} />}
@@ -81,7 +82,7 @@ function StatusCard({ e, kind, units, block }: {
           <p lang="ja">{e.help}</p>
         </details>
       )}
-      <h4 className="status-units-head">Applied by {e.units.length} unit{e.units.length === 1 ? "" : "s"}</h4>
+      <h4 className="status-units-head">Applied by {applied.length} unit{applied.length === 1 ? "" : "s"}</h4>
       <ul className="status-units">
         {shown.map(([id, slot]) => {
           const u = units.get(id);
@@ -95,8 +96,8 @@ function StatusCard({ e, kind, units, block }: {
           );
         })}
       </ul>
-      {e.units.length > 24 && (
-        <button className="hub-btn hub-btn--sm" onClick={() => setAll(!all)}>{all ? "Show fewer" : `Show all ${e.units.length}`}</button>
+      {applied.length > 24 && (
+        <button className="hub-btn hub-btn--sm" onClick={() => setAll(!all)}>{all ? "Show fewer" : `Show all ${applied.length}`}</button>
       )}
     </Panel>
   );

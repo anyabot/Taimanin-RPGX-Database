@@ -347,6 +347,10 @@ export const unitName = (u: { name: Text | null; displayName?: Text | null }, l:
 /** Units already in the master data ahead of their release date. */
 export const today = new Date().toISOString().slice(0, 10);
 export const isUpcoming = (u: { release: string | null }) => !!u.release && u.release > today;
+/** Upcoming units show only where the game's files do (dev, `npm run preview`);
+ *  the deployed site keeps to released ones. */
+export const SHOW_UPCOMING = GAME_CDN;
+export const isHidden = (u: { release: string | null }) => !SHOW_UPCOMING && isUpcoming(u);
 
 const DAY = 86400000;
 /** The client's event and banner rows often open a year before they close

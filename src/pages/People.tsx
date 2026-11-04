@@ -3,7 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, CardGrid, FallbackImage, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { ElementIcon, RarityIcon } from "../components";
-import { iconUrl, isUpcoming, tr, unitName, useData, useLang, type ArenaCard, type UnitIndexEntry } from "../data";
+import { iconUrl, isHidden, isUpcoming, tr, unitName, useData, useLang, type ArenaCard, type UnitIndexEntry } from "../data";
 import { CardTile } from "./Cards";
 import { ROLE_LABEL, gatherPeople, personHref, personKey, type Person, type Role } from "../people";
 import { LIST_META, personMeta } from "../meta";
@@ -12,7 +12,7 @@ import { usePageMeta } from "../usePageMeta";
 function usePeople() {
   const units = useData<UnitIndexEntry[]>("units/index");
   const cards = useData<ArenaCard[]>("cards");
-  const people = useMemo(() => units.data && cards.data ? gatherPeople(units.data, cards.data) : null, [units.data, cards.data]);
+  const people = useMemo(() => units.data && cards.data ? gatherPeople(units.data.filter((u) => !isHidden(u)), cards.data) : null, [units.data, cards.data]);
   return { people, loading: units.loading || cards.loading, error: units.error || cards.error };
 }
 

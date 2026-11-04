@@ -7,7 +7,7 @@ import {
 import { createPlayer } from "@altterisk/game-hub/audio";
 import { searchParamsAdapter } from "@altterisk/game-hub/filters";
 import {
-  GAME_CDN, RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
+  GAME_CDN, RARITY, STATS, iconUrl, isHidden, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
   type UnitIndexEntry, type ObtainEntry,
 } from "../data";
 import { credits, personHref } from "../people";
@@ -21,6 +21,7 @@ import { AbilityPanel, BloomTab } from "./growth";
 import type { Growth } from "../data";
 import { unitMeta } from "../meta";
 import { usePageMeta } from "../usePageMeta";
+import NotFound from "./NotFound";
 
 const TABS = [
   { id: "stats", label: "Stats" },
@@ -48,8 +49,9 @@ export default function UnitDetail() {
   const [tab, setTab] = tabParam(searchParamsAdapter(params, setParams), TABS);
   const [formIdx, setFormIdx] = useState<number | null>(null);
   const form = unit ? unit.forms[formIdx ?? unit.forms.length - 1] : null;
-  usePageMeta(unit && unitMeta(unit));
+  usePageMeta(unit && !isHidden(unit) ? unitMeta(unit) : undefined);
 
+  if (unit && isHidden(unit)) return <NotFound />;
   if (!unit || !form) return <LoadState loading={loading} error={error} />;
   const name = unitName(unit, lang);
 
@@ -120,7 +122,7 @@ function RelatedUnits({ id }: { id: string }) {
   const related = useMemo(() => {
     const self = index?.find((u) => u.id === id);
     if (!self) return [];
-    return index!.filter((u) => u.family === self.family && u.id !== id)
+    return index!.filter((u) => u.family === self.family && u.id !== id && !isHidden(u))
       .sort((a, b) => (b.release || "").localeCompare(a.release || ""));
   }, [index, id]);
   if (!related.length) return null;
