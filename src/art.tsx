@@ -2,7 +2,7 @@
 // gallery of the decoded ones, and PNG downloads.
 import { useEffect, useRef, useState } from "react";
 import { Lightbox } from "@altterisk/game-hub";
-import { useAssets } from "./data";
+import { GAME_CDN, useAssets } from "./data";
 import { toImageData } from "./unity/client";
 import { BundleImage } from "./bundleImage";
 import "./art.css";
@@ -16,7 +16,7 @@ export function stillStem(name: string): string {
 
 /** A scene's CG stills as thumbnails, decoded when they scroll into view. */
 export function SceneStills({ names }: { names?: string[] }) {
-  if (!names?.length) return null;
+  if (!names?.length || !GAME_CDN) return null;
   return (
     <span className="scene-stills">
       {names.map((n) => <BundleImage key={n} stem={stillStem(n)} name={n} width={150} height={100} className="scene-still" alt="" />)}

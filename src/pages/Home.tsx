@@ -8,11 +8,11 @@ import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 
 const SECTIONS: [string, string, string][] = [
-  ["/units", "Units", "Stats, skills, abilities, bloom, voices and scenes"],
+  ["/units", "Units", "Stats, skills, abilities, bloom and voice lines"],
   ["/events", "Events", "Story, raid and map events: rewards, shops, battles"],
   ["/banners", "Gacha banners", "Limited banners and their featured units"],
   ["/gacha", "Gacha simulator", "Pull on any banner with the game's own odds"],
-  ["/story", "Story", "Main and event story, played from the game's files"],
+  ["/story", "Story", "Main and event story: chapters and battles"],
   ["/quests", "Quests", "Arena towers, daily quests, mini events, dispatch"],
   ["/buffs", "Buffs", "Every unit's buffs and debuffs, ranked"],
   ["/statuses", "Statuses", "Ailments, states and markers"],

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { LoadState, PageHeader, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
-import { tr, useData, useLang, type BundleRef, type StoryGroup, type StorySection } from "../data";
+import { GAME_CDN, tr, useData, useLang, type BundleRef, type StoryGroup, type StorySection } from "../data";
 import { BundleImage } from "../bundleImage";
 import { EnglishBadge } from "../sceneText";
 import { LIST_META } from "../meta";
@@ -69,12 +69,21 @@ function StoryCard({ g, kind, lang, open }: { g: StoryGroup; kind: string; lang:
       <ol className="story-parts">
         {g.parts.map((p) => (
           <li key={p.id}>
-            <Link to={`/story/${p.id}`}>
-              <span className="muted">{p.section ?? p.id}</span>
-              {p.title && <span lang="ja"> · {p.title}</span>}
-            </Link>
-            <Link className="scene-transcript-link small" to={`/story/${p.id}/transcript`}>Transcript</Link>
-            <EnglishBadge sid={p.id} />
+            {GAME_CDN ? (
+              <>
+                <Link to={`/story/${p.id}`}>
+                  <span className="muted">{p.section ?? p.id}</span>
+                  {p.title && <span lang="ja"> · {p.title}</span>}
+                </Link>
+                <Link className="scene-transcript-link small" to={`/story/${p.id}/transcript`}>Transcript</Link>
+                <EnglishBadge sid={p.id} />
+              </>
+            ) : (
+              <span>
+                <span className="muted">{p.section ?? p.id}</span>
+                {p.title && <span lang="ja"> · {p.title}</span>}
+              </span>
+            )}
           </li>
         ))}
       </ol>

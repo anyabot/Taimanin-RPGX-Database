@@ -4,7 +4,7 @@ import { lazy, Suspense, useCallback, useMemo, useState, type ReactNode } from "
 import { Link } from "react-router-dom";
 import { Panel, SegmentedButtons, TabPanel, UrlTabs } from "@altterisk/game-hub";
 import {
-  ENEMY_ICONS, iconUrl, tr, useLang, windowOf, type BattleBoss, type BattleEnemy, type BattleQuest, type Battles,
+  ENEMY_ICONS, GAME_CDN, iconUrl, tr, useLang, windowOf, type BattleBoss, type BattleEnemy, type BattleQuest, type Battles,
   type BattleEvent, type LuckTier, type QuestDrop,
 } from "./data";
 import { EffectList, ElementIcon } from "./components";
@@ -80,7 +80,7 @@ function Stage({ quests, data, partTitle }: { quests: BattleQuest[]; data: Battl
   const spends = q.ap || q.userExp || q.unitExp || q.gold;
   return (
     <div className="stage" id={`quest-${q.id}`}>
-      {q.scripts.length > 0 && (
+      {GAME_CDN && q.scripts.length > 0 && (
         <div className="stage-story">
           {q.scripts.map((sc, i) => (
             <Link key={sc} to={`/story/${sc}`}>{q.scripts.length === 2 ? (i ? "After: " : "Before: ") : "Story: "}

@@ -6,7 +6,7 @@ import {
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { LiveBadge } from "@altterisk/game-hub/time";
 import {
-  phaseOf, phaseText, tr, useData, useLang, windowOf, type Battles, type StoryGroup, type StorySection,
+  GAME_CDN, phaseOf, phaseText, tr, useData, useLang, windowOf, type Battles, type StoryGroup, type StorySection,
 } from "../data";
 import { EventInfo } from "../battles";
 import { StoryBanner } from "./StoryList";
@@ -139,7 +139,7 @@ export function EventPage() {
           <h1 lang={e.g.title?.en && lang === "en" ? "en" : "ja"}>{title}</h1>
           {e.g.period && <p>{periodText(e)} <span className="muted">· {phaseText(e.g.period.start, e.g.period.end)}</span></p>}
           <div className="event-actions">
-            {first && <Link className="hub-btn" to={`/story/${first.id}`}>Read the story · {e.g.parts.length} part{e.g.parts.length === 1 ? "" : "s"}</Link>}
+            {GAME_CDN && first && <Link className="hub-btn" to={`/story/${first.id}`}>Read the story · {e.g.parts.length} part{e.g.parts.length === 1 ? "" : "s"}</Link>}
             {e.g.battles && (
               <Link className="hub-btn" to={`/story/battles/${e.g.id}`}>
                 Battles · {e.g.battles.quests} quests{e.g.battles.bosses ? ` · ${e.g.battles.bosses} raid bosses` : ""}
@@ -157,10 +157,17 @@ export function EventPage() {
         <ol className="story-parts">
           {e.g.parts.map((p) => (
             <li key={p.id}>
-              <Link to={`/story/${p.id}`}>
-                <span className="muted">{p.section ?? p.id}</span>
-                {p.title && <span lang="ja"> · {p.title}</span>}
-              </Link>
+              {GAME_CDN ? (
+                <Link to={`/story/${p.id}`}>
+                  <span className="muted">{p.section ?? p.id}</span>
+                  {p.title && <span lang="ja"> · {p.title}</span>}
+                </Link>
+              ) : (
+                <span>
+                  <span className="muted">{p.section ?? p.id}</span>
+                  {p.title && <span lang="ja"> · {p.title}</span>}
+                </span>
+              )}
             </li>
           ))}
         </ol>

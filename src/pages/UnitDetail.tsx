@@ -7,7 +7,7 @@ import {
 import { createPlayer } from "@altterisk/game-hub/audio";
 import { searchParamsAdapter } from "@altterisk/game-hub/filters";
 import {
-  RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
+  GAME_CDN, RARITY, STATS, iconUrl, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
   type UnitIndexEntry, type ObtainEntry,
 } from "../data";
 import { credits, personHref } from "../people";
@@ -32,7 +32,7 @@ const TABS = [
   { id: "profile", label: "Profile" },
   { id: "art", label: "Art" },
   { id: "scenes", label: "Scenes" },
-];
+].filter((t) => GAME_CDN || (t.id !== "art" && t.id !== "scenes"));
 
 const SLOT_LABEL: Record<Skill["slot"], string> = { attack: "Normal attack", skill1: "Skill 1", skill2: "Skill 2", ultimate: "Ultimate" };
 
@@ -106,8 +106,8 @@ export default function UnitDetail() {
         {tab === "voices" && <VoicesTab unit={unit} />}
         {tab === "obtain" && <ObtainTab unit={unit} />}
         {tab === "profile" && <ProfileTab unit={unit} />}
-        {tab === "art" && <ArtTab unit={unit} />}
-        {tab === "scenes" && <ScenesTab unit={unit} />}
+        {GAME_CDN && tab === "art" && <ArtTab unit={unit} />}
+        {GAME_CDN && tab === "scenes" && <ScenesTab unit={unit} />}
       </TabPanel>
     </div>
   );
@@ -294,7 +294,7 @@ function VoicesTab({ unit }: { unit: Unit }) {
                 id: v.clip ?? `${variant}-${i}`,
                 tag: `${v.label} ${v.index}`,
                 text: tr(v.text, lang) || <i className="muted">(no text)</i>,
-                available: !!v.clip,
+                available: GAME_CDN && !!v.clip,
               }))} />
           </Panel>
         );
@@ -378,7 +378,9 @@ function ProfileTab({ unit }: { unit: Unit }) {
         {unit.illustrator && <StatRow label="Illustrator" value={<CreditLinks raw={unit.illustrator} role="artist" />} />}
         {unit.voiceActor && <StatRow label="Voice" value={<CreditLinks raw={unit.voiceActor} role="cv" />} />}
         {unit.trust.length > 0 && <StatRow label="Scene unlocks" value={<>Trust {unit.trust.join(", ")}</>} />}
-        {unit.skin && <StatRow label="Skin" value={<span lang="ja"><Link to={`/units/${unit.id}?tab=art`}>{tr(unit.skin.name, lang) || unit.skin.item}</Link> (preview on the Art tab)</span>} />}
+        {unit.skin && <StatRow label="Skin" value={<span lang="ja">{GAME_CDN
+          ? <><Link to={`/units/${unit.id}?tab=art`}>{tr(unit.skin.name, lang) || unit.skin.item}</Link> (preview on the Art tab)</>
+          : tr(unit.skin.name, lang) || unit.skin.item}</span>} />}
       </StatRows>
     </Panel>
   );

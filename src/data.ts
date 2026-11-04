@@ -291,6 +291,11 @@ export interface RuneSet {
 }
 
 const base = import.meta.env.BASE_URL;
+/** The game CDN refuses requests from this site's domain (by Origin / Referer,
+ *  since 2026-11-04), so the deployed build reads nothing from it: no scenes,
+ *  story player, art, voices or bundle icons. `vite dev` and `npm run preview`
+ *  (localhost) still can. */
+export const GAME_CDN = import.meta.env.DEV || import.meta.env.MODE === "review";
 export const loader = createJsonLoader({ urls: (name) => [`${base}data/${name}.json`] });
 export const useData = <T,>(name: string | null) => useJson<T>(loader, name);
 
@@ -372,7 +377,7 @@ export function phaseText(start?: string | null, end?: string | null): string {
 
 // ---- the bundle decoder, created once
 let assets: Promise<Assets> | null = null;
-export const getAssets = () => (assets ??= Assets.load());
+export const getAssets = () => (assets ??= GAME_CDN ? Assets.load() : Promise.reject(new Error("The game's files are not available here.")));
 export function useAssets() {
   const [a, setA] = useState<Assets | null>(null);
   const [error, setError] = useState<unknown>(null);

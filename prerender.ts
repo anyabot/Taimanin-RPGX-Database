@@ -37,7 +37,7 @@ const a = (href: string, label: string) => `<a href="${esc(sitePath(href.split("
 const ul = (items: string[]) => (items.length ? `<ul>${items.map((x) => `<li>${x}</li>`).join("")}</ul>` : "");
 const section = (title: string, html: string) => (html ? `<h2>${esc(title)}</h2>${html}` : "");
 
-function pages(data: string): { files: Page[]; extra: string[] } {
+function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   const read = <T,>(name: string): T => JSON.parse(fs.readFileSync(path.join(data, `${name}.json`), "utf8"));
   const units = read<UnitIndexEntry[]>("units/index");
   const cards = read<ArenaCard[]>("cards");
@@ -47,6 +47,7 @@ function pages(data: string): { files: Page[]; extra: string[] } {
   const people = [...gatherPeople(units, cards).values()];
   const unitLink = (u: UnitIndexEntry) => a(`/units/${u.id}`, [unitDisplayName(u), en(u.title)].filter(Boolean).join(" "));
   const files: Page[] = [];
+  const part = (p: Parameters<typeof partName>[0]) => (cdn ? a(`/story/${p.id}`, partName(p)) : esc(partName(p)));
   const list = (p: string, body: string) => files.push({ path: p, meta: LIST_META[p], crumbs: [[LIST_META[p].title, p]], body });
 
   files.push({ path: "/", meta: DEFAULT_META, body: ul(Object.entries(LIST_META).filter(([p]) => p !== "/").map(([p, m]) => a(p, m.title))) });
@@ -62,7 +63,7 @@ function pages(data: string): { files: Page[]; extra: string[] } {
         full.profile && `<p>${esc(en(full.profile))}</p>`,
         section("Skills", ul(skills.map(esc))),
         full.leader?.name && section("Leader skill", `<p>${esc(en(full.leader.name))}</p>`),
-        section("Scenes", ul(full.scenes.flat().map((s) => a(`/scenes/${s}?unit=${u.id}`, s)))),
+        cdn && section("Scenes", ul(full.scenes.flat().map((s) => a(`/scenes/${s}?unit=${u.id}`, s)))),
         section("Credits", ul([
           ...(u.illustrator ? [`Art: ${a(personHref("artist", u.illustrator), u.illustrator)}`] : []),
           ...(u.voiceActor ? [`CV: ${a(personHref("cv", u.voiceActor), u.voiceActor)}`] : []),
@@ -75,7 +76,7 @@ function pages(data: string): { files: Page[]; extra: string[] } {
   for (const c of cards) {
     files.push({
       path: `/cards/${c.id}`, meta: cardMeta(c), crumbs: [["Arena cards", "/cards"], [en(c.name) || c.id, `/cards/${c.id}`]],
-      body: section("Scenes", ul(c.scenes.map((s) => a(`/scenes/${s}`, s)))),
+      body: cdn ? section("Scenes", ul(c.scenes.map((s) => a(`/scenes/${s}`, s)))) : "",
     });
   }
 
@@ -96,19 +97,19 @@ function pages(data: string): { files: Page[]; extra: string[] } {
       path: `/events/${g.id}`, meta: eventMeta(g, kind), crumbs: [["Events", "/events"], [eventName(g, kind), `/events/${g.id}`]],
       body: [
         g.battles && `<p>${a(`/story/battles/${g.id}`, "Battles, enemies and bosses")}</p>`,
-        section("Story", ul(g.parts.map((p) => a(`/story/${p.id}`, partName(p))))),
+        section("Story", ul(g.parts.map((p) => part(p)))),
       ].filter(Boolean).join(""),
     });
   }
 
   list("/story", stories.map((s) => section(s.label, ul(s.groups.map((g) =>
-    `${esc(storyGroupName(g))}${ul(g.parts.map((p) => a(`/story/${p.id}`, partName(p))))}`)))).join(""));
+    `${esc(storyGroupName(g))}${ul(g.parts.map((p) => part(p)))}`)))).join(""));
   for (const sec of stories) for (const g of sec.groups) {
     if (!g.battles) continue;
     files.push({
       path: `/story/battles/${g.id}`, meta: storyBattlesMeta(sec, g),
       crumbs: [["Story", "/story"], [storyGroupName(g), `/story/battles/${g.id}`]],
-      body: section("Story", ul(g.parts.map((p) => a(`/story/${p.id}`, partName(p))))),
+      body: section("Story", ul(g.parts.map((p) => part(p)))),
     });
   }
 
@@ -131,7 +132,7 @@ function pages(data: string): { files: Page[]; extra: string[] } {
   // served by the SPA fallback: in the sitemap only
   const scenes = fs.readdirSync(path.join(data, "scenes")).filter((f) => f.endsWith(".json")).map((f) => `/scenes/${f.slice(0, -5)}`);
   const parts = stories.flatMap((s) => s.groups.flatMap((g) => g.parts.map((p) => `/story/${p.id}`)));
-  const extra = [...scenes, ...parts].flatMap((p) => [p, `${p}/transcript`]);
+  const extra = cdn ? [...scenes, ...parts].flatMap((p) => [p, `${p}/transcript`]) : [];
   return { files, extra };
 }
 
@@ -161,16 +162,19 @@ function fileFor(outDir: string, p: string): string | null {
 export function prerender(): Plugin {
   let outDir = "";
   let publicDir = "";
+  // Scene and story pages read the game CDN, which the deployed build does not (src/data.ts GAME_CDN).
+  let cdn = false;
   return {
     name: "prerender",
     apply: "build",
     configResolved(c) {
       outDir = path.resolve(c.root, c.build.outDir);
       publicDir = c.publicDir;
+      cdn = c.mode === "review";
     },
     closeBundle() {
       const template = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
-      const { files, extra } = pages(path.join(publicDir, "data"));
+      const { files, extra } = pages(path.join(publicDir, "data"), cdn);
       let written = 0;
       const listed: string[] = [];
       for (const page of files) {

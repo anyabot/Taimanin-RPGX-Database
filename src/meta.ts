@@ -41,13 +41,13 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
 /** Index pages, keyed by path. */
 export const LIST_META: Record<string, PageMeta> = {
   "/": DEFAULT_META,
-  "/units": { title: "Units", description: "Every Taimanin RPGX unit: rarity, element, traits, stats, skills, abilities, bloom, voices, art and scenes. Filter by rarity, element, role, trait and origin." },
+  "/units": { title: "Units", description: "Every Taimanin RPGX unit: rarity, element, traits, stats, skills, abilities, bloom and voice lines. Filter by rarity, element, role, trait and origin." },
   "/events": { title: "Events", description: "Taimanin RPGX story, raid and map events: periods, story parts, battles, rewards and exchange shops." },
   "/banners": { title: "Gacha banners", description: "Taimanin RPGX limited gacha banners with their dates, pull types and featured units." },
   "/gacha": { title: "Gacha simulator", description: "Pull on any Taimanin RPGX gacha banner with the game's own rates and pick-ups." },
-  "/story": { title: "Story", description: "Taimanin RPGX main, event, raid and map story, played in the browser with the game's art, voice and music, with English text where translated." },
+  "/story": { title: "Story", description: "Taimanin RPGX main, event, raid and map story: chapters, parts and their battles." },
   "/quests": { title: "Quests", description: "Taimanin RPGX arena towers, daily quests, mini events and dispatch: stages, enemies, rules and drops." },
-  "/cards": { title: "Arena cards", description: "Every Taimanin RPGX Arena card: rarity, art, credits and scenes." },
+  "/cards": { title: "Arena cards", description: "Every Taimanin RPGX Arena card: rarity and credits." },
   "/items": { title: "Items", description: "Every Taimanin RPGX item: what it does, where it drops or is sold, and what uses it." },
   "/runes": { title: "Runes", description: "Taimanin RPGX rune sets: set bonuses, main and sub stats, and evolution costs." },
   "/buffs": { title: "Buff ranking", description: "Taimanin RPGX units ranked by the buffs and debuffs their skills give, by type and target." },
@@ -64,7 +64,7 @@ export function unitMeta(u: Pick<UnitIndexEntry, "id" | "name" | "displayName" |
     title: sentence(unitDisplayName(u), en(u.title)) + (kind ? ` – ${kind}` : ""),
     description: clip(sentence(
       `${kind || "Taimanin RPGX"} unit${u.traits.length ? ` (${u.traits.join(", ")})` : ""}.`,
-      "Stats, skills, leader skill, abilities, bloom, voices, art and scenes.",
+      "Stats, skills, leader skill, abilities, bloom and voice lines.",
       u.release && `Released ${u.release}.`,
       u.illustrator && `Art: ${u.illustrator}.`,
       u.voiceActor && `CV: ${u.voiceActor}.`,
@@ -78,7 +78,6 @@ export function cardMeta(c: ArenaCard): PageMeta {
     title: sentence(en(c.name) || c.id, en(c.title)) + " – Arena card",
     description: clip(sentence(
       `${RARITY[c.rarity] ?? ""} Arena card${c.union ? ` (${c.union})` : ""} in Taimanin RPGX.`.trimStart(),
-      c.scenes.length > 0 && `Art and ${plural(c.scenes.length, "scene")}.`,
       c.illustrator && `Art: ${c.illustrator}.`,
       c.voiceActor && `CV: ${c.voiceActor}.`,
     )),

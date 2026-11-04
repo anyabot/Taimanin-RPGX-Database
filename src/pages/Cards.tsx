@@ -4,7 +4,7 @@ import {
   Breadcrumbs, EntityTile, FallbackImage, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons, StatRow, StatRows,
 } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
-import { RARITY, cardIconUrl, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
+import { GAME_CDN, RARITY, cardIconUrl, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
 import { CreditLinks, RarityIcon } from "../components";
 import { ArtGallery, SceneStills } from "../art";
 import type { SceneDoc } from "../adv";
@@ -98,7 +98,7 @@ export function CardDetail() {
           {card.sale && <StatRow label="On sale from" value={card.sale} />}
         </StatRows>
       </Panel>
-      {card.scenes.length > 0 && (
+      {GAME_CDN && card.scenes.length > 0 && (
         <Panel title="Scenes" note="Played in the browser from the game's own files; each scene loads when opened.">
           <ol className="scene-list">
             {card.scenes.map((sid, i) => (
@@ -108,10 +108,12 @@ export function CardDetail() {
           </ol>
         </Panel>
       )}
-      <Panel title="Art">
-        {assets && !stems.length && <p className="muted">No art bundles found for this card.</p>}
-        <ArtGallery stems={stems} alt={`${card.id} art`} fileName={(s) => `kar_${card.id}_${s.match(/_l_(\d+)\.png$/)?.[1] ?? ""}.png`} />
-      </Panel>
+      {GAME_CDN && (
+        <Panel title="Art">
+          {assets && !stems.length && <p className="muted">No art bundles found for this card.</p>}
+          <ArtGallery stems={stems} alt={`${card.id} art`} fileName={(s) => `kar_${card.id}_${s.match(/_l_(\d+)\.png$/)?.[1] ?? ""}.png`} />
+        </Panel>
+      )}
     </div>
   );
 }

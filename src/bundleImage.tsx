@@ -4,7 +4,7 @@
 // image_banner_t holds 322 event banners, image_rune_s 876 rune icons).
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { getAssets } from "./data";
+import { GAME_CDN, getAssets } from "./data";
 import { toImageData } from "./unity/client";
 import { ClassID } from "./unity/serialized";
 
@@ -41,6 +41,7 @@ export function bundleImageUrl(stem: string | string[], name?: string): Promise<
 export function BundleImage({ stem, name, alt = "", className, width, height, style }: {
   stem: string | string[]; name?: string; alt?: string; className?: string; width?: number; height?: number; style?: CSSProperties;
 }) {
+  if (!GAME_CDN) return null;  // constant per build, so the hook order below never changes
   const ref = useRef<HTMLSpanElement>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
