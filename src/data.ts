@@ -303,9 +303,12 @@ export { RARITY } from "./meta";
 export const ELEMENTS = ["Superhuman", "Devilish", "Spiritual", "Natural", "Science"];
 export const STATS: [StatKey, string][] = [["hp", "HP"], ["sp", "SP"], ["atk", "ATK"], ["def", "DEF"], ["spd", "SPD"], ["luck", "Luck"]];
 
-export const iconUrl = (id: string) => `${base}icons/${id}.webp`;
+declare const __ICON_V__: string | undefined;
+/** vite.config.ts iconVersion(): changes whenever an icon is added. */
+const iconV = typeof __ICON_V__ === "string" ? `?v=${__ICON_V__}` : "";
+export const iconUrl = (id: string) => `${base}icons/${id}.webp${iconV}`;
 /** an Arena card's 80x80 face (r18_image_kar_s, tools/web_export/cards.py) */
-export const cardIconUrl = (id: string) => `${base}icons/cards/${id}.webp`;
+export const cardIconUrl = (id: string) => `${base}icons/cards/${id}.webp${iconV}`;
 export const voiceUrl = (clip: string) => `${DIRECT_ROOT}/${clip}`;
 
 // ---- language: English where the translation pipeline has it, else Japanese.

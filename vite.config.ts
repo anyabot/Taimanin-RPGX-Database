@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -89,8 +90,19 @@ function reviewOverlay(): Plugin {
   };
 }
 
+// Icon URLs carry a hash of which icons exist (src/data.ts iconUrl). A request
+// for an icon before it was exported gets the SPA fallback page, and the edge
+// cache keeps that under the icon's URL for the week /icons/* is cached
+// (public/_headers); a new icon changes the hash, and so every icon URL.
+function iconVersion() {
+  const dir = path.resolve(__dirname, "public/icons");
+  const names = fs.existsSync(dir) ? fs.readdirSync(dir, { recursive: true }).map(String).sort() : [];
+  return createHash("sha1").update(names.join("\n")).digest("hex").slice(0, 8);
+}
+
 export default defineConfig({
   plugins: [react(), cdnCache(), prerender(), reviewOverlay()],
+  define: { __ICON_V__: JSON.stringify(iconVersion()) },
   base: "/",
   worker: { format: "es" },
 });
