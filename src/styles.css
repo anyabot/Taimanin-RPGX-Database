@@ -86,6 +86,12 @@ img.element-icon { width: var(--icon-w, 20px); height: var(--icon-w, 20px); max-
 .obtain-pull { margin-left: 6px; font-size: 11px; padding: 0 6px; border: 1px solid var(--hub-border, #8884); border-radius: 6px; }
 .small { font-size: 12px; }
 .obtain-upcoming { margin-left: 6px; font-size: 11px; font-weight: 700; padding: 0 6px; border-radius: 6px; border: 1px solid var(--hub-accent, #e879f9); color: var(--hub-accent, #e879f9); }
+.obtain-cost { flex-basis: 100%; }
+.farm-item + .farm-item { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hub-border, #8884); }
+.farm-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.farm-head b { margin-left: auto; }
+.farm-list { margin: 6px 0 0; padding-left: 18px; font-size: 13px; }
+.farm-list li { padding: 1px 0; overflow-wrap: anywhere; }
 .scene-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .scene-list li { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
 .scene-unlock { font-size: 12px; min-width: 110px; }

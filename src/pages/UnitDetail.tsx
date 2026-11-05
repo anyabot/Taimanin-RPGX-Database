@@ -7,8 +7,8 @@ import {
 import { createPlayer } from "@altterisk/game-hub/audio";
 import { searchParamsAdapter } from "@altterisk/game-hub/filters";
 import {
-  GAME_CDN, RARITY, STATS, iconUrl, isHidden, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit, type UnitForm,
-  type UnitIndexEntry, type ObtainEntry,
+  GAME_CDN, ITEM_ICONS, RARITY, STATS, iconUrl, isHidden, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit,
+  type UnitForm, type UnitIndexEntry, type ObtainEntry, type Item, type ItemIndexEntry,
 } from "../data";
 import { credits, personHref } from "../people";
 import { CreditLinks } from "../components";
@@ -168,7 +168,6 @@ function StatsTab({ form }: { form: UnitForm }) {
   );
 }
 
-const ITEM_ICONS = "image_item_s_assets_all";
 
 /** EXP and gold from Lv 1 to the chosen level (GameSupport.GetUnitExpLevel: one row per level),
  *  and the items that evolve the form, where the data lists them. */
@@ -339,6 +338,7 @@ function ObtainTab({ unit }: { unit: Unit }) {
           {unit.release && <MetaChip label="Released" value={unit.release} />}
         </MetaChips>
       </Panel>
+      <FarmPanel unit={unit} />
       {groups.map(([kind, list]) => (
         <Panel key={kind} title={KIND_LABEL[kind as ObtainEntry["kind"]] ?? kind} note={`${list.length}`}>
           <ul className="obtain-list">
@@ -352,6 +352,9 @@ function ObtainTab({ unit }: { unit: Unit }) {
                   {e.upcoming && <span className="obtain-upcoming" title="From the next update's data (REVIEW server), not live yet">Upcoming</span>}
                 </span>
                 {period(e) && <span className="obtain-period muted">{period(e)}</span>}
+                {e.costs && <span className="obtain-cost small">
+                  {e.costs.map(([c, n], k) => <span key={k}>{k ? " or " : "for "}{n.toLocaleString()} × <Cost id={c} /></span>)}
+                </span>}
               </li>
             ))}
           </ul>
@@ -361,6 +364,73 @@ function ObtainTab({ unit }: { unit: Unit }) {
       <p className="muted small">Banners are listed where this unit was a rate-up; dates come from the game's master data.
         "Upcoming" entries come from the next update's data and are not live yet.</p>
     </>
+  );
+}
+
+// ePaymentType payments that are not items (tables.py PAYMENT)
+const CURRENCY: Record<string, string> = {
+  gold: "Gold", jewel: "Jewels", friend_point: "Friend points", dmm_point: "DMM points", raid_point: "Raid points", map_point: "Map points",
+};
+
+/** An exchange price: a currency, or an item linked to its page. */
+function Cost({ id }: { id: string }) {
+  const lang = useLang();
+  const { data: items } = useData<ItemIndexEntry[]>("items/index");
+  if (CURRENCY[id]) return <>{CURRENCY[id]}</>;
+  const it = items?.find((x) => x.id === id);
+  return <Link to={`/items/${id}`} lang="ja">{tr(it?.name ?? null, lang) || id}</Link>;
+}
+
+/** Where to farm what the open exchange shops take for this unit: its Unique
+ *  Memory (or a ticket), with the battles that drop it and the trades for it. */
+function FarmPanel({ unit }: { unit: Unit }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const need = new Map<string, number>();
+  for (const e of unit.obtain) {
+    if (e.kind !== "exchange" || (e.end && e.end < today)) continue;
+    for (const [c, n] of e.costs ?? []) if (!CURRENCY[c]) need.set(c, Math.max(need.get(c) ?? 0, n));
+  }
+  if (!need.size) return null;
+  return (
+    <Panel title="Farm" note="What the exchange shop takes for this unit, and where to get it">
+      {[...need].map(([id, n]) => <FarmItem key={id} id={id} need={n} unit={unit} />)}
+    </Panel>
+  );
+}
+
+function FarmItem({ id, need, unit }: { id: string; need: number; unit: Unit }) {
+  const lang = useLang();
+  const { data: item } = useData<Item>(`items/${id}`);
+  if (!item) return null;
+  const drops = (item.sources ?? []).filter((s) => s.page && !s.kinds.includes("exchange"));
+  const trades = (item.sources ?? []).filter((s) => s.kinds.includes("exchange") && (!s.end || s.end >= new Date().toISOString().slice(0, 10)));
+  const own = id.startsWith("ubl");
+  return (
+    <div className="farm-item">
+      <div className="farm-head">
+        <BundleImage stem={ITEM_ICONS} name={`${item.icon}_s`} width={40} height={40} className="item-icon" />
+        <Link to={`/items/${id}`} lang="ja">{tr(item.name, lang) || id}</Link>
+        {own && <span className="muted small">({tr(unit.displayName ?? null, lang) || unitName(unit, lang)})</span>}
+        <b>×{need.toLocaleString()}</b>
+      </div>
+      {drops.length > 0 && (
+        <ul className="farm-list">
+          {drops.map((s) => (
+            <li key={s.page!}>Drops in <Link to={`/${s.page}`} lang="ja">{tr(s.title, lang) || s.page}</Link>
+              <span className="muted small"> · {s.kinds.join(", ")}</span></li>
+          ))}
+        </ul>
+      )}
+      {trades.length > 0 && (
+        <ul className="farm-list">
+          {trades.map((s, i) => (
+            <li key={i}>Trade {s.costs?.map(([c, k], j) => <span key={j}>{j ? " or " : ""}{k.toLocaleString()} × <Cost id={c} /></span>)}
+              {s.page && <span className="muted small"> · <Link to={`/${s.page}`} lang="ja">{tr(s.title, lang) || s.page}</Link></span>}</li>
+          ))}
+        </ul>
+      )}
+      {!drops.length && !trades.length && <p className="muted small">No drop or shop in the site's data gives this item.</p>}
+    </div>
   );
 }
 

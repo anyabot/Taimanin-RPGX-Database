@@ -69,7 +69,8 @@ export function ItemDetail() {
   const unitName = (u: string) => tr(units?.find((x) => x.id === u)?.name, lang) || u;
   const shown = (ids?: string[]) => ids?.filter((id) => { const u = units?.find((x) => x.id === id); return !u || !isHidden(u); });
   if (!item) return <LoadState loading={loading} error={error} />;
-  const exchanges = shown(item.units);
+  // units a ticket becomes, and units a shop sells for this item (a Unique Memory)
+  const exchanges = shown([...new Set([...(item.units ?? []), ...(item.uses?.exchange ?? [])])]);
   const uses = item.uses && { ...item.uses, evolve: shown(item.uses.evolve), bloom: shown(item.uses.bloom), ability: shown(item.uses.ability) };
   const name = tr(item.name, lang) || item.id;
   const group = TYPE_GROUP[item.type] ?? "System";

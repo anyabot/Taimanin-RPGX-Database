@@ -114,6 +114,8 @@ export interface ObtainEntry {
   archive?: boolean;
   /** only in the REVIEW tree: part of the next update */
   upcoming?: boolean;
+  /** exchange shops: [item id or currency ("gold", "jewel", ...), amount], one per shop that day */
+  costs?: [string, number][];
 }
 
 export interface Unit extends Omit<UnitIndexEntry, "scenes" | "stats" | "obtain" | "skin"> {
@@ -427,7 +429,7 @@ export interface Item {
   units?: string[];
   statusCost?: number;
   sources?: ItemSource[];
-  uses?: { evolve?: string[]; bloom?: string[]; ability?: string[]; runeEvolve?: number; refine?: boolean };
+  uses?: { evolve?: string[]; bloom?: string[]; ability?: string[]; exchange?: string[]; runeEvolve?: number; refine?: boolean };
 }
 /** Item icons: <icon>_s in image_item_s. */
 export const ITEM_ICONS = "image_item_s_assets_all";
