@@ -399,3 +399,10 @@ html.scn-theater-open { overflow: hidden; }
 
 /* prerender.ts: the static summary in #root, shown until React replaces it */
 .prerender { max-width: 960px; margin: 0 auto; padding: 16px; }
+
+/* Farm page (src/pages/Farm.tsx) */
+.farm-units { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.farm-unit { display: grid; grid-template-columns: 48px 1fr; column-gap: 10px; align-items: center; padding: 6px 8px;
+  border: 1px solid var(--hub-border, #2a2e3b); border-radius: 8px; text-decoration: none; color: inherit; font-size: 13px; }
+.farm-unit img { grid-row: span 2; border-radius: 6px; }
+.farm-unit:hover { border-color: var(--hub-accent, #7aa2ff); }

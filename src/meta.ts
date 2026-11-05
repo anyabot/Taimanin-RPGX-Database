@@ -48,6 +48,7 @@ export const LIST_META: Record<string, PageMeta> = {
   "/story": { title: "Story", description: "Taimanin RPGX main, event, raid and map story: chapters, parts and their battles." },
   "/quests": { title: "Quests", description: "Taimanin RPGX arena towers, daily quests, mini events and dispatch: stages, enemies, rules and drops." },
   "/cards": { title: "Arena cards", description: "Every Taimanin RPGX Arena card: rarity and credits." },
+  "/farm": { title: "Farm", description: "Taimanin RPGX units you can farm: the battles that drop each unit's Unique Memory for the exchange shop, and what it trades for." },
   "/items": { title: "Items", description: "Every Taimanin RPGX item: what it does, where it drops or is sold, and what uses it." },
   "/runes": { title: "Runes", description: "Taimanin RPGX rune sets: set bonuses, main and sub stats, and evolution costs." },
   "/buffs": { title: "Buff ranking", description: "Taimanin RPGX units ranked by the buffs and debuffs their skills give, by type and target." },

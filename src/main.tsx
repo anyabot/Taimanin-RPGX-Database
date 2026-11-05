@@ -18,6 +18,7 @@ import StoryBattles from "./pages/StoryBattles";
 import QuestList, { QuestBattles } from "./pages/Quests";
 import CardList, { CardDetail } from "./pages/Cards";
 import ItemList, { ItemDetail } from "./pages/Items";
+import FarmPage from "./pages/Farm";
 import ScenePlayer from "./pages/ScenePlayer";
 import TranscriptPage from "./pages/Transcript";
 import { GAME_CDN } from "./data";
@@ -61,6 +62,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="cards/:id" element={<CardDetail />} />
           <Route path="items" element={<ItemList />} />
           <Route path="items/:id" element={<ItemDetail />} />
+          <Route path="farm" element={<FarmPage />} />
           <Route path="runes" element={<Runes />} />
           <Route path="buffs" element={<Buffs />} />
           <Route path="statuses" element={<Statuses />} />

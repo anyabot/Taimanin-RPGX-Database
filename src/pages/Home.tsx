@@ -14,6 +14,7 @@ const SECTIONS: [string, string, string][] = [
   ["/gacha", "Gacha simulator", "Pull on any banner with the game's own odds"],
   ["/story", "Story", "Main and event story: chapters and battles"],
   ["/quests", "Quests", "Arena towers, daily quests, mini events, dispatch"],
+  ["/farm", "Farm", "Units you can farm: where each Unique Memory drops"],
   ["/buffs", "Buffs", "Every unit's buffs and debuffs, ranked"],
   ["/statuses", "Statuses", "Ailments, states and markers"],
   ["/items", "Items", "Where items drop and what they are for"],

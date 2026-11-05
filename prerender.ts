@@ -83,6 +83,11 @@ function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   }
 
   list("/items", ul(items.map((i) => a(`/items/${i.id}`, en(i.name) || i.id))));
+  const shownUnits = new Map(units.map((u) => [u.id, u]));
+  const farm = read<{ unit: string; item: string; drops: { page: string; title: Text | null }[] }[]>("farm")
+    .filter((r) => r.item.startsWith("ubl") && shownUnits.has(r.unit));
+  list("/farm", ul(farm.map((r) => `${unitLink(shownUnits.get(r.unit)!)}${r.drops.length
+    ? `: ${r.drops.map((d) => a(`/${d.page}`, en(d.title) || d.page)).join(", ")}` : ""}`)));
   for (const i of items) {
     const full: Item = read(`items/${i.id}`);
     files.push({
