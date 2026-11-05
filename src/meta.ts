@@ -120,6 +120,15 @@ export function questMeta(sec: QuestSection, g: QuestGroup): PageMeta {
 
 export const storyGroupName = (g: StoryGroup) => en(g.title) || g.id;
 
+/** A main-story chapter's place, from its id: c001.. is the game's Part 1
+ *  (第一部), c201.. Part 2 (第二部; SecondaryQuestChapters 1-12 = c201-c212). */
+export function chapterLabel(id: string): string | null {
+  const m = /^c(\d{3})$/.exec(id);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return n > 200 ? `Part 2 · Ch. ${n - 200}` : `Part 1 · Ch. ${n}`;
+}
+
 export function storyBattlesMeta(sec: StorySection, g: StoryGroup): PageMeta {
   return {
     title: `${storyGroupName(g)} – Battles`,

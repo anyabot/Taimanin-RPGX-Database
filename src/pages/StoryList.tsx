@@ -5,7 +5,7 @@ import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/f
 import { GAME_CDN, tr, useData, useLang, type BundleRef, type StoryGroup, type StorySection } from "../data";
 import { BundleImage } from "../bundleImage";
 import { EnglishBadge } from "../sceneText";
-import { LIST_META } from "../meta";
+import { LIST_META, chapterLabel } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 
 const KIND_NOUN: Record<string, string> = {
@@ -52,7 +52,7 @@ export function StoryBanner({ banner, large }: { banner: BundleRef; large?: bool
 
 function StoryCard({ g, kind, lang, open }: { g: StoryGroup; kind: string; lang: "en" | "ja"; open: boolean }) {
   const title = tr(g.title, lang);
-  const noun = `${KIND_NOUN[kind] ?? "Story"} ${g.num}`;
+  const noun = (kind === "main" && chapterLabel(g.id)) || `${KIND_NOUN[kind] ?? "Story"} ${g.num}`;
   return (
     <details className="story-card" open={open}>
       <summary>

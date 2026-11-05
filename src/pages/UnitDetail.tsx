@@ -19,7 +19,7 @@ import type { SceneDoc } from "../adv";
 import { EnglishBadge } from "../sceneText";
 import { AbilityPanel, BloomTab } from "./growth";
 import type { Growth } from "../data";
-import { unitMeta } from "../meta";
+import { chapterLabel, unitMeta } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 import NotFound from "./NotFound";
 
@@ -416,7 +416,8 @@ function FarmItem({ id, need, unit }: { id: string; need: number; unit: Unit }) 
       {drops.length > 0 && (
         <ul className="farm-list">
           {drops.map((s) => (
-            <li key={s.page!}>Drops in <Link to={`/${s.page}`} lang="ja">{tr(s.title, lang) || s.page}</Link>
+            <li key={s.page!}>Drops in {chapterLabel(s.page!.split("/").pop()!) && <span className="muted">{chapterLabel(s.page!.split("/").pop()!)} </span>}
+              <Link to={`/${s.page}`} lang="ja">{tr(s.title, lang) || s.page}</Link>
               <span className="muted small"> · {s.kinds.join(", ")}</span></li>
           ))}
         </ul>

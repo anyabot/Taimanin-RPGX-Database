@@ -4,7 +4,7 @@ import { LoadState, PageHeader, Panel, SearchBox, SegmentedButtons } from "@altt
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { ITEM_ICONS, iconUrl, isHidden, tr, unitName, useData, useLang, type ItemIndexEntry, type Text, type UnitIndexEntry } from "../data";
 import { BundleImage } from "../bundleImage";
-import { LIST_META } from "../meta";
+import { LIST_META, chapterLabel } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 
 /** public/data/farm.json (tools/web_export/items.py): a unit an open exchange
@@ -71,7 +71,8 @@ export default function FarmPage() {
       {view === "drops" ? (
         <>
           {byPlace.map(([page, g]) => (
-            <Panel key={page} title={<Link to={`/${page}`} lang="ja">{tr(g.title, lang) || page}</Link>} note={`${g.rows.length}`}>
+            <Panel key={page} title={<><span className="farm-ch muted">{chapterLabel(page.split("/").pop()!)}</span>{" "}
+              <Link to={`/${page}`} lang="ja">{tr(g.title, lang) || page}</Link></>} note={`${g.rows.length}`}>
               <ul className="farm-units">{g.rows.map(([r, kinds]) => unitCell(r, kinds.join(", ")))}</ul>
             </Panel>
           ))}

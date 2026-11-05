@@ -16,7 +16,7 @@ import { escapeHtml as esc } from "@altterisk/game-hub/meta";
 import type { ArenaCard, Item, ItemIndexEntry, QuestSection, StorySection, Text, Unit, UnitIndexEntry } from "./src/data";
 import {
   DEFAULT_META, EVENT_KINDS, LIST_META, SITE_NAME, SITE_URL, canonicalUrl, cardMeta, eventMeta, eventName,
-  itemMeta, partName, personMeta, questMeta, site, sitePath, storyBattlesMeta, storyGroupName, unitDisplayName, unitMeta, type PageMeta,
+  chapterLabel, itemMeta, partName, personMeta, questMeta, site, sitePath, storyBattlesMeta, storyGroupName, unitDisplayName, unitMeta, type PageMeta,
 } from "./src/meta";
 import { ROLE_LABEL, gatherPeople, personHref } from "./src/people";
 
@@ -87,7 +87,7 @@ function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   const farm = read<{ unit: string; item: string; drops: { page: string; title: Text | null }[] }[]>("farm")
     .filter((r) => r.item.startsWith("ubl") && shownUnits.has(r.unit));
   list("/farm", ul(farm.map((r) => `${unitLink(shownUnits.get(r.unit)!)}${r.drops.length
-    ? `: ${r.drops.map((d) => a(`/${d.page}`, en(d.title) || d.page)).join(", ")}` : ""}`)));
+    ? `: ${r.drops.map((d) => a(`/${d.page}`, [chapterLabel(d.page.split("/").pop()!), en(d.title) || d.page].filter(Boolean).join(" "))).join(", ")}` : ""}`)));
   for (const i of items) {
     const full: Item = read(`items/${i.id}`);
     files.push({
