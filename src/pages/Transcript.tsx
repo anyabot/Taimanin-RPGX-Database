@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Breadcrumbs, CopyButton, LoadState } from "@altterisk/game-hub";
 import { downloadText } from "@altterisk/game-hub/persist";
-import { GAME_CDN, tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
+import { GAME_CDN, NO_GAME_FILES, tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Beat, type SceneDoc } from "../adv";
 import { loadScript } from "../sceneArt";
 import { RichLine, useSceneText } from "../sceneText";
@@ -66,7 +66,10 @@ export default function TranscriptPage({ source = "unit" }: { source?: "unit" | 
   const { data: doc, error } = useData<SceneDoc>(`${source === "story" ? "stories" : "scenes"}/${id}`);
   const { data: unit } = useData<Unit>(unitId ? `units/${unitId}` : null);
   const { data: stories } = useData<StorySection[]>(source === "story" ? "stories/index" : null);
-  const { assets, error: assetsError } = useAssets();
+  // Scripts are read out of the scenario bundle, which only the game CDN has.
+  const loaded = useAssets();
+  const assets = GAME_CDN ? loaded.assets : null;
+  const assetsError = GAME_CDN ? loaded.error : NO_GAME_FILES;
   const lang = useLang();
   const [beats, setBeats] = useState<Beat[] | null>(null);
   const [scriptError, setScriptError] = useState<unknown>(null);

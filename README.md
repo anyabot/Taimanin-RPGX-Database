@@ -3,11 +3,13 @@
 https://github.com/anyabot/Taimanin-RPGX-Database
 
 Static site: unit stats, skills, runes, stories and transcripts for Taimanin
-RPGX. The deployed site serves only its own files: game data, unit and item
-icons, banners and scene scripts. The game's CDN only answers requests from the
-game's own sites and from `localhost`, so full art, scene playback and audio
-work in local builds only (`npm run dev` and `npm run preview`), which fetch
-bundles from the CDN and decode them in the browser (`src/unity/`).
+RPGX. The game's CDN only answers requests from the game's own sites and from
+`localhost`. Local builds (`npm run dev` and `npm run preview`) fetch bundles
+from it and decode them in the browser (`src/unity/`), so everything works
+there: art, scene playback and audio. The deployed site serves its own files
+(game data, icons, banners, scene scripts) plus its own copy of the unit art
+and unit voice clips (see Asset host below); scene playback and card art stay
+local-only.
 
 Everything under `public/data` is written by a separate
 Python exporter toolkit that reads the game's tables and bundles; it is not
@@ -92,6 +94,25 @@ file (Pages allows 20,000 files per deployment; the build prints the count and
 warns near the limit): the SPA fallback serves them and they set their meta at
 runtime. Page text lives in `src/meta.ts`, shared by both; the site URL used
 for canonicals and the sitemap is `SITE_URL` there.
+
+## Asset host
+
+The deployed build (`HOSTED` in `src/unity/catalog.ts`) loads unit art bundles
+(`image_chr_{l,xl,ldiff}`, base and R18, and the skin preview bundle) and unit
+voice clips from `https://taimanin-assets.altterisk.cc`, in the game CDN's
+layout. That is the Worker in `workers/assets`, in front of a private Backblaze
+B2 bucket; it caches every file at Cloudflare's edge and only answers
+`taimanin.altterisk.cc` (and `localhost`) for CORS. The hosted copy has no
+catalogs, so the deployed build uses the bundle names in `public/data/bundles.json`
+as they are.
+
+After a game update, upload before deploying, or new units show no art:
+the toolkit's `tools/web_export/upload_b2.py` sends what the export names and
+the bucket lacks. Worker setup, once, from `workers/assets`:
+
+    npx wrangler deploy
+    npx wrangler secret put B2_KEY_ID      # Read Only key limited to the bucket
+    npx wrangler secret put B2_APP_KEY
 
 ## License
 

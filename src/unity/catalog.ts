@@ -9,7 +9,11 @@
 // The result is cached in Cache Storage under that hash, so only the first
 // visit after an update pays for it.
 
-export const CDN = import.meta.env.DEV ? "/cdn" : "https://dntgnyxcho2sk.cloudfront.net";
+/** The deployed build: the game CDN refuses other sites, so the site serves a
+ *  copy of the unit art and voice clips itself, in the CDN's layout
+ *  (workers/assets, uploaded by the toolkit's tools/web_export/upload_b2.py). */
+export const HOSTED = !import.meta.env.DEV && import.meta.env.MODE !== "review";
+export const CDN = import.meta.env.DEV ? "/cdn" : HOSTED ? "https://taimanin-assets.altterisk.cc" : "https://dntgnyxcho2sk.cloudfront.net";
 // `npm run preview` builds in "review" mode: the next update, for local use only.
 export const LIVE_ROOT = `${CDN}/asset_bundles/WebGL/${import.meta.env.MODE === "review" ? "REVIEW" : "LIVE"}`;
 export const DIRECT_ROOT = `${CDN}/asset_bundles/DirectDownloadBundles`;
@@ -98,6 +102,8 @@ export class Catalog {
 
   /** Compare live .hash tokens with what we hold; rescan the ones that moved. */
   refresh(force = false): Promise<void> {
+    // The hosted copy is uploaded from the shipped snapshot and has no catalogs.
+    if (HOSTED) return Promise.resolve();
     if (this.refreshing && !force) return this.refreshing;
     this.refreshing = (async () => {
       await Promise.all(CATALOGS.map(async (cat) => {

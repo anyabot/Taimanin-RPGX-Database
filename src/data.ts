@@ -6,7 +6,7 @@ import { createJsonLoader, useJson } from "@altterisk/game-hub/data";
 import { createSetting } from "@altterisk/game-hub/persist";
 import { phaseOf as windowPhase } from "@altterisk/game-hub/time";
 import { Assets } from "./unity/client";
-import { DIRECT_ROOT } from "./unity/catalog";
+import { DIRECT_ROOT, HOSTED } from "./unity/catalog";
 
 export interface Text { ja: string; en?: string }
 
@@ -298,6 +298,9 @@ const base = import.meta.env.BASE_URL;
  *  story player, art, voices or bundle icons. `vite dev` and `npm run preview`
  *  (localhost) still can. */
 export const GAME_CDN = import.meta.env.DEV || import.meta.env.MODE === "review";
+/** Unit art and voice clips: from the game CDN locally, from the site's own
+ *  copy when deployed. Everything else stays GAME_CDN only. */
+export const UNIT_FILES = GAME_CDN || HOSTED;
 export const loader = createJsonLoader({ urls: (name) => [`${base}data/${name}.json`] });
 export const useData = <T,>(name: string | null) => useJson<T>(loader, name);
 
@@ -386,7 +389,8 @@ export function phaseText(start?: string | null, end?: string | null): string {
 
 // ---- the bundle decoder, created once
 let assets: Promise<Assets> | null = null;
-export const getAssets = () => (assets ??= GAME_CDN ? Assets.load() : Promise.reject(new Error("The game's files are not available here.")));
+export const NO_GAME_FILES = new Error("The game's files are not available here.");
+export const getAssets = () => (assets ??= UNIT_FILES ? Assets.load() : Promise.reject(NO_GAME_FILES));
 export function useAssets() {
   const [a, setA] = useState<Assets | null>(null);
   const [error, setError] = useState<unknown>(null);

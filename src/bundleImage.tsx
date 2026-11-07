@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { GAME_CDN, getAssets } from "./data";
 import { toImageData } from "./unity/client";
 import { ClassID } from "./unity/serialized";
+import { HOSTED } from "./unity/catalog";
 
 const cache = new Map<string, Promise<string>>();
 
@@ -42,8 +43,12 @@ type BundleImageProps = {
   stem: string | string[]; name?: string; alt?: string; className?: string; width?: number; height?: number; style?: CSSProperties;
 };
 
+/** Bundles the deployed build serves itself, next to the unit art (upload_b2.py). */
+const HOSTED_STEMS = new Set(["image_customize_skin_assets_all"]);
+
 export function BundleImage(props: BundleImageProps) {
-  return GAME_CDN ? <CdnImage {...props} /> : <AtlasImage {...props} />;
+  const own = HOSTED && [props.stem].flat().every((s) => HOSTED_STEMS.has(s));
+  return GAME_CDN || own ? <CdnImage {...props} /> : <AtlasImage {...props} />;
 }
 
 // ---- the deployed build: icon sheets it serves itself (tools/web_export/atlases.py)

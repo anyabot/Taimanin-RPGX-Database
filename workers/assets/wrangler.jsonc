@@ -1,0 +1,24 @@
+// Cloudflare Worker serving the site's self-hosted game files from the private
+// B2 bucket. Deploy from this folder: npx wrangler deploy
+// Secrets (once): npx wrangler secret put B2_KEY_ID / B2_APP_KEY
+// (a Read Only B2 key limited to the bucket).
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "taimanin-assets",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-01",
+  // Creates the DNS record and certificate on first deploy.
+  "routes": [{ "pattern": "taimanin-assets.altterisk.cc", "custom_domain": true }],
+  // The *.workers.dev address would skip the edge cache; keep it off.
+  "workers_dev": false,
+  "vars": {
+    "B2_BUCKET": "TaimaninTest",
+    "ALLOWED_ORIGINS": "https://taimanin.altterisk.cc,http://localhost:5173,http://localhost:4173"
+  },
+  // Per-visitor cap so a script cannot run up B2 calls. A unit page loads a
+  // handful of files; 300 a minute is far above normal browsing.
+  "ratelimits": [
+    { "name": "RATE_LIMITER", "namespace_id": "1109202602", "simple": { "limit": 300, "period": 60 } }
+  ],
+  "observability": { "enabled": true }
+}
