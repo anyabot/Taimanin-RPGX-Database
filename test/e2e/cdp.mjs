@@ -1,5 +1,5 @@
 // Minimal headless-Chrome driver over CDP (Node's built-in WebSocket).
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -63,8 +63,21 @@ export class CDP {
   }
 }
 
+/** Delete profiles left by runs that crashed. Skips recent ones, which may belong to a run still going. */
+function sweepProfiles(maxAgeMs = 6 * 3600e3) {
+  const tmp = os.tmpdir();
+  for (const name of fs.readdirSync(tmp)) {
+    if (!name.startsWith("tmweb-")) continue;
+    const dir = path.join(tmp, name);
+    try {
+      if (Date.now() - fs.statSync(dir).mtimeMs > maxAgeMs) fs.rmSync(dir, { recursive: true, force: true });
+    } catch {}
+  }
+}
+
 /** Fresh profile = cold HTTP and Cache Storage. */
 export async function launch(port = 9335) {
+  sweepProfiles();
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), "tmweb-"));
   const chrome = spawn(CHROME, [
     "--headless=new", `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`,
@@ -72,7 +85,20 @@ export async function launch(port = 9335) {
     "--autoplay-policy=no-user-gesture-required",
     "--window-size=1400,1000", "about:blank",
   ], { stdio: "ignore" });
-  process.on("exit", () => { try { chrome.kill("SIGKILL"); } catch {} });
+  process.on("exit", () => {
+    // On Windows, killing only the main process leaves its children holding the profile open.
+    try {
+      if (process.platform === "win32") execFileSync("taskkill", ["/T", "/F", "/PID", String(chrome.pid)], { stdio: "ignore" });
+      else chrome.kill("SIGKILL");
+    } catch {}
+    // Files stay locked for a moment after the kill, so retry for up to 5 s.
+    const sleep = new Int32Array(new SharedArrayBuffer(4));
+    for (let i = 0; i < 50; i++) {
+      try { fs.rmSync(profile, { recursive: true, force: true }); break; } catch { Atomics.wait(sleep, 0, 0, 100); }
+    }
+  });
+  // Ctrl+C skips "exit" handlers unless we exit ourselves.
+  for (const sig of ["SIGINT", "SIGTERM"]) process.once(sig, () => process.exit(130));
   const targets = await waitFor(async () => (await fetch(`http://127.0.0.1:${port}/json/list`)).json(), 30000, "chrome");
   const ws = new WebSocket(targets.find((t) => t.type === "page").webSocketDebuggerUrl);
   await new Promise((res, rej) => { ws.addEventListener("open", res, { once: true }); ws.addEventListener("error", rej, { once: true }); });
