@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
@@ -19,7 +19,6 @@ import QuestList, { QuestBattles } from "./pages/Quests";
 import CardList, { CardDetail } from "./pages/Cards";
 import ItemList, { ItemDetail } from "./pages/Items";
 import FarmPage from "./pages/Farm";
-import ScenePlayer from "./pages/ScenePlayer";
 import TranscriptPage from "./pages/Transcript";
 import { GAME_CDN } from "./data";
 import DecoderLab from "./pages/DecoderLab";
@@ -28,6 +27,10 @@ import "@altterisk/game-hub/hub.css";
 import "@altterisk/game-hub/base.css";
 import "@altterisk/game-hub/components.css";
 import "./styles.css";
+
+// Only loaded where the game's files are reachable (GAME_CDN).
+const ScenePlayer = lazy(() => import("./pages/ScenePlayer"));
+const player = (source?: "story") => <Suspense fallback={<p className="muted">Loading the player…</p>}><ScenePlayer source={source} /></Suspense>;
 
 // Links from when the site used hash routes: /#/units/1?tab=art -> /units/1?tab=art
 // (a query outside the hash, the age gate's ?enter=1, is kept).
@@ -50,11 +53,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="gacha" element={<GachaSim />} />
           <Route path="units" element={<UnitList />} />
           <Route path="units/:id" element={<UnitDetail />} />
-          {GAME_CDN && <Route path="scenes/:id" element={<ScenePlayer />} />}
+          {GAME_CDN && <Route path="scenes/:id" element={player()} />}
           <Route path="scenes/:id/transcript" element={<TranscriptPage />} />
           <Route path="story" element={<StoryList />} />
           <Route path="story/battles/:id" element={<StoryBattles />} />
-          {GAME_CDN && <Route path="story/:id" element={<ScenePlayer source="story" />} />}
+          {GAME_CDN && <Route path="story/:id" element={player("story")} />}
           <Route path="story/:id/transcript" element={<TranscriptPage source="story" />} />
           <Route path="quests" element={<QuestList />} />
           <Route path="quests/:id" element={<QuestBattles />} />

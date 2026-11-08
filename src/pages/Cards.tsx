@@ -4,7 +4,7 @@ import {
   Breadcrumbs, EntityTile, FallbackImage, LoadState, PageHeader, Panel, SearchBox, SegmentedButtons, StatRow, StatRows,
 } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
-import { GAME_CDN, RARITY, cardIconUrl, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
+import { ART_AND_VOICE, GAME_CDN, RARITY, cardIconUrl, tr, useAssets, useData, useLang, type ArenaCard } from "../data";
 import { CreditLinks, RarityIcon } from "../components";
 import { ArtGallery, SceneStills } from "../art";
 import type { SceneDoc } from "../adv";
@@ -108,7 +108,7 @@ export function CardDetail() {
           </ol>
         </Panel>
       )}
-      {GAME_CDN && (
+      {ART_AND_VOICE && (
         <Panel title="Art">
           {assets && !stems.length && <p className="muted">No art bundles found for this card.</p>}
           <ArtGallery stems={stems} alt={`${card.id} art`} fileName={(s) => `kar_${card.id}_${s.match(/_l_(\d+)\.png$/)?.[1] ?? ""}.png`} />

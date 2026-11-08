@@ -65,8 +65,17 @@ function ArtImage({ stem, openable, url, fileName, onReady, onOpen }: {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [state, setState] = useState<string>("loading");
   const [attempt, setAttempt] = useState(0);
+  // Downloaded only when scrolled near: a unit can have a dozen pictures.
+  const figure = useRef<HTMLElement>(null);
+  const [near, setNear] = useState(false);
   useEffect(() => {
-    if (!assets) return;
+    if (near || !figure.current) return;
+    const io = new IntersectionObserver((seen) => { if (seen.some((e) => e.isIntersecting)) setNear(true); }, { rootMargin: "300px" });
+    io.observe(figure.current);
+    return () => io.disconnect();
+  }, [near]);
+  useEffect(() => {
+    if (!assets || !near) return;
     let live = true;
     setState("loading");
     (async () => {
@@ -86,10 +95,10 @@ function ArtImage({ stem, openable, url, fileName, onReady, onOpen }: {
       }
     })();
     return () => { live = false; };
-  }, [assets, stem, attempt]);
+  }, [assets, stem, attempt, near]);
   const failed = state && state !== "loading" && !state.endsWith("%");
   return (
-    <figure className="art-item">
+    <figure ref={figure} className="art-item">
       <canvas ref={canvas} className={`art-canvas${openable ? " art-ready" : ""}`} onClick={() => openable && onOpen()}
         role={openable ? "button" : undefined} aria-label={openable ? "Open full screen" : undefined} />
       {url && !state && (

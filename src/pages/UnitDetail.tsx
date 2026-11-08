@@ -7,7 +7,7 @@ import {
 import { createPlayer } from "@altterisk/game-hub/audio";
 import { searchParamsAdapter } from "@altterisk/game-hub/filters";
 import {
-  GAME_CDN, ITEM_ICONS, RARITY, STATS, UNIT_FILES, iconUrl, isHidden, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit,
+  GAME_CDN, ITEM_ICONS, RARITY, STATS, ART_AND_VOICE, iconUrl, isHidden, isUpcoming, tr, unitName, useAssets, useData, useLang, voiceUrl, type Skill, type Unit,
   type UnitForm, type UnitIndexEntry, type ObtainEntry, type Item, type ItemIndexEntry,
 } from "../data";
 import { credits, personHref } from "../people";
@@ -33,7 +33,7 @@ const TABS = [
   { id: "profile", label: "Profile" },
   { id: "art", label: "Art" },
   { id: "scenes", label: "Scenes" },
-].filter((t) => UNIT_FILES || t.id !== "art");
+].filter((t) => ART_AND_VOICE || t.id !== "art");
 
 const SLOT_LABEL: Record<Skill["slot"], string> = { attack: "Normal attack", skill1: "Skill 1", skill2: "Skill 2", ultimate: "Ultimate" };
 
@@ -108,7 +108,7 @@ export default function UnitDetail() {
         {tab === "voices" && <VoicesTab unit={unit} />}
         {tab === "obtain" && <ObtainTab unit={unit} />}
         {tab === "profile" && <ProfileTab unit={unit} />}
-        {UNIT_FILES && tab === "art" && <ArtTab unit={unit} />}
+        {ART_AND_VOICE && tab === "art" && <ArtTab unit={unit} />}
         {tab === "scenes" && <ScenesTab unit={unit} />}
       </TabPanel>
     </div>
@@ -290,12 +290,12 @@ function VoicesTab({ unit }: { unit: Unit }) {
         return (
           <Panel key={variant} title={title} note={unit.voiceActor ? `CV: ${unit.voiceActor}` : undefined}>
             <VoiceLineList playing={playing} onStop={voices.stop}
-              onPlay={(clip) => voices.play(clip, async () => voiceUrl(clip))}
+              onPlay={(clip) => voices.play(clip, () => voiceUrl(unit.id, clip))}
               items={list.map((v, i) => ({
                 id: v.clip ?? `${variant}-${i}`,
                 tag: `${v.label} ${v.index}`,
                 text: tr(v.text, lang) || <i className="muted">(no text)</i>,
-                available: UNIT_FILES && !!v.clip,
+                available: ART_AND_VOICE && !!v.clip,
               }))} />
           </Panel>
         );
@@ -451,7 +451,7 @@ function ProfileTab({ unit }: { unit: Unit }) {
         {unit.illustrator && <StatRow label="Illustrator" value={<CreditLinks raw={unit.illustrator} role="artist" />} />}
         {unit.voiceActor && <StatRow label="Voice" value={<CreditLinks raw={unit.voiceActor} role="cv" />} />}
         {unit.trust.length > 0 && <StatRow label="Scene unlocks" value={<>Trust {unit.trust.join(", ")}</>} />}
-        {unit.skin && <StatRow label="Skin" value={<span lang="ja">{UNIT_FILES
+        {unit.skin && <StatRow label="Skin" value={<span lang="ja">{ART_AND_VOICE
           ? <><Link to={`/units/${unit.id}?tab=art`}>{tr(unit.skin.name, lang) || unit.skin.item}</Link> (preview on the Art tab)</>
           : tr(unit.skin.name, lang) || unit.skin.item}</span>} />}
       </StatRows>

@@ -1,9 +1,10 @@
-// Serves the site's self-hosted game files (unit art bundles, voice clips) from
+// Serves the site's self-hosted game files (art and voice packs) from
 // a private Backblaze B2 bucket at https://taimanin-assets.altterisk.cc/<path>.
 //
-// The bucket mirrors the game CDN's layout, so <path> is the same as on the
-// CDN: asset_bundles/WebGL/LIVE/<Basic|R18>/<name>.bundle and
-// asset_bundles/DirectDownloadBundles/Audio/... The site only swaps the host.
+// B2 counts every download against a small daily allowance, so each unit's or
+// card's files are one pack (packs/<id>_<kind>_<md5>.pack): the first visitor at
+// a location makes one B2 download, and browsers read single files out of the
+// cached pack with Range requests.
 //
 // Every file is cached at Cloudflare's edge after its first download, so B2 is
 // asked once per file per location. B2 -> Cloudflare transfer is free.
@@ -14,9 +15,9 @@
 const B2_AUTH_URL = "https://api.backblazeb2.com/b2api/v3/b2_authorize_account";
 // B2 tokens last 24 h; renew well before that.
 const AUTH_TTL_MS = 20 * 3600e3;
-// Bundle names carry a content hash, so a URL never changes what it serves.
+// Pack and bundle names carry a content hash, so a URL never changes what it serves.
 const HASHED_MAX_AGE = 365 * 86400;
-// Voice clips keep their name across updates; still effectively static.
+// Anything without a hash in its name.
 const PLAIN_MAX_AGE = 30 * 86400;
 // A missing file is cached briefly, so probing for files cannot run up B2 calls.
 const MISSING_MAX_AGE = 600;
@@ -56,11 +57,14 @@ function toStored(r, path) {
     if (v) h.set(k, v);
   }
   h.set("Accept-Ranges", "bytes");
-  const age = !ok ? MISSING_MAX_AGE : /_[0-9a-f]{32}\.bundle$/.test(path) ? HASHED_MAX_AGE : PLAIN_MAX_AGE;
+  const age = !ok ? MISSING_MAX_AGE : /_[0-9a-f]{32}\.(bundle|pack)$/.test(path) ? HASHED_MAX_AGE : PLAIN_MAX_AGE;
   h.set("Cache-Control", `public, max-age=${age}${ok && age === HASHED_MAX_AGE ? ", immutable" : ""}`);
   // B2 answers 404 with a JSON error naming the bucket; send nothing instead.
   return new Response(ok ? r.body : null, { status: ok ? r.status : r.status === 404 ? 404 : 502, headers: h });
 }
+
+/** Failures are not stored: a B2 outage or spent cap must end when B2 recovers. */
+const cacheable = (status) => status === 200 || status === 404;
 
 function withCors(res, origin, env) {
   const allowed = (env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -107,13 +111,19 @@ export default {
     if (hit) return withCors(request.method === "HEAD" ? new Response(null, hit) : hit, origin, env);
 
     try {
-      if (range) {
-        // Serve the slice straight from B2, and fill the cache with the whole file meanwhile.
-        ctx.waitUntil(fromB2(env, "GET", path).then((r) => cache.put(key, toStored(r, path))).catch(() => {}));
-        return withCors(toStored(await fromB2(env, "GET", path, range), path), origin, env);
-      }
       const stored = toStored(await fromB2(env, "GET", path), path);
-      ctx.waitUntil(cache.put(key, stored.clone()));
+      if (range) {
+        // One B2 download for the whole file, then the slice from the cache.
+        // Without this every first Range request would be a download of its own.
+        if (stored.status !== 200) {
+          if (cacheable(stored.status)) await cache.put(key, stored.clone());
+          return withCors(stored, origin, env);
+        }
+        await cache.put(key, stored);
+        const slice = await cache.match(new Request(key, { headers: { Range: range } }));
+        return withCors(slice || toStored(await fromB2(env, "GET", path, range), path), origin, env);
+      }
+      if (cacheable(stored.status)) ctx.waitUntil(cache.put(key, stored.clone()));
       return withCors(request.method === "HEAD" ? new Response(null, stored) : stored, origin, env);
     } catch (e) {
       console.error(String(e));

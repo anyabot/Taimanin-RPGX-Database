@@ -7,6 +7,7 @@ import { createSetting } from "@altterisk/game-hub/persist";
 import { phaseOf as windowPhase } from "@altterisk/game-hub/time";
 import { Assets } from "./unity/client";
 import { DIRECT_ROOT, HOSTED } from "./unity/catalog";
+import { packFile } from "./unity/fetch";
 
 export interface Text { ja: string; en?: string }
 
@@ -296,11 +297,12 @@ const base = import.meta.env.BASE_URL;
 /** The game CDN refuses requests from this site's domain (by Origin / Referer,
  *  since 2026-11-04), so the deployed build reads nothing from it: no scenes,
  *  story player, art, voices or bundle icons. `vite dev` and `npm run preview`
- *  (localhost) still can. */
-export const GAME_CDN = import.meta.env.DEV || import.meta.env.MODE === "review";
-/** Unit art and voice clips: from the game CDN locally, from the site's own
+ *  (localhost) still can, and so can a page that sets
+ *  window.__TAIMANIN_GAME_CDN__ and answers those requests itself. */
+export const GAME_CDN = !HOSTED;
+/** Unit and card art and unit voice clips: from the game CDN locally, from the site's own
  *  copy when deployed. Everything else stays GAME_CDN only. */
-export const UNIT_FILES = GAME_CDN || HOSTED;
+export const ART_AND_VOICE = GAME_CDN || HOSTED;
 export const loader = createJsonLoader({ urls: (name) => [`${base}data/${name}.json`] });
 export const useData = <T,>(name: string | null) => useJson<T>(loader, name);
 
@@ -314,7 +316,18 @@ const iconV = typeof __ICON_V__ === "string" ? `?v=${__ICON_V__}` : "";
 export const iconUrl = (id: string) => `${base}icons/${id}.webp${iconV}`;
 /** an Arena card's 80x80 face (r18_image_kar_s, tools/web_export/cards.py) */
 export const cardIconUrl = (id: string) => `${base}icons/cards/${id}.webp${iconV}`;
-export const voiceUrl = (clip: string) => `${DIRECT_ROOT}/${clip}`;
+const voiceBlobs = new Map<string, Promise<string>>();
+/** A playable URL for a unit's voice clip: the CDN file, or read out of the unit's voice pack when deployed. */
+export function voiceUrl(unitId: string, clip: string): Promise<string> {
+  if (!HOSTED) return Promise.resolve(`${DIRECT_ROOT}/${clip}`);
+  let p = voiceBlobs.get(clip);
+  if (!p) {
+    p = packFile(unitId, "voice", clip).then((b) => URL.createObjectURL(new Blob([b as Uint8Array<ArrayBuffer>], { type: "audio/ogg" })));
+    p.catch(() => voiceBlobs.delete(clip));
+    voiceBlobs.set(clip, p);
+  }
+  return p;
+}
 
 // ---- language: English where the translation pipeline has it, else Japanese.
 type Lang = "en" | "ja";
@@ -357,7 +370,7 @@ export const today = new Date().toISOString().slice(0, 10);
 export const isUpcoming = (u: { release: string | null }) => !!u.release && u.release > today;
 /** Upcoming units show only where the game's files do (dev, `npm run preview`);
  *  the deployed site keeps to released ones. */
-export const SHOW_UPCOMING = GAME_CDN;
+export const SHOW_UPCOMING = import.meta.env.DEV || import.meta.env.MODE === "review";
 export const isHidden = (u: { release: string | null }) => !SHOW_UPCOMING && isUpcoming(u);
 
 const DAY = 86400000;
@@ -390,7 +403,7 @@ export function phaseText(start?: string | null, end?: string | null): string {
 // ---- the bundle decoder, created once
 let assets: Promise<Assets> | null = null;
 export const NO_GAME_FILES = new Error("The game's files are not available here.");
-export const getAssets = () => (assets ??= UNIT_FILES ? Assets.load() : Promise.reject(NO_GAME_FILES));
+export const getAssets = () => (assets ??= ART_AND_VOICE ? Assets.load() : Promise.reject(NO_GAME_FILES));
 export function useAssets() {
   const [a, setA] = useState<Assets | null>(null);
   const [error, setError] = useState<unknown>(null);

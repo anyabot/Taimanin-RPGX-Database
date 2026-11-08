@@ -7,8 +7,8 @@ RPGX. The game's CDN only answers requests from the game's own sites and from
 `localhost`. Local builds (`npm run dev` and `npm run preview`) fetch bundles
 from it and decode them in the browser (`src/unity/`), so everything works
 there: art, scene playback and audio. The deployed site serves its own files
-(game data, icons, banners, scene scripts) plus its own copy of the unit art
-and unit voice clips (see Asset host below); scene playback and card art stay
+(game data, icons, banners, scene scripts) plus its own copy of the unit and
+card art and unit voice clips (see Asset host below); scene playback stays
 local-only.
 
 Everything under `public/data` is written by a separate
@@ -98,17 +98,23 @@ for canonicals and the sitemap is `SITE_URL` there.
 ## Asset host
 
 The deployed build (`HOSTED` in `src/unity/catalog.ts`) loads unit art bundles
-(`image_chr_{l,xl,ldiff}`, base and R18, and the skin preview bundle) and unit
-voice clips from `https://taimanin-assets.altterisk.cc`, in the game CDN's
+(`image_chr_{l,xl,ldiff}`, base and R18, and the skin preview bundle), card art
+bundles (`r18_image_kar_l`) and unit voice clips from `https://taimanin-assets.altterisk.cc`, in the game CDN's
 layout. That is the Worker in `workers/assets`, in front of a private Backblaze
 B2 bucket; it caches every file at Cloudflare's edge and only answers
 `taimanin.altterisk.cc` (and `localhost`) for CORS. The hosted copy has no
 catalogs, so the deployed build uses the bundle names in `public/data/bundles.json`
 as they are.
 
+B2 counts every download against a small daily allowance, so a unit's or card's
+files of one kind are one pack (`packs/<id>_<art|r18|card|voice>_<md5>.pack`,
+listed in `public/data/packs.json`). The Worker downloads a pack once per
+location and the browser reads single files out of it with Range requests, as
+they scroll into view or are played.
+
 After a game update, upload before deploying, or new units show no art:
-the toolkit's `tools/web_export/upload_b2.py` sends what the export names and
-the bucket lacks. Worker setup, once, from `workers/assets`:
+the toolkit's `tools/web_export/upload_b2.py` packs and sends what the export
+names and the bucket lacks, and rewrites `public/data/packs.json` (commit it). Worker setup, once, from `workers/assets`:
 
     npx wrangler deploy
     npx wrangler secret put B2_KEY_ID      # Read Only key limited to the bucket

@@ -10,9 +10,9 @@
 // visit after an update pays for it.
 
 /** The deployed build: the game CDN refuses other sites, so the site serves a
- *  copy of the unit art and voice clips itself, in the CDN's layout
+ *  copy of the unit and card art and voice clips itself, in the CDN's layout
  *  (workers/assets, uploaded by the toolkit's tools/web_export/upload_b2.py). */
-export const HOSTED = !import.meta.env.DEV && import.meta.env.MODE !== "review";
+export const HOSTED = !import.meta.env.DEV && import.meta.env.MODE !== "review" && !(globalThis as { __TAIMANIN_GAME_CDN__?: boolean }).__TAIMANIN_GAME_CDN__;
 export const CDN = import.meta.env.DEV ? "/cdn" : HOSTED ? "https://taimanin-assets.altterisk.cc" : "https://dntgnyxcho2sk.cloudfront.net";
 // `npm run preview` builds in "review" mode: the next update, for local use only.
 export const LIVE_ROOT = `${CDN}/asset_bundles/WebGL/${import.meta.env.MODE === "review" ? "REVIEW" : "LIVE"}`;
