@@ -52,17 +52,25 @@ which is remembered.
 
 ## Refresh the data after a game update
 
-From the exporter toolkit's folder:
+From the exporter toolkit's folder, one command runs every step in order:
 
-    py -3 tools/web_export/catalog_snapshot.py   # public/data/bundles.json
-    py -3 tools/web_export/tables.py             # units, runes, icons, UI art
-    py -3 tools/web_export/scenes.py             # public/data/scenes, adv_se.json (after tables.py)
-    py -3 tools/web_export/gacha.py              # public/data/gacha.json for #/gacha (after tables.py)
-    py -3 tools/web_export/buffs.py              # public/data/buffs.json for #/buffs (after tables.py)
-    py -3 tools/web_export/stories.py            # public/data/stories for #/story (after scenes.py)
-    py -3 tools/web_export/translations.py       # public/data/tl: English scene text (after stories.py)
-    py -3 tools/web_export/atlases.py            # public/atlas: item, rune, enemy, boss icon sheets
-    py -3 tools/web_export/banner_art.py         # public/art: gacha and story banners (after stories.py)
+    py -3 tools/web_export/export_all.py         # all of the below; --from STEP resumes, --only STEP ... runs some
+
+The steps, in that order:
+
+    catalog_snapshot.py   public/data/bundles.json
+    tables.py             units (skills, ailment roll counts), runes, banners, growth, icons, UI art
+    cards.py              Arena cards
+    scenes.py             public/data/scenes, adv_se.json
+    gacha.py              public/data/gacha.json for /gacha
+    stories.py            public/data/stories for /story
+    translations.py       public/data/tl: English scene text
+    quests.py             quests, dispatch.json
+    buffs.py              public/data/buffs.json for /buffs and /ailments
+    statuses.py           public/data/statuses.json for /statuses
+    items.py              items, farm.json (reads what the others wrote)
+    atlases.py            public/atlas: item, rune, enemy, boss icon sheets
+    banner_art.py         public/art: gacha and story banners
 
 In local builds the site also checks the catalog `.hash` files and rescans a
 changed catalog itself, so renamed bundles keep loading between refreshes.

@@ -170,6 +170,9 @@ export default function Buffs() {
         ))}
         {!keys.length && <span className="muted small">Nothing matches these filters.</span>}
       </FilterRow>
+      {cat === "ailment" && key && key !== "A random status ailment" && (
+        <p className="small"><Link to={`/ailments?a=${encodeURIComponent(key)}`}>{key}: chance to land it on a boss, with resist and buffs →</Link></p>
+      )}
       {!enemySide && (
         <>
           <FilterRow label="Receiver">

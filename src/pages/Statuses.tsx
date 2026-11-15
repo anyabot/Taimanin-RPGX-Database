@@ -75,6 +75,9 @@ function StatusCard({ e, kind, units, block }: {
       {e.effect && <p className="status-effect">{e.effect}</p>}
       {e.definition?.map((d) => <p key={d} className="status-effect">{d}</p>)}
       <p className="status-rule"><StackBadge tag={tag} stack={e.stack} />{stackRule(tag, e.stack)}</p>
+      {kind === "ailments" && e.key !== "ab:random" && e.key !== "ab:10" && e.units.length > 0 && (
+        <p className="small"><Link to={`/ailments?a=${encodeURIComponent(e.name)}`}>Chance to land it on a boss →</Link></p>
+      )}
       {block && <p className="muted small">Blocked by {block.name.toLowerCase()} ({block.units.length} unit{block.units.length === 1 ? "" : "s"}).</p>}
       {e.help && (
         <details className="status-help">
