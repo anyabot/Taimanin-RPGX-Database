@@ -7,6 +7,7 @@ import { renderLink } from "./links";
 /** The less used pages, under "Etc" in the bar. */
 const MORE: [href: string, label: string][] = [
   ["/statuses", "Statuses"],
+  ["/ailments", "Ailment odds"],
   ["/people", "People"],
   ["/items", "Items"],
   ["/runes", "Runes"],

@@ -1,0 +1,48 @@
+.ail-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+.ail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  gap: 10px 14px;
+}
+.ail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ail-field .hub-select,
+.ail-field .hub-input {
+  width: 100%;
+  min-width: 0;
+}
+.ail-label {
+  font-size: 0.85em;
+  color: var(--hub-muted, inherit);
+}
+.ail-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ail-check {
+  flex-direction: row;
+  align-items: center;
+  align-self: end;
+  gap: 8px;
+  min-height: 2.2em;
+}
+.ail-table td[data-label="Skill"] .small {
+  max-width: 34ch;
+}
+.ail-help {
+  margin-top: 16px;
+}
+.ail-help ul {
+  padding-left: 1.2em;
+  line-height: 1.5;
+}
