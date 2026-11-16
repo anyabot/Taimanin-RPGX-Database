@@ -135,7 +135,7 @@ export function boostedSpRows(id: string, skills: SkillFx[], u: { element: strin
       if (pct <= 0) return;
       const v = Math.floor(Number(m[1]) * (1 + pct / 100));
       out.push({ u: id, c: "recovery", k: "SP restore", v, p: 0, sc: "all", t: 0, s: sk.slot,
-        x: `All allies: restore ${m[1]} SP, about ${v} ${how} (${mod.text})` });
+        x: `All allies: restore ${m[1]} SP, about ${v} ${how} (${mod.text.replace(/^Healing/, "SP restored")})` });
     });
   }
   return out;
