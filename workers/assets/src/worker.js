@@ -6,8 +6,13 @@
 // a location makes one B2 download, and browsers read single files out of the
 // cached pack with Range requests.
 //
-// Every file is cached at Cloudflare's edge after its first download, so B2 is
-// asked once per file per location. B2 -> Cloudflare transfer is free.
+// Two cache layers: the Cache API (one data centre) answers Range requests, and
+// the B2 download itself goes through Cloudflare's cache with fetch(), which
+// Tiered Cache shares between data centres (turn on Smart Tiered Cache for the
+// zone). So a location that misses usually gets the file from an upper tier,
+// not from B2. B2 -> Cloudflare transfer is free.
+//
+// Every B2 call is logged as one JSON line ({b2: ...}) in Workers Logs.
 //
 // Secrets (wrangler secret put): B2_KEY_ID, B2_APP_KEY, a read-only key
 // limited to the bucket. Vars (wrangler.jsonc): B2_BUCKET, ALLOWED_ORIGINS.
@@ -19,33 +24,82 @@ const AUTH_TTL_MS = 20 * 3600e3;
 const HASHED_MAX_AGE = 365 * 86400;
 // Anything without a hash in its name.
 const PLAIN_MAX_AGE = 30 * 86400;
-// A missing file is cached briefly, so probing for files cannot run up B2 calls.
-const MISSING_MAX_AGE = 600;
+// A missing file is cached, so probing for files cannot run up B2 calls. A hashed
+// name never appears later; a plain one might after an upload.
+const MISSING_MAX_AGE = 3600;
+const MISSING_HASHED_MAX_AGE = 7 * 86400;
+const HASHED = /_[0-9a-f]{32}\.(bundle|pack)$/;
+// Where the B2 token is kept for other isolates in this data centre. Paths under
+// /__ are refused below, so no visitor can read it.
+const AUTH_CACHE_KEY = "https://taimanin-assets.altterisk.cc/__internal/b2auth";
 const EXPOSE = "Content-Length, Content-Range, Accept-Ranges, ETag";
 
-let auth = null; // { apiUrl, downloadUrl, token, until } for this isolate
+let auth = null; // { downloadUrl, token, until } for this isolate
+const inflight = new Map(); // path -> Promise of the stored response, for this isolate
 
+const log = (o) => console.log(JSON.stringify(o));
+
+/** A B2 token: this isolate's, else this data centre's, else a new one (a Class C call). */
 async function authorize(env, force = false) {
   if (!force && auth && Date.now() < auth.until) return auth;
+  const cache = caches.default;
+  if (!force) {
+    const hit = await cache.match(AUTH_CACHE_KEY);
+    if (hit) {
+      const a = await hit.json();
+      if (Date.now() < a.until) return (auth = a);
+    }
+  }
   const r = await fetch(B2_AUTH_URL, {
     headers: { Authorization: "Basic " + btoa(`${env.B2_KEY_ID}:${env.B2_APP_KEY}`) },
   });
+  log({ b2: "authorize", status: r.status, force });
   if (!r.ok) throw new Error(`b2 authorize: HTTP ${r.status}`);
   const j = await r.json();
   auth = { downloadUrl: j.apiInfo.storageApi.downloadUrl, token: j.authorizationToken, until: Date.now() + AUTH_TTL_MS };
+  const age = Math.floor(AUTH_TTL_MS / 1000);
+  await cache.put(AUTH_CACHE_KEY, new Response(JSON.stringify(auth), {
+    headers: { "Content-Type": "application/json", "Cache-Control": `private, max-age=${age}` },
+  })).catch(() => {});
   return auth;
 }
 
-/** GET or HEAD one file from B2, renewing the token once if it expired. */
-async function fromB2(env, method, path, range) {
+/** How long Cloudflare's cache keeps a B2 answer, by status. */
+function ttlByStatus(path) {
+  const hashed = HASHED.test(path);
+  return {
+    "200-299": hashed ? HASHED_MAX_AGE : PLAIN_MAX_AGE,
+    404: hashed ? MISSING_HASHED_MAX_AGE : MISSING_MAX_AGE,
+    "400-403": 0,
+    "405-599": 0,
+  };
+}
+
+/** GET one file from B2 (through Cloudflare's tiered cache unless ranged), renewing the token once if it expired. */
+async function fromB2(env, path, range, colo) {
   for (let attempt = 0; attempt < 2; attempt++) {
     const a = await authorize(env, attempt > 0);
     const headers = { Authorization: a.token };
     if (range) headers.Range = range;
-    const r = await fetch(`${a.downloadUrl}/file/${env.B2_BUCKET}/${path}`, { method, headers });
+    const init = { headers };
+    if (!range) init.cf = { cacheEverything: true, cacheTtlByStatus: ttlByStatus(path) };
+    const r = await fetch(`${a.downloadUrl}/file/${env.B2_BUCKET}/${path}`, init);
+    // HIT means an upper tier or this location answered, not B2.
+    log({ b2: "get", path, range: range || undefined, status: r.status, cache: r.headers.get("cf-cache-status"), colo, bytes: Number(r.headers.get("Content-Length")) || undefined });
     if (r.status !== 401) return r;
   }
   throw new Error("b2: token refused after renewal");
+}
+
+/** One B2 download per path at a time in this isolate: concurrent misses share it. */
+function storedFromB2(env, path, colo) {
+  let p = inflight.get(path);
+  if (!p) {
+    p = fromB2(env, path, null, colo).then((r) => toStored(r, path));
+    inflight.set(path, p);
+    p.finally(() => inflight.delete(path)).catch(() => {});
+  }
+  return p.then((r) => r.clone());
 }
 
 /** B2's response, cleaned up for storing and serving. */
@@ -57,7 +111,8 @@ function toStored(r, path) {
     if (v) h.set(k, v);
   }
   h.set("Accept-Ranges", "bytes");
-  const age = !ok ? MISSING_MAX_AGE : /_[0-9a-f]{32}\.(bundle|pack)$/.test(path) ? HASHED_MAX_AGE : PLAIN_MAX_AGE;
+  const hashed = HASHED.test(path);
+  const age = !ok ? (hashed ? MISSING_HASHED_MAX_AGE : MISSING_MAX_AGE) : hashed ? HASHED_MAX_AGE : PLAIN_MAX_AGE;
   h.set("Cache-Control", `public, max-age=${age}${ok && age === HASHED_MAX_AGE ? ", immutable" : ""}`);
   // B2 answers 404 with a JSON error naming the bucket; send nothing instead.
   return new Response(ok ? r.body : null, { status: ok ? r.status : r.status === 404 ? 404 : 502, headers: h });
@@ -93,7 +148,7 @@ export default {
 
     const url = new URL(request.url);
     const path = url.pathname.replace(/^\/+/, "");
-    if (!path || path.endsWith("/") || path.split("/").some((s) => s === ".." || s === ".")) {
+    if (!path || path.startsWith("__") || path.endsWith("/") || path.split("/").some((s) => s === ".." || s === ".")) {
       return withCors(new Response("Not found", { status: 404 }), origin, env);
     }
 
@@ -110,8 +165,9 @@ export default {
     const hit = await cache.match(range ? new Request(key, { headers: { Range: range } }) : key);
     if (hit) return withCors(request.method === "HEAD" ? new Response(null, hit) : hit, origin, env);
 
+    const colo = request.cf && request.cf.colo;
     try {
-      const stored = toStored(await fromB2(env, "GET", path), path);
+      const stored = await storedFromB2(env, path, colo);
       if (range) {
         // One B2 download for the whole file, then the slice from the cache.
         // Without this every first Range request would be a download of its own.
@@ -121,7 +177,7 @@ export default {
         }
         await cache.put(key, stored);
         const slice = await cache.match(new Request(key, { headers: { Range: range } }));
-        return withCors(slice || toStored(await fromB2(env, "GET", path, range), path), origin, env);
+        return withCors(slice || toStored(await fromB2(env, path, range, colo), path), origin, env);
       }
       if (cacheable(stored.status)) ctx.waitUntil(cache.put(key, stored.clone()));
       return withCors(request.method === "HEAD" ? new Response(null, stored) : stored, origin, env);

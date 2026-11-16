@@ -118,7 +118,11 @@ B2 counts every download against a small daily allowance, so a unit's or card's
 files of one kind are one pack (`packs/<id>_<art|r18|card|voice>_<md5>.pack`,
 listed in `public/data/packs.json`). The Worker downloads a pack once per
 location and the browser reads single files out of it with Range requests, as
-they scroll into view or are played.
+they scroll into view or are played. The Worker fetches from B2 through
+Cloudflare's cache, so with Smart Tiered Cache on for the zone (Caching → Tiered
+Cache) other locations get a pack from an upper tier instead of from B2. Each B2
+call is logged as a `{"b2": ...}` line in the Worker's logs (`npx wrangler tail`
+or the dashboard), with `cache: "HIT"` when B2 was not asked.
 
 After a game update, upload before deploying, or new units show no art:
 the toolkit's `tools/web_export/upload_b2.py` packs and sends what the export
