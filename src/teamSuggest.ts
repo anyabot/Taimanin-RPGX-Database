@@ -22,7 +22,14 @@ export interface BuffRow {
   x: string;
 }
 
-export interface Candidate { id: string; element: string | null; traits: string[]; atk: number; spd: number }
+export interface Candidate {
+  id: string; element: string | null; traits: string[]; atk: number; spd: number; def?: number;
+  /** not owned but free to get (the free Yukikaze): only used as the buffer, and an owned unit wins a tie */
+  free?: boolean;
+}
+
+/** The only truly free unit: Yukikaze 【Lightning Taimanin】, all allies ATK/DEF +60% (rule 3's fallback). */
+export const FREE_BUFFER = "00068";
 
 export type Role = "sp" | "spot" | "buffer" | "healer" | "dps";
 
@@ -95,6 +102,45 @@ const rank = (r: BuffRow) => (r.t >= 3 || r.t < 0 ? 10_000 : 0) + r.v;
 /** % SP restore compared with flat: 20% ~ 70 SP */
 const spValue = (r: BuffRow) => (r.p ? r.v * 3.5 : r.v);
 
+/** A skill effect as the unit files have it (src/data.ts Effect). */
+interface SkillFx { slot: BuffRow["s"]; effects: { text: string; tag?: string }[] }
+
+/**
+ * Whole-team SP restores raised by the "Healing +…" modifier listed right
+ * after them in the skill's effects (e.g. "+100% per 100 of the allies'
+ * average SPD"), as extra SP-restore rows with the raised value. Only
+ * modifiers that hold in any team are counted:
+ * - allies' average SPD: estimated with the unit's own SPD
+ * - own DEF: the unit's max-level DEF
+ * - "with 1 X ally": counted (at the 1-ally value) when the unit itself is X
+ * Others (HP missing, stacks) are left out.
+ */
+export function boostedSpRows(id: string, skills: SkillFx[], u: { element: string | null; spd: number; def: number }): BuffRow[] {
+  const out: BuffRow[] = [];
+  for (const sk of skills) {
+    sk.effects.forEach((e, i) => {
+      const m = /^All allies: restore (\d+) SP$/.exec(e.text);
+      const mod = sk.effects[i + 1];
+      if (!m || mod?.tag !== "modifier") return;
+      let pct = 0;
+      let how = "";
+      let x: RegExpExecArray | null;
+      if ((x = /^Healing \+([\d.]+)% per (\d+) of the allies' average SPD/.exec(mod.text))) {
+        pct = (Number(x[1]) * u.spd) / Number(x[2]); how = `with ${u.spd} average SPD`;
+      } else if ((x = /^Healing \+([\d.]+)% per (\d+) of own DEF/.exec(mod.text))) {
+        pct = (Number(x[1]) * u.def) / Number(x[2]); how = `with ${u.def} DEF`;
+      } else if ((x = /^Healing \+([\d.]+)% with 1 (\w+) ally/.exec(mod.text)) && x[2] === u.element) {
+        pct = Number(x[1]); how = `with 1 ${x[2]} ally`;
+      }
+      if (pct <= 0) return;
+      const v = Math.floor(Number(m[1]) * (1 + pct / 100));
+      out.push({ u: id, c: "recovery", k: "SP restore", v, p: 0, sc: "all", t: 0, s: sk.slot,
+        x: `All allies: restore ${m[1]} SP, about ${v} ${how} (${mod.text})` });
+    });
+  }
+  return out;
+}
+
 /** Does an ally buff land on every member? */
 function applies(r: BuffRow, team: Candidate[]) {
   if (r.sc === "all") return true;
@@ -123,13 +169,14 @@ export function suggestTeam(owned: Candidate[], rows: BuffRow[]): Suggestion {
   for (const r of rows) by.set(r.u, [...(by.get(r.u) || []), r]);
   const fx = (id: string) => by.get(id) || [];
   const units = owned.filter((u) => fx(u.id).length || u.atk);
+  const mine = units.filter((u) => !u.free);
 
   // 1. SP units, best restore first
   const spRow = (u: Candidate) => fx(u.id).filter(spRestore).sort((a, b) => spValue(b) - spValue(a))[0];
-  const sp = units.filter((u) => spRow(u)).sort((a, b) => spValue(spRow(b)) - spValue(spRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
+  const sp = mine.filter((u) => spRow(u)).sort((a, b) => spValue(spRow(b)) - spValue(spRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
   // no SP unit: one SP-over-time unit, best first
   const spotRow = (u: Candidate) => fx(u.id).filter(spot).sort((a, b) => rank(b) - rank(a))[0];
-  const spots = units.filter((u) => spotRow(u)).sort((a, b) => rank(spotRow(b)) - rank(spotRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
+  const spots = mine.filter((u) => spotRow(u)).sort((a, b) => rank(spotRow(b)) - rank(spotRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
   // 3 SP units if a team can be made with them, else 2, else 1, else SPoT
   const tries: { sets: Candidate[][]; spot: boolean }[] = [3, 2, 1].filter((k) => sp.length >= k).map((k) => ({ sets: combos(sp, k), spot: false }));
   if (!sp.length) tries.push({ sets: spots.map((u) => [u]), spot: true });
@@ -191,14 +238,18 @@ const compare = (a: number[], b: number[]) => { for (let i = 0; i < a.length; i+
 function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow[], isSpot = false): Built | string {
   const roles = new Map<string, Role>(set.map((u) => [u.id, isSpot ? "spot" : "sp"]));
   const team = [...set];
-  const rest = () => units.filter((u) => !roles.has(u.id));
+  // a free (not owned) unit can only fill the buffer slot
+  const rest = () => units.filter((u) => !roles.has(u.id) && !u.free);
   const all = (u: Candidate) => fx(u.id);
   const healsInSp = !isSpot && set.length >= 3 && set.some((u) => all(u).some(teamHeal));
   // rule 2: fewer than 3 SP units, or none of them heals -> an HP-over-time unit
   let needHeal = !healsInSp;
   const has = (pred: (r: BuffRow) => boolean, members: Candidate[]) => !!best(members.flatMap((u) => all(u).filter(pred)), members);
-  const needAtk = !has(atkBuff, team);
-  const needDef = !has(defBuff, team);
+  // only "All allies" buffs from the SP units count as covered here: an
+  // element/trait buff can stop applying once the other members join
+  const allAllies = (pred: (r: BuffRow) => boolean) => (r: BuffRow) => pred(r) && r.sc === "all";
+  const needAtk = !has(allAllies(atkBuff), team);
+  const needDef = !has(allAllies(defBuff), team);
 
   // rule 3: the buffer. When a heal is still needed and only one free slot
   // would be left for it, the healer requirement wins: try healers first.
@@ -210,11 +261,11 @@ function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow
       if ((needAtk && !a) || (needDef && !d)) return -1;
       return (a ? rank(a) : 0) + (d ? rank(d) : 0);
     };
-    const pool = rest().filter((u) => value(u) >= 0);
+    const pool = units.filter((u) => !roles.has(u.id) && value(u) >= 0);
     if (!pool.length) return needAtk && needDef ? "no unit gives both an ATK and a DEF buff to the team (rule 3)." : `no unit gives the team a ${needAtk ? "ATK" : "DEF"} buff (rule 3).`;
     const healers = needHeal ? pool.filter((u) => all(u).some(hpot)) : [];
     const vals = new Map((healers.length ? healers : pool).map((u) => [u, value(u)]));
-    const pick = [...vals.keys()].sort((a, b) => vals.get(b)! - vals.get(a)! || b.atk - a.atk)[0];
+    const pick = [...vals.keys()].sort((a, b) => vals.get(b)! - vals.get(a)! || Number(!!a.free) - Number(!!b.free) || b.atk - a.atk)[0];
     roles.set(pick.id, "buffer");
     if (healers.length) needHeal = false;
     team.push(pick);

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { suggestTeam, type BuffRow, type Candidate } from "../src/teamSuggest";
+import { boostedSpRows, suggestTeam, type BuffRow, type Candidate } from "../src/teamSuggest";
 
 const data = (f: string) => JSON.parse(readFileSync(path.resolve(__dirname, "../public/data", f), "utf8"));
 
@@ -51,6 +51,19 @@ describe("suggestTeam", () => {
     const more = [...rows, row("short", "stat", "DEF", 200, 1, "skill2", "all", { t: 1 }), row("buf", "stat", "DEF", 60, 1, "skill2", "all", { t: 4 })];
     const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("buf"), u("short"), u("dps", 2000)], more.filter((x) => !(x.u === "buf" && x.t === 0 && x.k === "DEF")));
     expect(r.ok && r.def.u).toBe("buf");
+  });
+  it("raises an SP restore by the allies' SPD modifier", () => {
+    const skills = [{ slot: "skill2" as const, effects: [{ text: "All allies: restore 60 SP", tag: "instant" },
+      { text: "Healing +100% per 100 of the allies' average SPD", tag: "modifier" }] }];
+    expect(boostedSpRows("x", skills, { element: "Natural", spd: 75, def: 400 })[0].v).toBe(105);
+    const ally = [{ slot: "skill2" as const, effects: [{ text: "All allies: restore 60 SP" }, { text: "Healing +20% with 1 Superhuman ally, +20% for each more (+100% at 5)", tag: "modifier" }] }];
+    expect(boostedSpRows("x", ally, { element: "Superhuman", spd: 70, def: 0 })[0].v).toBe(72);
+    expect(boostedSpRows("x", ally, { element: "Natural", spd: 70, def: 0 })).toEqual([]);
+  });
+  it("uses the free buffer only as the buffer, and says it isn't owned", () => {
+    const more = [...rows.filter((x) => x.u !== "buf"), row("yuki", "stat", "ATK", 60, 1, "ultimate", "all", { t: 4 }), row("yuki", "stat", "DEF", 60, 1, "ultimate", "all", { t: 4 })];
+    const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("dps", 2000), { ...u("yuki", 9999), free: true }], more);
+    expect(r.ok && r.members.find((m) => m.id === "yuki")?.role).toBe("buffer");
   });
   it("runs on the real data with every unit owned", () => {
     const index = data("units/index.json") as { id: string; element: string | null; traits: string[]; stats: { atk: number; spd: number } }[];

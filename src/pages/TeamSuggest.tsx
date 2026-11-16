@@ -1,12 +1,12 @@
 // Team builder, "Suggest" tab: a team from the units the player owns, by the
 // simple rules in src/teamSuggest.ts.
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { FallbackImage, LoadState, Panel } from "@altterisk/game-hub";
 import { useOwned } from "../collection";
-import { iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntry } from "../data";
+import { iconUrl, isUpcoming, loader, tr, unitName, useData, useLang, type Unit, type UnitIndexEntry } from "../data";
 import { ElementIcon, RarityIcon } from "../components";
-import { RULES, suggestTeam, type BuffRow, type Member, type Role } from "../teamSuggest";
+import { FREE_BUFFER, RULES, boostedSpRows, suggestTeam, type BuffRow, type Candidate, type Member, type Role } from "../teamSuggest";
 
 const ROLE: Record<Role, string> = { sp: "SP", spot: "SP over time", buffer: "Buffer", healer: "Healer", dps: "DPS" };
 const SKILL: Record<BuffRow["s"], string> = { attack: "Attack", skill1: "S1", skill2: "S2", ultimate: "Ougi", leader: "Leader" };
@@ -34,17 +34,63 @@ export function suggestedSlots(members: Member[]): SuggestedSlot[] {
   return members.map((m) => ({ unit: m.id, note: scriptNote(m), macro: m.only ? [{ action: ACTION[m.only.s] }] : [] }));
 }
 
+/** How to get the free Yukikaze 【Lightning Taimanin】 (00068), from the event,
+ *  unit and item data: she drops as SR in Story event #1 (Event Archive), and her
+ *  ATK/DEF ougi only comes with the LR form, so she needs two awakenings. */
+function FreeUnitGuide() {
+  return (
+    <div className="team-suggest-get small">
+      <p><strong>You don't own her yet.</strong> She's free. Get her, she's every team's fallback buffer:</p>
+      <ol>
+        <li>Open the <strong>Event Archive</strong> and play Story event #1{" "}
+          <Link to="/events/es001" lang="ja">「雷撃の対魔忍」</Link>. Every quest in it (5 sections × 3 difficulties) can drop her;
+          later sections and higher difficulties drop her more often. <Link to="/story/battles/es001">Quests and drops</Link></li>
+        <li>She drops as <strong>SR</strong>. Her ATK/DEF +60% ougi only unlocks at <strong>LR</strong>, so awaken her twice:
+          <ul>
+            <li>SR → UR: 5 Natural Shard, 15 Natural Drop, 5 Natural Orb, 1 Mystic Treasure</li>
+            <li>UR → LR: 10 Natural Drop, 15 Natural Orb, 4 Primordial Treasure, 2 Mystic Treasure</li>
+          </ul>
+        </li>
+        <li>Natural materials and Primordial Treasure: the daily awakening quests{" "}
+          (<Link to="/quests/daily-1">Science/Natural</Link> Mon &amp; Sat, <Link to="/quests/daily-4">Natural/Spiritual</Link> Thu &amp; Sun,{" "}
+          <Link to="/quests/daily-11">Natural</Link> Fri). Mystic Treasure: <Link to="/items/evo00017">map event shops</Link>.</li>
+      </ol>
+      <p className="muted">Then mark her owned on the <Link to="/collection?q=00068">Collection</Link> page. <Link to="/units/00068">Unit page</Link></p>
+    </div>
+  );
+}
+
 export default function TeamSuggest({ index, onUse }: { index: UnitIndexEntry[]; onUse: (slots: SuggestedSlot[]) => void }) {
   const lang = useLang();
   const owned = useOwned();
   const { data: rows, loading, error } = useData<BuffRow[]>("buffs");
   const units = useMemo(() => new Map(index.map((u) => [u.id, u])), [index]);
+  // SP restores under 70 that a modifier may raise (e.g. by the allies' SPD): read those units' skills
+  const [boosted, setBoosted] = useState<BuffRow[]>([]);
+  useEffect(() => {
+    if (!rows) return;
+    const ids = [...new Set(rows.filter((r) => owned.has(r.u) && r.k === "SP restore" && r.sc === "all" && !r.p && r.v < 70 && r.s !== "leader").map((r) => r.u))];
+    let live = true;
+    Promise.all(ids.map(async (id) => {
+      const u = units.get(id);
+      const unit = await loader.load<Unit>(`units/${id}`).catch(() => null);
+      if (!u || !unit) return [];
+      const top = unit.forms[unit.forms.length - 1];
+      const skills = (top?.skills ?? Object.keys(unit.skills)).map((k) => unit.skills[k]).filter(Boolean)
+        .map((sk) => ({ slot: sk.slot, effects: sk.effects }));
+      return boostedSpRows(id, skills, { element: u.element, spd: u.stats.spd, def: u.stats.def });
+    })).then((l) => { if (live) setBoosted(l.flat()); });
+    return () => { live = false; };
+  }, [rows, owned, units]);
   const result = useMemo(() => {
     if (!rows || !owned.ids.size) return null;
-    const mine = index.filter((u) => owned.has(u.id) && !isUpcoming(u))
-      .map((u) => ({ id: u.id, element: u.element, traits: u.traits, atk: u.stats.atk, spd: u.stats.spd }));
-    return suggestTeam(mine, rows);
-  }, [rows, owned, index]);
+    const cand = (u: UnitIndexEntry, free?: boolean): Candidate =>
+      ({ id: u.id, element: u.element, traits: u.traits, atk: u.stats.atk, spd: u.stats.spd, def: u.stats.def, free });
+    const mine = index.filter((u) => owned.has(u.id) && !isUpcoming(u)).map((u) => cand(u));
+    const yuki = units.get(FREE_BUFFER);
+    if (yuki && !owned.has(FREE_BUFFER)) mine.push(cand(yuki, true));
+    return suggestTeam(mine, [...rows, ...boosted]);
+  }, [rows, boosted, owned, index, units]);
 
   const rules = (
     <details className="team-rules">
@@ -81,6 +127,7 @@ export default function TeamSuggest({ index, onUse }: { index: UnitIndexEntry[];
                     {u && <ElementIcon element={u.element} size={14} />}
                     {m.role === "dps" && u && <span className="small muted">ATK {u.stats.atk}</span>}
                   </div>
+                  {!owned.has(m.id) && <FreeUnitGuide />}
                   <ul className="team-suggest-fx small">
                     {m.why.map((r, i) => <li key={`w${i}`}>{fx(r)}{r.n && <span className="muted"> ({r.n})</span>}</li>)}
                     {m.only && <li className="team-suggest-script">Script: only cast {SKILL[m.only.s]}</li>}

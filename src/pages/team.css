@@ -285,3 +285,12 @@
   border-radius: var(--hub-radius-md);
   padding: 10px;
 }
+.team-suggest-get {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--hub-danger);
+  border-radius: var(--hub-radius-md);
+}
+.team-suggest-get p { margin: 0 0 4px; }
+.team-suggest-get ol { margin: 0 0 4px; padding-left: 18px; }
+.team-suggest-get ul { margin: 2px 0; padding-left: 16px; }
