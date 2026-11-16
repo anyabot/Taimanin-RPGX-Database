@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
-import { RARITY, RUNE_ICONS, familyLabel, tr, useData, useLang, type Growth, type RuneEffect, type RuneSet } from "../data";
+import { RARITY, RUNE_ICONS, both, familyLabel, tr, useData, useLang, type Growth, type RuneEffect, type RuneSet } from "../data";
 import { BundleImage } from "../bundleImage";
 import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
@@ -84,7 +84,7 @@ function Tier({ set }: { set: RuneSet }) {
   const p = set.pieces[0];
   return (
     <section className="rune-tier">
-      <h3 lang="ja">{tr(set.name, lang)}</h3>
+      <h3>{both(set.name)}</h3>
       <Bonuses set={set} />
       <div className="rune-pieces">
         {set.pieces.map((x) => (
@@ -160,13 +160,11 @@ function Costs() {
 }
 
 /** A set family with its rarity tiers as tabs (highest tier first shown). */
-function Family({ family, tiers }: { family: string; tiers: RuneSet[] }) {
-  const lang = useLang();
+function Family({ tiers }: { family: string; tiers: RuneSet[] }) {
   const [pick, setPick] = useState<string | null>(null);
   const t = tiers.find((x) => String(x.id) === pick) ?? tiers[tiers.length - 1];
-  const label = familyLabel(tiers[0], lang);
   return (
-    <Panel title={<span lang={label === family ? "ja" : undefined} title={label === family ? undefined : family}>{label}</span>} className="rune-family">
+    <Panel title={familyLabel(tiers[0])} className="rune-family">
       {tiers.length > 1 && (
         <SegmentedButtons label="Rarity" selected={[String(t.id)]} onToggle={setPick}
           options={tiers.map((x) => ({ value: String(x.id), label: <RarityIcon rarity={x.pieces[0].rarity} height={16} /> }))} />

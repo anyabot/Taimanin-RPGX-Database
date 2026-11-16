@@ -339,9 +339,10 @@ export function tr(t: Text | null | undefined, l: Lang = langSetting.get()): str
   if (!t) return "";
   return (l === "en" && t.en) || t.ja;
 }
-/** A rune set's family in the current language (English where the export has it). */
-export const familyLabel = (s: Pick<RuneSet, "family" | "familyName">, l: Lang = langSetting.get()) =>
-  tr(s.familyName ?? { ja: s.family }, l);
+/** English and Japanese together ("Indomitable 不屈"); just the Japanese where there is no English. */
+export const both = (t: Text | null | undefined) => (!t ? "" : t.en && t.en !== t.ja ? `${t.en} ${t.ja}` : t.ja);
+/** A rune set's family, English and Japanese (the English is unofficial, see tables.py RUNE_FAMILY_EN). */
+export const familyLabel = (s: Pick<RuneSet, "family" | "familyName">) => both(s.familyName ?? { ja: s.family });
 // ---- English scene text (public/data/tl, tools/web_export/translations.py)
 /** Per Japanese beat of the script: [name, text], or 0 where the translation has no line. */
 export type SceneLine = [string, string] | 0;

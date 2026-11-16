@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { FallbackImage, FilterChip, FilterRow, GroupCard, LoadState, PageHeader, Panel } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter } from "@altterisk/game-hub/filters";
-import { SHOW_UPCOMING, familyLabel, iconUrl, isUpcoming, tr, unitName, useData, useLang, type RuneSet, type UnitIndexEntry } from "../data";
+import { SHOW_UPCOMING, both, familyLabel, iconUrl, isUpcoming, tr, unitName, useData, useLang, type RuneSet, type UnitIndexEntry } from "../data";
 import { ElementIcon, RarityIcon } from "../components";
 import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
@@ -145,7 +145,7 @@ export default function Ailments() {
           const m = /^Status ailment infliction rate \+(\d+)%$/.exec(l.text);
           if (!m) continue;
           const fam = `${s.family}|${pieces}`;
-          out.set(fam, [...(out.get(fam) || []), { value: String(s.id), label: `${tr(s.name, lang) || familyLabel(s, lang)} +${m[1]}%`, v: Number(m[1]) }]);
+          out.set(fam, [...(out.get(fam) || []), { value: String(s.id), label: `${both(s.name) || familyLabel(s)} +${m[1]}%`, v: Number(m[1]) }]);
         }
       }
     }
@@ -153,7 +153,7 @@ export default function Ailments() {
       const [family, pieces] = fam.split("|");
       // the URL key stays the Japanese family, so links work in either language
       const set = (runes || []).find((x) => x.family === family);
-      return { key: `rune${family}`, family: set ? familyLabel(set, lang) : family, pieces, opts: opts.sort((a, b) => a.v - b.v) };
+      return { key: `rune${family}`, family: set ? familyLabel(set) : family, pieces, opts: opts.sort((a, b) => a.v - b.v) };
     });
   }, [runes, lang]);
   const runeBonus = runeOpts.reduce((sum, f) => sum + (f.opts.find((o) => o.value === url.text(f.key))?.v || 0), 0);

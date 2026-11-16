@@ -115,7 +115,7 @@ function RuneLabel({ r, set }: { r: RuneLine; set?: RuneSet }) {
     <span className="team-rune" title={bonusTitle(set)}>
       <span className="team-rune-count">{r.count}</span>
       <BundleImage stem={RUNE_ICONS} name={`${set.pieces[0].icon}_s`} width={22} height={22} className="team-rune-icon" />
-      <span title={set.family}>{familyLabel(set)}</span>
+      <span>{familyLabel(set)}</span>
       <RarityIcon rarity={set.pieces[0].rarity} height={12} />
       {r.note && <span className="team-rune-note">{r.note}</span>}
     </span>
@@ -164,7 +164,7 @@ function teamAsText(team: Team, units: Map<string, UnitIndexEntry>, runes: Retur
     out.push(`${head}: ${u ? fullName(u, lang) : "—"}${s.hl ? " (!)" : ""}`);
     for (const r of s.runes) {
       const set = runes.byId.get(r.set);
-      out.push(`  ${r.count}× ${set ? `${familyLabel(set, lang)} ${tierLabel(set)}` : "?"}${r.note ? ` (${r.note})` : ""}`);
+      out.push(`  ${r.count}× ${set ? `${familyLabel(set)} ${tierLabel(set)}` : "?"}${r.note ? ` (${r.note})` : ""}`);
     }
     if (s.note) out.push(`  ${s.note}`);
     if (macro) s.macro.forEach((m, k) => out.push(`  ${macroText(m, k, macro, lang)}`));
@@ -181,7 +181,7 @@ function imageColumns(team: Team, units: Map<string, UnitIndexEntry>, runes: Ret
       icon: u ? iconUrl(u.id) : undefined, name: u ? unitName(u, lang) : undefined, title: u ? titleOf(u, lang) || undefined : undefined, note: s.note, hl: s.hl,
       runes: s.runes.flatMap((r) => {
         const set = runes.byId.get(r.set);
-        return set ? [{ count: r.count, stem: RUNE_ICONS, icon: set.pieces[0].icon, name: familyLabel(set, lang), tier: tierLabel(set), note: r.note }] : [];
+        return set ? [{ count: r.count, stem: RUNE_ICONS, icon: set.pieces[0].icon, name: familyLabel(set), tier: tierLabel(set), note: r.note }] : [];
       }),
       lines: macro ? s.macro.map((m, k) => macroText(m, k, macro, lang)) : [],
     };

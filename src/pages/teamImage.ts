@@ -80,10 +80,17 @@ export async function renderTeamImage(title: string | undefined, cols: ImageColu
         // "4 [icon] 不屈 UR", centred as one row
         ctx.font = `700 15px ${FONT}`;
         const wCount = ctx.measureText(String(r.count)).width;
-        ctx.font = `400 15px ${FONT}`;
-        const wName = ctx.measureText(r.name).width;
         ctx.font = `700 11px ${FONT}`;
         const wTier = ctx.measureText(r.tier).width;
+        // long "English 日本語" names shrink to stay inside the column
+        let nameSize = 15;
+        ctx.font = `400 ${nameSize}px ${FONT}`;
+        const room = inner - (wCount + 4 + RUNE + 4 + 5 + wTier);
+        if (ctx.measureText(r.name).width > room) {
+          nameSize = Math.max(10, Math.floor(nameSize * room / ctx.measureText(r.name).width));
+          ctx.font = `400 ${nameSize}px ${FONT}`;
+        }
+        const wName = ctx.measureText(r.name).width;
         const total = wCount + 4 + RUNE + 4 + wName + 5 + wTier;
         let x = cx - total / 2;
         if (draw) {
@@ -94,7 +101,7 @@ export async function renderTeamImage(title: string | undefined, cols: ImageColu
           const ic = runeIcons[i][k];
           if (ic) ctx.drawImage(ic.img, ...ic.rect, x, y, RUNE, RUNE);
           x += RUNE + 4;
-          ctx.font = `400 15px ${FONT}`; ctx.fillStyle = accent; ctx.fillText(r.name, x, mid); x += wName + 5;
+          ctx.font = `400 ${nameSize}px ${FONT}`; ctx.fillStyle = accent; ctx.fillText(r.name, x, mid); x += wName + 5;
           ctx.font = `700 11px ${FONT}`; ctx.fillStyle = C.tier; ctx.fillText(r.tier, x, mid);
         }
         y += RUNE + 3;
