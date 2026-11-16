@@ -82,7 +82,7 @@ export default function Collection() {
           </div>
         </FilterPanel>
         <div className="collection-bulk">
-          <span className="muted small">Click a unit to mark it owned or not.</span>
+          <span className="muted small">Click a unit to mark it owned or not; ↗ opens its page.</span>
           <button type="button" className="hub-btn hub-btn--sm" disabled={!shown.some((u) => !owned.has(u.id))}
             onClick={() => owned.add(shown.map((u) => u.id))}>Mark all {shown.length} shown as owned</button>
           <button type="button" className="hub-btn hub-btn--sm" disabled={!shown.some((u) => owned.has(u.id))}
@@ -95,13 +95,16 @@ export default function Collection() {
           {shown.map((u) => {
             const on = owned.has(u.id);
             return (
-              <button key={u.id} type="button" className={`collection-tile${on ? " is-owned" : ""}`} aria-pressed={on}
-                onClick={() => owned.toggle(u.id)} title={`${unitName(u, lang)} ${tr(u.title, lang) || ""}`.trim()}>
-                <FallbackImage srcs={[iconUrl(u.id)]} alt="" width={72} height={72} loading="lazy" />
-                <span className="collection-tile-name">{unitName(u, lang)}</span>
-                <span className="collection-tile-title muted">{tr(u.title, lang)}</span>
-                <span className="collection-tile-meta"><RarityIcon rarity={u.rarity} height={12} /><ElementIcon element={u.element} size={14} /></span>
-              </button>
+              <div key={u.id} className="collection-cell">
+                <button type="button" className={`collection-tile${on ? " is-owned" : ""}`} aria-pressed={on}
+                  onClick={() => owned.toggle(u.id)} title={`${unitName(u, lang)} ${tr(u.title, lang) || ""}`.trim()}>
+                  <FallbackImage srcs={[iconUrl(u.id)]} alt="" width={72} height={72} loading="lazy" />
+                  <span className="collection-tile-name">{unitName(u, lang)}</span>
+                  <span className="collection-tile-title muted">{tr(u.title, lang)}</span>
+                  <span className="collection-tile-meta"><RarityIcon rarity={u.rarity} height={12} /><ElementIcon element={u.element} size={14} /></span>
+                </button>
+                <Link className="collection-tile-link" to={`/units/${u.id}`} title="Open the unit page" aria-label={`${unitName(u, lang)}: unit page`}>↗</Link>
+              </div>
             );
           })}
         </div>

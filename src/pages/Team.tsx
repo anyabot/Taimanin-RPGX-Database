@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { CopyButton, FallbackImage, LoadState, PageHeader, Panel, SearchBox, ShareButton } from "@altterisk/game-hub";
+import { CopyButton, FallbackImage, LoadState, PageHeader, Panel, SearchBox, ShareButton, TabPanel, UrlTabs, tabParam } from "@altterisk/game-hub";
 import { packJson, unpackJson } from "@altterisk/game-hub/codec";
 import { createPersisted, saveBlob } from "@altterisk/game-hub/persist";
-import { textMatch } from "@altterisk/game-hub/filters";
+import { searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
 import { ownedOnlySetting, useOwned } from "../collection";
 import { BundleImage } from "../bundleImage";
@@ -12,6 +12,7 @@ import { RARITY, RUNE_ICONS, familyLabel, iconUrl, isUpcoming, tr, unitName, use
 import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 import { renderTeamImage, type ImageColumn } from "./teamImage";
+import TeamSuggest, { type SuggestedSlot } from "./TeamSuggest";
 import "./team.css";
 
 // ---- public/data/macro.json (tools/web_export/macro.py): the game's auto-skill editor lists
@@ -58,6 +59,8 @@ function sanitize(raw: unknown): Team {
   });
   return { title: str(t.title, 120), slots };
 }
+
+const TABS = [{ id: "build", label: "Build" }, { id: "suggest", label: "Suggest from my box" }];
 
 const draft = createPersisted<Team>({ key: "taimanin.team", version: 1, empty: emptyTeam, sanitize });
 
@@ -436,6 +439,7 @@ export default function TeamBuilder() {
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState<"" | "ok" | "fail">("");
   const loaded = useRef<string | null>(null);
+  const [tab, setTab] = tabParam(searchParamsAdapter(params, setParams), TABS);
 
   // A shared link (?b=...) replaces the draft once it is read.
   useEffect(() => {
@@ -479,6 +483,11 @@ export default function TeamBuilder() {
       setSaving(false);
     }
   };
+  const applySuggestion = (list: SuggestedSlot[]) => {
+    setTeam({ title: "Suggested team", slots: SLOTS.map((_, i) => list[i] ? { ...emptySlot(), unit: list[i].unit, note: list[i].note, macro: list[i].macro } : emptySlot()) });
+    setSelected(0);
+    setTab("build");
+  };
   const shareUrl = async () => `${window.location.origin}${window.location.pathname}?b=${await packJson(team)}`;
 
   return (
@@ -486,7 +495,9 @@ export default function TeamBuilder() {
       <PageHeader title="Team builder"
         subtitle="Units, rune sets and the game's auto-skill macro for each slot, ready to share. Click a column to edit it." />
       <LoadState loading={loading} error={error} />
-      {index && <>
+      {index && <UrlTabs tabs={TABS} active={tab} onChange={setTab} idBase="team" />}
+      {index && tab === "suggest" && <TabPanel tab={tab} idBase="team"><TeamSuggest index={index} onUse={applySuggestion} /></TabPanel>}
+      {index && tab === "build" && <TabPanel tab={tab} idBase="team">
         {shareError && <p className="team-error">{shareError}</p>}
         <div className="team-bar">
           <input className="hub-input team-grow" value={team.title ?? ""} placeholder="Team name (optional)" maxLength={120}
@@ -509,7 +520,7 @@ export default function TeamBuilder() {
           Skill, target and condition lists are the game's own (SkillMacro tables of the client). The team is kept in this browser;
           "Copy link" makes a link that opens it anywhere; "Copy image" puts the picture on the clipboard and "Save image" downloads it as a PNG.
         </p>
-      </>}
+      </TabPanel>}
     </div>
   );
 }

@@ -125,3 +125,31 @@
 .collection-foot {
   margin-top: 16px;
 }
+
+.collection-cell {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+.collection-cell .collection-tile { flex: 1; }
+.collection-tile-link {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  color: var(--hub-text);
+  font-size: 12px;
+  line-height: 1;
+  text-decoration: none;
+}
+.collection-tile-link:hover,
+.collection-tile-link:focus-visible {
+  background: var(--hub-accent-soft);
+  border-color: var(--hub-accent-line);
+}
