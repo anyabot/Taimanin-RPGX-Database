@@ -59,7 +59,7 @@ async function authorize(env, force = false) {
   auth = { downloadUrl: j.apiInfo.storageApi.downloadUrl, token: j.authorizationToken, until: Date.now() + AUTH_TTL_MS };
   const age = Math.floor(AUTH_TTL_MS / 1000);
   await cache.put(AUTH_CACHE_KEY, new Response(JSON.stringify(auth), {
-    headers: { "Content-Type": "application/json", "Cache-Control": `private, max-age=${age}` },
+    headers: { "Content-Type": "application/json", "Cache-Control": `max-age=${age}` },
   })).catch(() => {});
   return auth;
 }
