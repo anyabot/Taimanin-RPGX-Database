@@ -143,3 +143,26 @@ function CdnImage({ stem, name, alt = "", className, width, height, style }: Bun
     </span>
   );
 }
+
+/** The icon as something a canvas can draw: the image and the part of it to
+ *  draw (a sprite sheet on the deployed build, a whole decoded texture locally). */
+export async function bundleIconForCanvas(stem: string | string[], name?: string):
+  Promise<{ img: HTMLImageElement; rect: [number, number, number, number] } | null> {
+  const load = (src: string) => new Promise<HTMLImageElement>((ok, fail) => {
+    const img = new Image();
+    img.onload = () => ok(img);
+    img.onerror = () => fail(new Error(src));
+    img.src = src;
+  });
+  try {
+    const own = HOSTED && [stem].flat().every((s) => HOSTED_STEMS.has(s));
+    if (GAME_CDN || own) {
+      const img = await load(await bundleImageUrl(stem, name));
+      return { img, rect: [0, 0, img.naturalWidth, img.naturalHeight] };
+    }
+    const icon = await atlasIcon(stem, name);
+    return icon ? { img: await load(icon.url), rect: icon.rect } : null;
+  } catch {
+    return null;
+  }
+}

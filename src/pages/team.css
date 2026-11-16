@@ -1,0 +1,221 @@
+.team-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+.team-grow {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+.team-error {
+  color: var(--hub-danger);
+}
+
+/* ---- the output strip */
+.team-card {
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-lg);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.team-title {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 1.2em;
+}
+.team-strip {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (max-width: 900px) {
+  .team-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .team-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.team-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 4px;
+  border: 1px solid transparent;
+  border-radius: var(--hub-radius-md);
+  background: none;
+  color: var(--hub-text);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+.team-col:hover {
+  background: var(--hub-surface-hover);
+}
+.team-col.is-selected {
+  border-color: var(--hub-accent-line);
+  background: var(--hub-accent-soft);
+}
+.team-col.is-hl .team-runes,
+.team-col.is-hl .team-note {
+  color: var(--hub-danger);
+}
+.team-col-head {
+  font-weight: 600;
+  min-height: 1.3em;
+}
+.team-icon {
+  width: 88px;
+  height: 88px;
+  max-width: 100%;
+  border-radius: var(--hub-radius-md);
+  object-fit: cover;
+}
+.team-icon-empty {
+  display: grid;
+  place-items: center;
+  border: 2px dashed var(--hub-border-strong);
+  color: var(--hub-text-subtle);
+  font-size: 2em;
+}
+.team-name {
+  font-size: 0.85em;
+  color: var(--hub-text-muted);
+  overflow-wrap: anywhere;
+}
+.team-name {
+  display: flex;
+  flex-direction: column;
+}
+.team-unit-title {
+  font-size: 0.9em;
+}
+.team-runes,
+.team-macro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.team-macro {
+  margin-top: 6px;
+  font-size: 0.85em;
+  line-height: 1.35;
+}
+.team-macro > span {
+  overflow-wrap: anywhere;
+}
+.team-rune {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+}
+.team-rune-count {
+  font-weight: 700;
+}
+.team-rune-icon {
+  width: 22px;
+  height: 22px;
+}
+.team-rune-note,
+.team-note {
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+/* ---- the slot editor */
+.team-editor section + section {
+  margin-top: 14px;
+}
+.team-editor h3 {
+  margin: 0 0 6px;
+  font-size: 1em;
+}
+.team-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.team-row .hub-select {
+  max-width: 100%;
+}
+.team-count,
+.team-tier {
+  width: auto;
+}
+.team-hint {
+  flex-basis: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.team-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.team-macro-row {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--hub-border);
+}
+.team-prio {
+  font-family: var(--hub-font-mono);
+  color: var(--hub-text-muted);
+}
+.team-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.team-value .hub-input {
+  width: 5.5em;
+}
+.team-row-tools {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.team-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.team-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-md);
+  background: var(--hub-surface-raised);
+  color: var(--hub-text);
+  font: inherit;
+  font-size: 0.8em;
+  text-align: center;
+  cursor: pointer;
+  min-width: 0;
+}
+.team-pick:hover {
+  border-color: var(--hub-accent-line);
+}
+.team-pick img {
+  border-radius: var(--hub-radius-sm);
+}
+.team-pick span {
+  overflow-wrap: anywhere;
+}
+.team-foot {
+  margin-top: 16px;
+}

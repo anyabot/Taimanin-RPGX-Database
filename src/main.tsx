@@ -8,6 +8,7 @@ import UnitDetail from "./pages/UnitDetail";
 import Runes from "./pages/Runes";
 import Buffs from "./pages/Buffs";
 import Ailments from "./pages/Ailments";
+import TeamBuilder from "./pages/Team";
 import Statuses from "./pages/Statuses";
 import PeopleIndex, { PersonPage } from "./pages/People";
 import StoryList from "./pages/StoryList";
@@ -70,6 +71,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="runes" element={<Runes />} />
           <Route path="buffs" element={<Buffs />} />
           <Route path="ailments" element={<Ailments />} />
+          <Route path="team" element={<TeamBuilder />} />
           <Route path="statuses" element={<Statuses />} />
           <Route path="people" element={<PeopleIndex />} />
           <Route path="people/:role/:name" element={<PersonPage />} />

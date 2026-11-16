@@ -54,6 +54,7 @@ export default function App() {
         <NavLink to="/quests">Quests</NavLink>
         <NavLink to="/farm">Farm</NavLink>
         <NavLink to="/cards">Cards</NavLink>
+        <NavLink to="/team">Team</NavLink>
         <NavMenu label="Etc" showActiveLabel renderLink={renderLink}
           items={MORE.map(([href, label]) => ({ href, label, active: pathname === href || pathname.startsWith(`${href}/`) }))} />
       </>}

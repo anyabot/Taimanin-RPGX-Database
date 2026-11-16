@@ -53,6 +53,7 @@ export const LIST_META: Record<string, PageMeta> = {
   "/runes": { title: "Runes", description: "Taimanin RPGX rune sets: set bonuses, main and sub stats, and evolution costs." },
   "/buffs": { title: "Buff ranking", description: "Taimanin RPGX units ranked by the buffs and debuffs their skills give, by type and target." },
   "/ailments": { title: "Ailment odds", description: "Taimanin RPGX status ailment chance calculator: each unit's chance to land an ailment on a boss, with resist, debuffs, leader skills, buffs and rune sets." },
+  "/team": { title: "Team builder", description: "Taimanin RPGX team builder: units, rune sets and auto-skill macro lines per slot, shared as a link or text." },
   "/statuses": { title: "Statuses", description: "Taimanin RPGX ailments, states and markers, and the units that apply them." },
   "/people": { title: "Artists & voice actors", description: "Every illustrator and voice actor credited on a Taimanin RPGX unit or Arena card." },
 };
