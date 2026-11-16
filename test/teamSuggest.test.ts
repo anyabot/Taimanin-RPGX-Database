@@ -36,6 +36,22 @@ describe("suggestTeam", () => {
     const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("buf"), u("dps", 2000)], scoped);
     expect(r.ok).toBe(false);
   });
+  it("takes 1 SP unit + an HPoT unit when that's all there is", () => {
+    const more = [...rows, row("hot", "recovery", "HP regen", 25, 1, "skill1", "all", { t: 3 }), row("buf", "stat", "ATK", 50, 1)];
+    const r = suggestTeam([u("sp1"), u("buf"), u("hot"), u("dps", 2000), u("low", 100)], more);
+    expect(r.ok && Object.fromEntries(r.members.map((m) => [m.id, m.role]))).toEqual({ sp1: "sp", buf: "buffer", hot: "healer", dps: "dps", low: "dps" });
+  });
+  it("falls back to SPoT + HPoT with no SP unit", () => {
+    const more = [row("regen", "recovery", "SP regen", 40, 0, "skill2", "all", { t: 3 }), row("hot", "recovery", "HP regen", 25, 1, "skill1", "all", { t: 3 }),
+      row("buf", "stat", "ATK", 50, 1), row("buf", "stat", "DEF", 50, 1)];
+    const r = suggestTeam([u("regen"), u("buf"), u("hot"), u("dps", 2000), u("low", 100)], more);
+    expect(r.ok && r.members.find((m) => m.id === "regen")?.role).toBe("spot");
+  });
+  it("prefers a 3-4 turn buff over a bigger 1-turn one", () => {
+    const more = [...rows, row("short", "stat", "DEF", 200, 1, "skill2", "all", { t: 1 }), row("buf", "stat", "DEF", 60, 1, "skill2", "all", { t: 4 })];
+    const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("buf"), u("short"), u("dps", 2000)], more.filter((x) => !(x.u === "buf" && x.t === 0 && x.k === "DEF")));
+    expect(r.ok && r.def.u).toBe("buf");
+  });
   it("runs on the real data with every unit owned", () => {
     const index = data("units/index.json") as { id: string; element: string | null; traits: string[]; stats: { atk: number; spd: number } }[];
     const all = index.map((x) => ({ id: x.id, element: x.element, traits: x.traits, atk: x.stats.atk, spd: x.stats.spd }));

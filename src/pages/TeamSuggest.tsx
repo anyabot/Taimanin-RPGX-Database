@@ -8,7 +8,7 @@ import { iconUrl, isUpcoming, tr, unitName, useData, useLang, type UnitIndexEntr
 import { ElementIcon, RarityIcon } from "../components";
 import { RULES, suggestTeam, type BuffRow, type Member, type Role } from "../teamSuggest";
 
-const ROLE: Record<Role, string> = { sp: "SP", buffer: "Buffer", healer: "Healer", dps: "DPS" };
+const ROLE: Record<Role, string> = { sp: "SP", spot: "SP over time", buffer: "Buffer", healer: "Healer", dps: "DPS" };
 const SKILL: Record<BuffRow["s"], string> = { attack: "Attack", skill1: "S1", skill2: "S2", ultimate: "Ougi", leader: "Leader" };
 /** the team builder's auto-skill action for a skill slot */
 const ACTION: Record<BuffRow["s"], number> = { attack: 1, skill1: 2, skill2: 3, ultimate: 4, leader: 0 };

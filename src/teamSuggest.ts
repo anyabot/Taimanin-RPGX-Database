@@ -24,7 +24,7 @@ export interface BuffRow {
 
 export interface Candidate { id: string; element: string | null; traits: string[]; atk: number; spd: number }
 
-export type Role = "sp" | "buffer" | "healer" | "dps";
+export type Role = "sp" | "spot" | "buffer" | "healer" | "dps";
 
 export interface Member {
   id: string;
@@ -43,21 +43,25 @@ export type Suggestion =
   | { ok: true; members: Member[]; atk: BuffRow; def: BuffRow; heal: BuffRow }
   | { ok: false; reason: string };
 
-export const RULES = `1. SP: pick 3 units that each restore 70+ SP (or 20%+ SP) to the WHOLE team
-   - any skill counts (S1/S2/ougi)
-   - exception: 2 units are enough if both do it on S2 (not ougi)
-   - SP over time (e.g. 40/turn) doesn't count
+export const RULES = `1. SP: pick up to 3 units that each restore 70+ SP (or 20%+ SP) to the WHOLE team
+   - any skill counts (S1/S2/ougi make no difference)
+   - restores under 70 SP don't count
+   - more SP units is better: 3, then 2, then 1
+   - no SP unit at all -> 1 unit with team SP over time (SPoT) instead
 
 2. HP: the team needs a whole-team heal
-   - prefer an SP unit that also heals
-   - otherwise the buffer or the DPS must be a unit with team HP over time of 20%+/turn (no extra slot)
+   - 3 SP units and one of them heals the team -> done
+   - otherwise add a unit with team HP over time (HPoT) of 20%+/turn
+     (3 SP + HPoT, 2 SP + HPoT, 1 SP + HPoT, or SPoT + HPoT)
+   - with 3 SP units the HPoT unit is the buffer or the DPS (no extra slot)
 
 3. BUFFS: the team needs 1 ATK buff + 1 DEF buff
    - SP units already give one -> add the unit with the highest value for the other
    - SP units give neither -> add 1 unit that gives both (fallback: free Yukikaze)
    - only count buffs that apply to this team (skip element/trait-limited buffs that don't match)
+   - a 3-4 turn buff always beats a 1-turn buff
 
-4. DPS: the last slot goes to the highest-ATK unit left (max level)
+4. DPS: the free slots go to the highest-ATK units left (max level)
 
 5. LEADER: ignore for now
 
@@ -85,6 +89,9 @@ const hpot = (r: BuffRow) => isSkill(r) && r.c === "recovery" && r.k === "HP reg
 const statBuff = (k: "ATK" | "DEF") => (r: BuffRow) => isSkill(r) && r.c === "stat" && r.k === k && r.p === 1 && (r.sc === "all" || r.sc === "element" || r.sc === "trait");
 const atkBuff = statBuff("ATK");
 const defBuff = statBuff("DEF");
+const spot = (r: BuffRow) => isSkill(r) && r.c === "recovery" && r.k === "SP regen" && r.sc === "all";
+/** a 3-4 turn (or rest-of-battle) effect beats a 1-turn one, whatever the values */
+const rank = (r: BuffRow) => (r.t >= 3 || r.t < 0 ? 10_000 : 0) + r.v;
 /** % SP restore compared with flat: 20% ~ 70 SP */
 const spValue = (r: BuffRow) => (r.p ? r.v * 3.5 : r.v);
 
@@ -98,7 +105,7 @@ function applies(r: BuffRow, team: Candidate[]) {
 
 function best(rows: BuffRow[], team: Candidate[]) {
   let top: BuffRow | undefined;
-  for (const r of rows) if (applies(r, team) && (!top || r.v > top.v)) top = r;
+  for (const r of rows) if (applies(r, team) && (!top || rank(r) > rank(top))) top = r;
   return top;
 }
 
@@ -120,18 +127,23 @@ export function suggestTeam(owned: Candidate[], rows: BuffRow[]): Suggestion {
   // 1. SP units, best restore first
   const spRow = (u: Candidate) => fx(u.id).filter(spRestore).sort((a, b) => spValue(b) - spValue(a))[0];
   const sp = units.filter((u) => spRow(u)).sort((a, b) => spValue(spRow(b)) - spValue(spRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
-  const s2 = sp.filter((u) => fx(u.id).some((r) => spRestore(r) && r.s === "skill2"));
-  const spSets = sp.length >= 3 ? combos(sp, 3) : s2.length >= 2 ? combos(s2, 2) : [];
-  if (!spSets.length) {
-    return { ok: false, reason: `Not enough units yet: ${sp.length ? `only ${sp.length} unit${sp.length === 1 ? "" : "s"}` : "no unit"} with a 70+ SP (or 20%+) whole-team restore. Rule 1 needs 3, or 2 that do it on S2.` };
-  }
+  // no SP unit: one SP-over-time unit, best first
+  const spotRow = (u: Candidate) => fx(u.id).filter(spot).sort((a, b) => rank(b) - rank(a))[0];
+  const spots = units.filter((u) => spotRow(u)).sort((a, b) => rank(spotRow(b)) - rank(spotRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
+  // 3 SP units if a team can be made with them, else 2, else 1, else SPoT
+  const tries: { sets: Candidate[][]; spot: boolean }[] = [3, 2, 1].filter((k) => sp.length >= k).map((k) => ({ sets: combos(sp, k), spot: false }));
+  if (!sp.length) tries.push({ sets: spots.map((u) => [u]), spot: true });
+  if (!tries.length) return { ok: false, reason: "Not enough units yet: no unit restores 70+ SP (or 20%+) to the whole team, and none gives team SP over time (rule 1)." };
 
   let top: Built | undefined;
   let lastFail = "";
-  for (const set of spSets) {
-    const r = build(set, units, fx);
-    if (typeof r === "string") { lastFail = r; continue; }
-    if (!top || compare(r.score, top.score) > 0) top = r;
+  for (const { sets, spot: isSpot } of tries) {
+    for (const set of sets) {
+      const r = build(set, units, fx, isSpot);
+      if (typeof r === "string") { lastFail = r; continue; }
+      if (!top || compare(r.score, top.score) > 0) top = r;
+    }
+    if (top) break;
   }
   if (!top) return { ok: false, reason: `Not enough units yet: ${lastFail}` };
 
@@ -143,6 +155,7 @@ export function suggestTeam(owned: Candidate[], rows: BuffRow[]): Suggestion {
   const members: Member[] = team.map((u) => {
     const role = roles.get(u.id)!;
     const why = role === "sp" ? [spRow(u), ...fx(u.id).filter((r) => teamHeal(r))].filter(Boolean) as BuffRow[]
+      : role === "spot" ? [spotRow(u)]
       : role === "healer" ? fx(u.id).filter(hpot)
       : role === "buffer" ? fx(u.id).filter((r) => ((atkBuff(r) || defBuff(r)) && applies(r, team)) || hpot(r))
       : [];
@@ -160,7 +173,7 @@ export function suggestTeam(owned: Candidate[], rows: BuffRow[]): Suggestion {
     }
     m.extra = extra;
   }
-  const order: Role[] = ["sp", "buffer", "healer", "dps"];
+  const order: Role[] = ["sp", "spot", "buffer", "healer", "dps"];
   members.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role) || Number(!!b.firstSp) - Number(!!a.firstSp));
   return { ok: true, members, atk: top.atk, def: top.def, heal: top.heal };
 }
@@ -175,14 +188,14 @@ function dedupe(rows: BuffRow[]) {
 const compare = (a: number[], b: number[]) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i]; return 0; };
 
 /** Rules 2-4 for one SP set. Returns the team or why it can't be made. */
-function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow[]): Built | string {
-  const roles = new Map<string, Role>(set.map((u) => [u.id, "sp"]));
+function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow[], isSpot = false): Built | string {
+  const roles = new Map<string, Role>(set.map((u) => [u.id, isSpot ? "spot" : "sp"]));
   const team = [...set];
   const rest = () => units.filter((u) => !roles.has(u.id));
   const all = (u: Candidate) => fx(u.id);
-  const healsInSp = set.some((u) => all(u).some(teamHeal));
+  const healsInSp = !isSpot && set.length >= 3 && set.some((u) => all(u).some(teamHeal));
   // rule 2: fewer than 3 SP units, or none of them heals -> an HP-over-time unit
-  let needHeal = set.length < 3 || !healsInSp;
+  let needHeal = !healsInSp;
   const has = (pred: (r: BuffRow) => boolean, members: Candidate[]) => !!best(members.flatMap((u) => all(u).filter(pred)), members);
   const needAtk = !has(atkBuff, team);
   const needDef = !has(defBuff, team);
@@ -195,7 +208,7 @@ function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow
       const a = needAtk ? best(all(u).filter(atkBuff), with_) : undefined;
       const d = needDef ? best(all(u).filter(defBuff), with_) : undefined;
       if ((needAtk && !a) || (needDef && !d)) return -1;
-      return (a?.v ?? 0) + (d?.v ?? 0);
+      return (a ? rank(a) : 0) + (d ? rank(d) : 0);
     };
     const pool = rest().filter((u) => value(u) >= 0);
     if (!pool.length) return needAtk && needDef ? "no unit gives both an ATK and a DEF buff to the team (rule 3)." : `no unit gives the team a ${needAtk ? "ATK" : "DEF"} buff (rule 3).`;
@@ -208,8 +221,9 @@ function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow
   }
   // rule 2: the healer, the highest-ATK one (it doubles as the DPS when slots are short)
   if (needHeal) {
-    const h = rest().filter((u) => all(u).some(hpot)).sort((a, b) => b.atk - a.atk)[0];
-    if (!h) return "no SP unit heals the team and no unit has a 20%+/turn team HP over time (rule 2).";
+    const long = (u: Candidate) => Number(all(u).some((r) => hpot(r) && (r.t >= 3 || r.t < 0)));
+    const h = rest().filter((u) => all(u).some(hpot)).sort((a, b) => long(b) - long(a) || b.atk - a.atk)[0];
+    if (!h) return "no unit has a 20%+/turn team HP over time, which this team needs (rule 2).";
     if (team.length >= TEAM) return "no room for a healer (rule 2).";
     roles.set(h.id, "healer");
     team.push(h);
@@ -234,11 +248,11 @@ function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow
   const rowsOf = (pred: (r: BuffRow) => boolean) => team.flatMap((u) => all(u).filter(pred));
   const atk = best(rowsOf(atkBuff), team);
   const def = best(rowsOf(defBuff), team);
-  const heal = set.flatMap((u) => all(u).filter(teamHeal))[0] ?? best(rowsOf(hpot), team);
+  const heal = healsInSp ? set.flatMap((u) => all(u).filter(teamHeal))[0] : best(rowsOf(hpot), team);
   if (!atk || !def) return "the team's ATK/DEF buffs don't apply to every member (rule 3).";
   if (!heal) return "no whole-team heal (rule 2).";
   const dpsAtk = team.filter((u) => roles.get(u.id) === "dps").reduce((s, u) => s + u.atk, 0);
-  const spSum = set.reduce((s, u) => s + Math.max(...all(u).filter(spRestore).map(spValue)), 0);
-  // prefer: 3 SP units, heal from an SP unit, stronger buffs, stronger DPS, more SP
-  return { team, roles, atk, def, heal, score: [set.length, Number(healsInSp), atk.v + def.v, dpsAtk, spSum] };
+  const spSum = set.reduce((s, u) => s + Math.max(0, ...all(u).filter(isSpot ? spot : spRestore).map(isSpot ? rank : spValue)), 0);
+  // prefer: heal from an SP unit, longer then stronger buffs, stronger DPS, more SP
+  return { team, roles, atk, def, heal, score: [Number(healsInSp), rank(atk) + rank(def), dpsAtk, spSum] };
 }
