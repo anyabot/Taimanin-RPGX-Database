@@ -86,7 +86,7 @@ const SP_POOL = 16;
  *  else (random chance, a named unit in the party, HP thresholds, stacks, a
  *  mode, a party row, element counts...) is not counted on. */
 const SAFE_NOTE = [/^Before attacking$/, /^\(trait buff\)$/, /^for \d+ turns?$/, /^Extra action \(end of turn\)$/,
-  /^all allies \+[\d.]+%$/, /^with 1 \w+ ally, \+[\d.]+% for each more/];
+  /^all allies \+[\d.]+%$/, /^with 1 \w+ ally, \+[\d.]+% for each more/, /^Without [^;]+$/];
 const reliable = (r: BuffRow) => !r.n || r.n.split("; ").every((part) => SAFE_NOTE.some((re) => re.test(part)));
 /** Skill effects only (rule 5: no leader) that always work */
 const isSkill = (r: BuffRow) => r.s !== "leader" && reliable(r);
@@ -120,8 +120,13 @@ export function boostedSpRows(id: string, skills: SkillFx[], u: { element: strin
   for (const sk of skills) {
     sk.effects.forEach((e, i) => {
       const m = /^All allies: restore (\d+) SP$/.exec(e.text);
-      const mod = sk.effects[i + 1];
-      if (!m || mod?.tag !== "modifier") return;
+      if (!m) return;
+      // the skill's modifiers follow its effects as a block ("Power +…", "Healing +…"): take the Healing one
+      let j = i + 1;
+      while (j < sk.effects.length && sk.effects[j].tag !== "modifier") j++;
+      let mod: { text: string } | undefined;
+      for (; j < sk.effects.length && sk.effects[j].tag === "modifier"; j++) if (sk.effects[j].text.startsWith("Healing")) { mod = sk.effects[j]; break; }
+      if (!mod) return;
       let pct = 0;
       let how = "";
       let x: RegExpExecArray | null;

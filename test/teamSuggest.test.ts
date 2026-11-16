@@ -59,6 +59,11 @@ describe("suggestTeam", () => {
     const ally = [{ slot: "skill2" as const, effects: [{ text: "All allies: restore 60 SP" }, { text: "Healing +20% with 1 Superhuman ally, +20% for each more (+100% at 5)", tag: "modifier" }] }];
     expect(boostedSpRows("x", ally, { element: "Superhuman", spd: 70, def: 0 })[0].v).toBe(72);
     expect(boostedSpRows("x", ally, { element: "Natural", spd: 70, def: 0 })).toEqual([]);
+    // the Healing modifier can come after another one (Young Tokiko: Power, then Healing)
+    const block = [{ slot: "skill2" as const, effects: [{ text: "All allies: restore 13% HP" }, { text: "All allies: restore 60 SP" },
+      { text: "Power +10% with 1 Spiritual ally, +5% for each more (+30% at 5)", tag: "modifier" },
+      { text: "Healing +20% with 1 Spiritual ally, +20% for each more (+100% at 5)", tag: "modifier" }] }];
+    expect(boostedSpRows("x", block, { element: "Spiritual", spd: 70, def: 0 })[0].v).toBe(72);
   });
   it("uses the free buffer only as the buffer, and says it isn't owned", () => {
     const more = [...rows.filter((x) => x.u !== "buf"), row("yuki", "stat", "ATK", 60, 1, "ultimate", "all", { t: 4 }), row("yuki", "stat", "DEF", 60, 1, "ultimate", "all", { t: 4 })];
