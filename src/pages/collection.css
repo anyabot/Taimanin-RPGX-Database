@@ -1,0 +1,127 @@
+.collection-page .hub-panel {
+  margin-bottom: 16px;
+}
+.collection-rarities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 16px;
+  margin-top: 8px;
+}
+.collection-drop {
+  border: 1px dashed var(--hub-border);
+  border-radius: var(--hub-radius-md);
+  padding: 10px 12px;
+}
+.collection-drop:focus-visible {
+  outline: 2px solid var(--hub-accent-line);
+}
+.collection-drop p {
+  margin: 0 0 8px;
+}
+.collection-drop input[type="file"] {
+  max-width: 100%;
+}
+.collection-message {
+  margin: 10px 0 0;
+}
+.collection-added {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  margin-top: 8px;
+}
+.collection-added img {
+  border-radius: var(--hub-radius-sm, 4px);
+  display: block;
+}
+.collection-scan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 6px;
+  margin-top: 10px;
+}
+.collection-scan-tile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-md);
+  cursor: pointer;
+  min-width: 0;
+}
+.collection-scan-tile.on {
+  border-color: var(--hub-accent-line);
+  background: var(--hub-accent-soft);
+}
+.collection-scan-tile img {
+  border-radius: var(--hub-radius-sm, 4px);
+  flex: none;
+}
+.collection-scan-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.collection-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0;
+}
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.collection-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-md);
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  font: inherit;
+  font-size: 0.8em;
+  text-align: center;
+  cursor: pointer;
+}
+.collection-tile img {
+  filter: grayscale(1);
+  opacity: 0.45;
+  border-radius: var(--hub-radius-sm, 4px);
+}
+.collection-tile:hover {
+  background: var(--hub-surface-hover);
+}
+.collection-tile.is-owned {
+  border-color: var(--hub-accent-line);
+  background: var(--hub-accent-soft);
+}
+.collection-tile.is-owned img {
+  filter: none;
+  opacity: 1;
+}
+.collection-tile-name,
+.collection-tile-title {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.collection-tile-meta {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.collection-foot {
+  margin-top: 16px;
+}

@@ -183,6 +183,23 @@
   gap: 4px;
   margin-left: auto;
 }
+.team-picker-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+}
+.team-picker-bar > :first-child {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.team-owned {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  white-space: nowrap;
+  cursor: pointer;
+}
 .team-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));

@@ -53,7 +53,7 @@ function pages(data: string, cdn: boolean): { files: Page[]; extra: string[] } {
   const list = (p: string, body: string) => files.push({ path: p, meta: LIST_META[p], crumbs: [[LIST_META[p].title, p]], body });
 
   files.push({ path: "/", meta: DEFAULT_META, body: ul(Object.entries(LIST_META).filter(([p]) => p !== "/").map(([p, m]) => a(p, m.title))) });
-  for (const p of ["/banners", "/gacha", "/buffs", "/ailments", "/team", "/statuses", "/runes"]) list(p, "");
+  for (const p of ["/banners", "/gacha", "/buffs", "/ailments", "/team", "/collection", "/statuses", "/runes"]) list(p, "");
 
   list("/units", ul(units.map(unitLink)));
   for (const u of units) {

@@ -5,6 +5,7 @@ import { packJson, unpackJson } from "@altterisk/game-hub/codec";
 import { createPersisted, saveBlob } from "@altterisk/game-hub/persist";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
+import { ownedOnlySetting, useOwned } from "../collection";
 import { BundleImage } from "../bundleImage";
 import { RARITY, RUNE_ICONS, familyLabel, iconUrl, isUpcoming, tr, unitName, useData, useLang,
   type RuneSet, type Text, type Unit, type UnitIndexEntry } from "../data";
@@ -192,27 +193,38 @@ function imageColumns(team: Team, units: Map<string, UnitIndexEntry>, runes: Ret
 function UnitPicker({ index, onPick }: { index: UnitIndexEntry[]; onPick: (id: string | undefined) => void }) {
   const lang = useLang();
   const [q, setQ] = useState("");
+  const owned = useOwned();
+  const [ownedOnly, setOwnedOnly] = ownedOnlySetting.use();
+  const mine = ownedOnly && owned.ids.size > 0;
   const hits = useMemo(() => {
-    if (!q.trim()) return [];
-    return index.filter((u) => !isUpcoming(u) && textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en,
-      u.displayName?.ja, u.displayName?.en, ...(u.aliases ?? [])])).slice(0, 48);
-  }, [q, index]);
+    if (!q.trim() && !mine) return [];
+    const list = index.filter((u) => !isUpcoming(u) && (!mine || owned.has(u.id)) && (!q.trim() || textMatch(q, [u.id, u.name?.ja, u.name?.en, u.title?.ja, u.title?.en,
+      u.displayName?.ja, u.displayName?.en, ...(u.aliases ?? [])])));
+    // the whole collection when nothing is typed: best rarity, newest first
+    return q.trim() ? list.slice(0, 48)
+      : list.sort((a, b) => b.rarity - a.rarity || (b.release || "").localeCompare(a.release || "") || b.id.localeCompare(a.id));
+  }, [q, index, mine, owned]);
   return (
     <div className="team-picker">
-      <SearchBox value={q} onChange={setQ} placeholder="Search units by name or title" label="Find a unit" />
+      <div className="team-picker-bar">
+        <SearchBox value={q} onChange={setQ} placeholder={mine ? "Search your units" : "Search units by name or title"} label="Find a unit" />
+        {owned.ids.size > 0
+          ? <label className="team-owned small"><input type="checkbox" checked={ownedOnly} onChange={(e) => setOwnedOnly(e.target.checked)} /> Owned only ({owned.ids.size})</label>
+          : <Link className="small" to="/collection">Set up your collection</Link>}
+      </div>
       {hits.length > 0 && (
         <div className="team-picker-grid">
           {hits.map((u) => (
             <button key={u.id} type="button" className="team-pick" onClick={() => { onPick(u.id); setQ(""); }}
               title={fullName(u, lang)}>
-              <FallbackImage srcs={[iconUrl(u.id)]} alt="" width={56} height={56} />
+              <FallbackImage srcs={[iconUrl(u.id)]} alt="" width={56} height={56} loading="lazy" />
               <span>{unitName(u, lang)}</span>
               {u.title && <span className="muted small">{titleOf(u, lang)}</span>}
             </button>
           ))}
         </div>
       )}
-      {q.trim() && !hits.length && <p className="muted small">No unit matches.</p>}
+      {q.trim() && !hits.length && <p className="muted small">{mine ? "None of your units match. Untick \"Owned only\" to search them all." : "No unit matches."}</p>}
     </div>
   );
 }
