@@ -236,3 +236,52 @@
 .team-foot {
   margin-top: 16px;
 }
+
+/* ---- Suggest tab */
+.team-suggest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+.team-suggest-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 8px;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-md);
+  min-width: 0;
+}
+.team-suggest-row img { flex: none; border-radius: var(--hub-radius-md); }
+.team-suggest-body { min-width: 0; flex: 1; }
+.team-suggest-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.team-suggest-role {
+  font-weight: 600;
+  font-size: 0.85em;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--hub-accent-soft);
+  border: 1px solid var(--hub-accent-line);
+}
+.team-suggest-fx {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  overflow-wrap: anywhere;
+}
+.team-suggest-script { color: var(--hub-text-muted, inherit); font-style: italic; }
+.team-rules { margin: 12px 0; }
+.team-rules pre {
+  white-space: pre-wrap;
+  font-size: 0.85em;
+  background: var(--hub-surface);
+  border: 1px solid var(--hub-border);
+  border-radius: var(--hub-radius-md);
+  padding: 10px;
+}

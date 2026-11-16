@@ -1,0 +1,48 @@
+import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { suggestTeam, type BuffRow, type Candidate } from "../src/teamSuggest";
+
+const data = (f: string) => JSON.parse(readFileSync(path.resolve(__dirname, "../public/data", f), "utf8"));
+
+const u = (id: string, atk = 1000, spd = 70, element = "Natural", traits: string[] = []): Candidate => ({ id, element, traits, atk, spd });
+const row = (u: string, c: string, k: string, v: number, p: 0 | 1, s: BuffRow["s"] = "skill2", sc: BuffRow["sc"] = "all", more: Partial<BuffRow> = {}): BuffRow =>
+  ({ u, c, k, v, p, sc, s, t: 0, x: `${u} ${k} ${v}`, ...more });
+
+describe("suggestTeam", () => {
+  const rows: BuffRow[] = [
+    row("sp1", "recovery", "SP restore", 80, 0), row("sp1", "recovery", "HP restore", 20, 1, "skill1"),
+    row("sp2", "recovery", "SP restore", 75, 0),
+    row("sp3", "recovery", "SP restore", 20, 1, "ultimate"), row("sp3", "stat", "ATK", 40, 1, "skill1"),
+    row("buf", "stat", "DEF", 60, 1), row("buf", "debuff", "DEF", 25, 1, "skill1", "enemies"),
+    row("weak", "recovery", "SP restore", 60, 0), row("regen", "recovery", "SP regen", 40, 0),
+  ];
+  it("builds 3 SP + DEF buffer + top-ATK DPS", () => {
+    const r = suggestTeam([u("sp1", 500, 90), u("sp2"), u("sp3"), u("buf"), u("dps", 2000), u("low", 100), u("weak"), u("regen")], rows);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const roles = Object.fromEntries(r.members.map((m) => [m.id, m.role]));
+    expect(roles).toEqual({ sp1: "sp", sp2: "sp", sp3: "sp", buf: "buffer", dps: "dps" });
+    expect(r.members.find((m) => m.id === "sp1")?.firstSp).toBe(true);
+    expect(r.members.find((m) => m.id === "sp2")?.only?.k).toBe("SP restore");
+    expect(r.members.find((m) => m.id === "buf")?.extra.map((x) => `${x.c}|${x.k}`)).toEqual(["debuff|DEF"]);
+  });
+  it("says not enough without SP units", () => {
+    const r = suggestTeam([u("sp1"), u("buf"), u("dps"), u("weak"), u("regen")], rows);
+    expect(r.ok).toBe(false);
+  });
+  it("skips buffs that don't apply to the whole team", () => {
+    const scoped = [...rows.filter((x) => x.u !== "buf"), row("buf", "stat", "DEF", 60, 1, "skill2", "element", { el: "Science" })];
+    const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("buf"), u("dps", 2000)], scoped);
+    expect(r.ok).toBe(false);
+  });
+  it("runs on the real data with every unit owned", () => {
+    const index = data("units/index.json") as { id: string; element: string | null; traits: string[]; stats: { atk: number; spd: number } }[];
+    const all = index.map((x) => ({ id: x.id, element: x.element, traits: x.traits, atk: x.stats.atk, spd: x.stats.spd }));
+    const t = Date.now();
+    const r = suggestTeam(all, data("buffs.json"));
+    expect(Date.now() - t).toBeLessThan(5000);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.members).toHaveLength(5);
+  });
+});
