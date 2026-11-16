@@ -289,7 +289,8 @@ export interface RunePiece {
 /** A decoded set-bonus line (eEquipComboBonus, see tables.py export_runes). */
 export interface RuneBonusLine { text: string; icon?: string }
 export interface RuneSet {
-  id: number; family: string; name: Text | null; bonus: Record<string, Text | null>;
+  /** family: the Japanese family key (不屈); familyName adds its English (unofficial, see tables.py RUNE_FAMILY_EN) */
+  id: number; family: string; familyName?: Text; name: Text | null; bonus: Record<string, Text | null>;
   bonusFx?: Record<string, RuneBonusLine[]>; pieces: RunePiece[];
 }
 
@@ -338,6 +339,9 @@ export function tr(t: Text | null | undefined, l: Lang = langSetting.get()): str
   if (!t) return "";
   return (l === "en" && t.en) || t.ja;
 }
+/** A rune set's family in the current language (English where the export has it). */
+export const familyLabel = (s: Pick<RuneSet, "family" | "familyName">, l: Lang = langSetting.get()) =>
+  tr(s.familyName ?? { ja: s.family }, l);
 // ---- English scene text (public/data/tl, tools/web_export/translations.py)
 /** Per Japanese beat of the script: [name, text], or 0 where the translation has no line. */
 export type SceneLine = [string, string] | 0;

@@ -6,7 +6,7 @@ import { createPersisted, saveBlob } from "@altterisk/game-hub/persist";
 import { textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
 import { BundleImage } from "../bundleImage";
-import { RARITY, RUNE_ICONS, iconUrl, isUpcoming, tr, unitName, useData, useLang,
+import { RARITY, RUNE_ICONS, familyLabel, iconUrl, isUpcoming, tr, unitName, useData, useLang,
   type RuneSet, type Text, type Unit, type UnitIndexEntry } from "../data";
 import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
@@ -115,7 +115,7 @@ function RuneLabel({ r, set }: { r: RuneLine; set?: RuneSet }) {
     <span className="team-rune" title={bonusTitle(set)}>
       <span className="team-rune-count">{r.count}</span>
       <BundleImage stem={RUNE_ICONS} name={`${set.pieces[0].icon}_s`} width={22} height={22} className="team-rune-icon" />
-      <span lang="ja">{set.family}</span>
+      <span title={set.family}>{familyLabel(set)}</span>
       <RarityIcon rarity={set.pieces[0].rarity} height={12} />
       {r.note && <span className="team-rune-note">{r.note}</span>}
     </span>
@@ -164,7 +164,7 @@ function teamAsText(team: Team, units: Map<string, UnitIndexEntry>, runes: Retur
     out.push(`${head}: ${u ? fullName(u, lang) : "—"}${s.hl ? " (!)" : ""}`);
     for (const r of s.runes) {
       const set = runes.byId.get(r.set);
-      out.push(`  ${r.count}× ${set ? `${set.family} ${tierLabel(set)}` : "?"}${r.note ? ` (${r.note})` : ""}`);
+      out.push(`  ${r.count}× ${set ? `${familyLabel(set, lang)} ${tierLabel(set)}` : "?"}${r.note ? ` (${r.note})` : ""}`);
     }
     if (s.note) out.push(`  ${s.note}`);
     if (macro) s.macro.forEach((m, k) => out.push(`  ${macroText(m, k, macro, lang)}`));
@@ -181,7 +181,7 @@ function imageColumns(team: Team, units: Map<string, UnitIndexEntry>, runes: Ret
       icon: u ? iconUrl(u.id) : undefined, name: u ? unitName(u, lang) : undefined, title: u ? titleOf(u, lang) || undefined : undefined, note: s.note, hl: s.hl,
       runes: s.runes.flatMap((r) => {
         const set = runes.byId.get(r.set);
-        return set ? [{ count: r.count, stem: RUNE_ICONS, icon: set.pieces[0].icon, name: set.family, tier: tierLabel(set), note: r.note }] : [];
+        return set ? [{ count: r.count, stem: RUNE_ICONS, icon: set.pieces[0].icon, name: familyLabel(set, lang), tier: tierLabel(set), note: r.note }] : [];
       }),
       lines: macro ? s.macro.map((m, k) => macroText(m, k, macro, lang)) : [],
     };
@@ -228,9 +228,10 @@ function RuneEditor({ line, runes, onChange, onRemove }: {
         onChange={(e) => onChange({ ...line, count: e.target.value === "2" ? 2 : 4 })}>
         <option value={4}>4×</option><option value={2}>2×</option>
       </select>
-      <select className="hub-select" value={set?.family ?? ""} aria-label="Rune set" lang="ja"
+      <select className="hub-select" value={set?.family ?? ""} aria-label="Rune set"
         onChange={(e) => { const l = runes.families.find(([f]) => f === e.target.value)?.[1]; if (l) onChange({ ...line, set: l[l.length - 1].id }); }}>
-        {runes.families.map(([f, l]) => <option key={f} value={f} title={bonusTitle(l[l.length - 1])}>{f}</option>)}
+        {runes.families.map(([f, l]) => <option key={f} value={f} title={`${f}
+${bonusTitle(l[l.length - 1])}`}>{familyLabel(l[0])}</option>)}
       </select>
       <select className="hub-select team-tier" value={line.set} aria-label="Tier"
         onChange={(e) => onChange({ ...line, set: Number(e.target.value) })}>

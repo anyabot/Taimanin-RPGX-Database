@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { CheckboxGroup, EmptyState, ListToolbar, LoadState, Panel, SearchBox, SegmentedButtons } from "@altterisk/game-hub";
 import { listState, searchParamsAdapter, textMatch } from "@altterisk/game-hub/filters";
 import { RarityIcon } from "../components";
-import { RARITY, RUNE_ICONS, tr, useData, useLang, type Growth, type RuneEffect, type RuneSet } from "../data";
+import { RARITY, RUNE_ICONS, familyLabel, tr, useData, useLang, type Growth, type RuneEffect, type RuneSet } from "../data";
 import { BundleImage } from "../bundleImage";
 import { LIST_META } from "../meta";
 import { usePageMeta } from "../usePageMeta";
@@ -161,10 +161,12 @@ function Costs() {
 
 /** A set family with its rarity tiers as tabs (highest tier first shown). */
 function Family({ family, tiers }: { family: string; tiers: RuneSet[] }) {
+  const lang = useLang();
   const [pick, setPick] = useState<string | null>(null);
   const t = tiers.find((x) => String(x.id) === pick) ?? tiers[tiers.length - 1];
+  const label = familyLabel(tiers[0], lang);
   return (
-    <Panel title={<span lang="ja">{family}</span>} className="rune-family">
+    <Panel title={<span lang={label === family ? "ja" : undefined} title={label === family ? undefined : family}>{label}</span>} className="rune-family">
       {tiers.length > 1 && (
         <SegmentedButtons label="Rarity" selected={[String(t.id)]} onToggle={setPick}
           options={tiers.map((x) => ({ value: String(x.id), label: <RarityIcon rarity={x.pieces[0].rarity} height={16} /> }))} />
@@ -186,7 +188,7 @@ export default function Runes() {
     const m = new Map<string, RuneSet[]>();
     for (const s of sets || []) {
       if (rarityF.length && !s.pieces.some((p) => rarityF.includes(String(p.rarity)))) continue;
-      if (q && !textMatch(q, [s.family, s.name?.ja, s.name?.en, ...Object.values(s.bonus).map((b) => b?.ja),
+      if (q && !textMatch(q, [s.family, s.familyName?.en, s.name?.ja, s.name?.en, ...Object.values(s.bonus).map((b) => b?.ja),
         ...Object.values(s.bonusFx ?? {}).flat().map((l) => l.text)])) continue;
       m.set(s.family, [...(m.get(s.family) || []), s]);
     }
