@@ -54,6 +54,9 @@ export const RULES = `1. SP: pick up to 3 units that each restore 70+ SP (or 20%
    - any skill counts (S1/S2/ougi make no difference)
    - restores under 70 SP don't count
    - more SP units is better: 3, then 2, then 1
+   - an element-only restore (e.g. "All Devilish allies") or one needing "4+ Taimanin allies" counts
+     only if it completes a 3-SP team and every member is of that element/trait (so it reaches everyone)
+   - "back row only" restores don't count
    - no SP unit at all -> 1 unit with team SP over time (SPoT) instead
 
 2. HP: the team needs a whole-team heal
@@ -90,7 +93,25 @@ const SAFE_NOTE = [/^Before attacking$/, /^\(trait buff\)$/, /^for \d+ turns?$/,
 const reliable = (r: BuffRow) => !r.n || r.n.split("; ").every((part) => SAFE_NOTE.some((re) => re.test(part)));
 /** Skill effects only (rule 5: no leader) that always work */
 const isSkill = (r: BuffRow) => r.s !== "leader" && reliable(r);
-const spRestore = (r: BuffRow) => isSkill(r) && r.c === "recovery" && r.k === "SP restore" && r.sc === "all" && (r.p ? r.v >= 20 : r.v >= 70);
+/** "4+ Taimanin allies": a team-make-up condition on a whole-team SP restore */
+const teamCond = (r: BuffRow) => { const m = /^(\d+)\+ (.+) allies$/.exec(r.n ?? ""); return m ? { n: Number(m[1]), of: m[2] } : null; };
+const bigSp = (r: BuffRow) => r.s !== "leader" && r.c === "recovery" && r.k === "SP restore" && (r.p ? r.v >= 20 : r.v >= 70);
+/** whole-team SP restore that works in any team */
+const spRestore = (r: BuffRow) => bigSp(r) && r.sc === "all" && reliable(r);
+/** SP restore that only reaches the whole team in some teams: element/trait-only,
+ *  or "4+ Taimanin allies". Used only when it makes a 3-SP team whose members all fit. */
+const spRestricted = (r: BuffRow) => bigSp(r) && (((r.sc === "element" || r.sc === "trait") && reliable(r)) || (r.sc === "all" && !!teamCond(r)));
+const anySp = (r: BuffRow) => spRestore(r) || spRestricted(r);
+const isOf = (u: Candidate, x: string) => u.element === x || u.traits.includes(x);
+/** may this member join a team that relies on the restricted restore r? */
+const fitsSp = (r: BuffRow, u: Candidate) =>
+  r.sc === "element" ? u.element === r.el : r.sc === "trait" ? !!r.tr && u.traits.includes(r.tr) : (c => !c || isOf(u, c.of))(teamCond(r));
+/** does the restricted restore r reach the whole final team? */
+const spWorks = (r: BuffRow, team: Candidate[]) => {
+  if (r.sc === "element" || r.sc === "trait") return applies(r, team);
+  const c = teamCond(r);
+  return !c || team.filter((u) => isOf(u, c.of)).length >= c.n;
+};
 const teamHeal = (r: BuffRow) => isSkill(r) && r.c === "recovery" && (r.k === "HP restore" || r.k === "HP regen") && r.sc === "all";
 const hpot = (r: BuffRow) => isSkill(r) && r.c === "recovery" && r.k === "HP regen" && r.sc === "all" && r.p === 1 && r.v >= 20;
 const statBuff = (k: "ATK" | "DEF") => (r: BuffRow) => isSkill(r) && r.c === "stat" && r.k === k && r.p === 1 && (r.sc === "all" || r.sc === "element" || r.sc === "trait");
@@ -177,21 +198,27 @@ export function suggestTeam(owned: Candidate[], rows: BuffRow[]): Suggestion {
   const mine = units.filter((u) => !u.free);
 
   // 1. SP units, best restore first
-  const spRow = (u: Candidate) => fx(u.id).filter(spRestore).sort((a, b) => spValue(b) - spValue(a))[0];
+  // a restore that works in any team first, then the strongest
+  const spRow = (u: Candidate) => fx(u.id).filter(anySp).sort((a, b) => Number(spRestricted(a)) - Number(spRestricted(b)) || spValue(b) - spValue(a))[0];
   const sp = mine.filter((u) => spRow(u)).sort((a, b) => spValue(spRow(b)) - spValue(spRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
   // no SP unit: one SP-over-time unit, best first
   const spotRow = (u: Candidate) => fx(u.id).filter(spot).sort((a, b) => rank(b) - rank(a))[0];
   const spots = mine.filter((u) => spotRow(u)).sort((a, b) => rank(spotRow(b)) - rank(spotRow(a)) || b.atk - a.atk).slice(0, SP_POOL);
-  // 3 SP units if a team can be made with them, else 2, else 1, else SPoT
-  const tries: { sets: Candidate[][]; spot: boolean }[] = [3, 2, 1].filter((k) => sp.length >= k).map((k) => ({ sets: combos(sp, k), spot: false }));
-  if (!sp.length) tries.push({ sets: spots.map((u) => [u]), spot: true });
+  // 3 SP units if a team can be made with them, else 3 with a restricted
+  // restore (element/trait-only, "4+ Taimanin allies"), else 2, else 1, else SPoT
+  const plain = sp.filter((u) => !spRestricted(spRow(u)));
+  const tries: { sets: Candidate[][]; spot: boolean }[] = [];
+  if (plain.length >= 3) tries.push({ sets: combos(plain, 3), spot: false });
+  if (sp.length >= 3 && sp.length > plain.length) tries.push({ sets: combos(sp, 3).filter((s) => s.some((u) => spRestricted(spRow(u)))), spot: false });
+  for (const k of [2, 1]) if (plain.length >= k) tries.push({ sets: combos(plain, k), spot: false });
+  if (!plain.length) tries.push({ sets: spots.map((u) => [u]), spot: true });
   if (!tries.length) return { ok: false, reason: "Not enough units yet: no unit restores 70+ SP (or 20%+) to the whole team, and none gives team SP over time (rule 1)." };
 
   let top: Built | undefined;
   let lastFail = "";
   for (const { sets, spot: isSpot } of tries) {
     for (const set of sets) {
-      const r = build(set, units, fx, isSpot);
+      const r = build(set, units, fx, isSpot, isSpot ? [] : set.map(spRow).filter(spRestricted));
       if (typeof r === "string") { lastFail = r; continue; }
       if (!top || compare(r.score, top.score) > 0) top = r;
     }
@@ -240,11 +267,20 @@ function dedupe(rows: BuffRow[]) {
 const compare = (a: number[], b: number[]) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i]; return 0; };
 
 /** Rules 2-4 for one SP set. Returns the team or why it can't be made. */
-function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow[], isSpot = false): Built | string {
+function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow[], isSpot = false, restricted: BuffRow[] = []): Built | string {
   const roles = new Map<string, Role>(set.map((u) => [u.id, isSpot ? "spot" : "sp"]));
   const team = [...set];
+  // a restricted SP restore only counts with 3 SP units and members it reaches
+  if (restricted.length && set.length < 3) return "an element-only SP restore needs a 3-SP team (rule 1).";
+  // element/trait-only: every member must fit; "4+ X allies": non-X members only while there's room
+  const fits = (u: Candidate) => restricted.every((r) => {
+    const c = r.sc === "all" ? teamCond(r) : null;
+    if (!c) return fitsSp(r, u);
+    return isOf(u, c.of) || team.filter((m) => !isOf(m, c.of)).length + 1 <= TEAM - c.n;
+  });
+  if (!set.every((u) => restricted.every((r) => r.sc === "all" || fitsSp(r, u)))) return "the SP units' element-only restores don't reach each other (rule 1).";
   // a free (not owned) unit can only fill the buffer slot
-  const rest = () => units.filter((u) => !roles.has(u.id) && !u.free);
+  const rest = () => units.filter((u) => !roles.has(u.id) && !u.free && fits(u));
   const all = (u: Candidate) => fx(u.id);
   const healsInSp = !isSpot && set.length >= 3 && set.some((u) => all(u).some(teamHeal));
   // rule 2: fewer than 3 SP units, or none of them heals -> an HP-over-time unit
@@ -266,7 +302,7 @@ function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow
       if ((needAtk && !a) || (needDef && !d)) return -1;
       return (a ? rank(a) : 0) + (d ? rank(d) : 0);
     };
-    const pool = units.filter((u) => !roles.has(u.id) && value(u) >= 0);
+    const pool = units.filter((u) => !roles.has(u.id) && fits(u) && value(u) >= 0);
     if (!pool.length) return needAtk && needDef ? "no unit gives both an ATK and a DEF buff to the team (rule 3)." : `no unit gives the team a ${needAtk ? "ATK" : "DEF"} buff (rule 3).`;
     const healers = needHeal ? pool.filter((u) => all(u).some(hpot)) : [];
     const vals = new Map((healers.length ? healers : pool).map((u) => [u, value(u)]));
@@ -306,9 +342,10 @@ function build(set: Candidate[], units: Candidate[], fx: (id: string) => BuffRow
   const def = best(rowsOf(defBuff), team);
   const heal = healsInSp ? set.flatMap((u) => all(u).filter(teamHeal))[0] : best(rowsOf(hpot), team);
   if (!atk || !def) return "the team's ATK/DEF buffs don't apply to every member (rule 3).";
+  if (!restricted.every((r) => spWorks(r, team))) return "not enough members of the right element/trait for the SP units' restores (rule 1).";
   if (!heal) return "no whole-team heal (rule 2).";
   const dpsAtk = team.filter((u) => roles.get(u.id) === "dps").reduce((s, u) => s + u.atk, 0);
-  const spSum = set.reduce((s, u) => s + Math.max(0, ...all(u).filter(isSpot ? spot : spRestore).map(isSpot ? rank : spValue)), 0);
+  const spSum = set.reduce((s, u) => s + Math.max(0, ...all(u).filter(isSpot ? spot : anySp).map(isSpot ? rank : spValue)), 0);
   // prefer: heal from an SP unit, longer then stronger buffs, stronger DPS, more SP
   return { team, roles, atk, def, heal, score: [Number(healsInSp), rank(atk) + rank(def), dpsAtk, spSum] };
 }

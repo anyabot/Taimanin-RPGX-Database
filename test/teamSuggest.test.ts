@@ -70,6 +70,27 @@ describe("suggestTeam", () => {
     const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("dps", 2000), { ...u("yuki", 9999), free: true }], more);
     expect(r.ok && r.members.find((m) => m.id === "yuki")?.role).toBe("buffer");
   });
+  it("uses an element-only SP restore only for a 3-SP team of that element", () => {
+    const dev = (id: string, atk = 1000) => u(id, atk, 70, "Devilish");
+    const more = [row("a", "recovery", "SP restore", 80, 0), row("a", "recovery", "HP restore", 20, 1, "skill1"),
+      row("b", "recovery", "SP restore", 80, 0), row("c", "recovery", "SP restore", 95, 0, "skill2", "element", { el: "Devilish" }),
+      row("buf", "stat", "ATK", 50, 1), row("buf", "stat", "DEF", 50, 1)];
+    const ok = suggestTeam([dev("a"), dev("b"), dev("c"), dev("buf"), dev("dps", 2000), u("nat", 5000)], more);
+    expect(ok.ok && ok.members.map((m) => m.id).sort()).toEqual(["a", "b", "buf", "c", "dps"]);
+    // only 2 other SP units: the element-only one is never used for a 2-SP team
+    const two = suggestTeam([dev("a"), dev("c"), dev("buf"), dev("dps"), u("hot")], [...more, row("hot", "recovery", "HP regen", 25, 1, "skill1", "all", { t: 3 })]);
+    expect(two.ok && two.members.some((m) => m.id === "c" && m.role === "sp")).toBe(false);
+  });
+  it("counts a 4+ Taimanin SP restore only when the team has 4+ Taimanin", () => {
+    const tai = (id: string, atk = 1000) => u(id, atk, 70, "Natural", ["Taimanin"]);
+    const more = [row("a", "recovery", "SP restore", 80, 0), row("a", "recovery", "HP restore", 20, 1, "skill1"),
+      row("b", "recovery", "SP restore", 80, 0), row("c", "recovery", "SP restore", 100, 0, "skill2", "all", { n: "4+ Taimanin allies" }),
+      row("buf", "stat", "ATK", 50, 1), row("buf", "stat", "DEF", 50, 1)];
+    const ok = suggestTeam([tai("a"), tai("b"), tai("c"), tai("buf"), u("dps", 2000)], more);
+    expect(ok.ok && ok.members.find((m) => m.id === "c")?.role).toBe("sp");
+    const no = suggestTeam([u("a"), tai("b"), tai("c"), tai("buf"), u("dps", 2000)], more);
+    expect(no.ok).toBe(false);
+  });
   it("runs on the real data with every unit owned", () => {
     const index = data("units/index.json") as { id: string; element: string | null; traits: string[]; stats: { atk: number; spd: number } }[];
     const all = index.map((x) => ({ id: x.id, element: x.element, traits: x.traits, atk: x.stats.atk, spd: x.stats.spd }));
