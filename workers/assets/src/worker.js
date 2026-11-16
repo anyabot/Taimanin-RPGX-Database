@@ -85,7 +85,9 @@ async function fromB2(env, path, range, colo) {
     if (!range) init.cf = { cacheEverything: true, cacheTtlByStatus: ttlByStatus(path) };
     const r = await fetch(`${a.downloadUrl}/file/${env.B2_BUCKET}/${path}`, init);
     // HIT means an upper tier or this location answered, not B2.
-    log({ b2: "get", path, range: range || undefined, status: r.status, cache: r.headers.get("cf-cache-status"), colo, bytes: Number(r.headers.get("Content-Length")) || undefined });
+    // B2's error body names the cause, e.g. download_cap_exceeded.
+    const error = r.status >= 400 && r.status !== 404 ? await r.clone().json().then((j) => j.code, () => undefined) : undefined;
+    log({ b2: "get", path, range: range || undefined, status: r.status, error, cache: r.headers.get("cf-cache-status"), colo, bytes: Number(r.headers.get("Content-Length")) || undefined });
     if (r.status !== 401) return r;
   }
   throw new Error("b2: token refused after renewal");
