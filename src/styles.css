@@ -106,23 +106,16 @@ img.element-icon { width: var(--icon-w, 20px); height: var(--icon-w, 20px); max-
 .scene-player { container: player / inline-size; }
 .scn-frame { position: relative; width: min(100%, calc((100vh - 220px) * 16 / 9)); min-width: 280px; margin: 0 auto;
   container-type: inline-size; cursor: pointer; user-select: none; }
-.scn-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; overflow: hidden; border-radius: 6px; }
+/* .scn-stage is the hub's SceneFrame (.hub-scene-frame: aspect, black, clipped). */
+.scn-stage { border-radius: 6px; }
 .scn-stage > img { position: absolute; display: block; pointer-events: none; }
 .scn-bg { inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .scn-ev { inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
 .scn-actor { bottom: 0; height: 105.56%; aspect-ratio: 1280 / 760; left: 50%; transform: translateX(-50%); }
 .scn-actor.x-LEFT { left: 25%; } .scn-actor.x-RIGHT { left: 75%; }
-/* Dialogue over the picture... */
-.scn-text { position: absolute; left: 4%; right: 4%; bottom: 3%; min-height: 22%; padding: 1.4cqw 2.2cqw; border-radius: 1cqw;
-  background: #0a0b10cc; color: #fff; font-size: max(12px, 2.1cqw); line-height: 1.5; }
-/* Hidden lines stay rendered (opacity, not display/visibility) so page translators
-   that only translate what is visible still reach them. */
-.scn-text { overflow: hidden; }
-.scn-text.off { opacity: 0; pointer-events: none; }
-.scn-say { position: absolute; left: 0; right: 0; top: 0; padding: inherit; opacity: 0; pointer-events: none; }
-.scn-say.on { position: static; padding: 0; opacity: 1; pointer-events: auto; }
-.scn-name { font-weight: 700; color: #f6c445; margin-bottom: .3em; }
-.scn-line { white-space: pre-line; }
+/* Dialogue over the picture (the hub's SceneTextBox, .hub-scene-text)... */
+.scn-text { left: 4%; right: 4%; padding: 1.4cqw 2.2cqw; }
+.scn-text .hub-scene-name { color: #f6c445; }
 /* ...and under it on a narrow player, where overlaid text would cover the CG:
    a fixed height for 4 lines + name, so the controls do not jump per line. */
 @container player (max-width: 640px) {
@@ -150,9 +143,8 @@ html.scn-theater-open { overflow: hidden; }
 @keyframes scn-quake-b { 0%, 100% { transform: none; } 25% { transform: translateY(-1.2%); } 50% { transform: translateY(1%); } 75% { transform: translateY(-.5%); } }
 .scn-busy { position: absolute; top: 8px; right: 10px; font-size: 12px; color: #fffc; background: #0008; padding: 2px 8px; border-radius: 6px; }
 .scn-note { position: absolute; top: 8px; left: 10px; right: 90px; font-size: 12px; color: #fff; background: #000a; padding: 4px 8px; border-radius: 6px; }
-.scn-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px auto; max-width: max(280px, calc((100vh - 220px) * 16 / 9)); }
-.scn-controls input[type=range] { flex: 1; min-width: 120px; }
-.scn-count { font-variant-numeric: tabular-nums; font-size: 13px; }
+/* .scn-controls is the hub's SceneControls bar */
+.scn-controls { margin: 10px auto; padding: 0; max-width: max(280px, calc((100vh - 220px) * 16 / 9)); }
 .scn-transcript { margin: 12px auto; max-width: max(280px, calc((100vh - 220px) * 16 / 9)); }
 .scn-transcript > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
 .scn-tr-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 6px 0; }

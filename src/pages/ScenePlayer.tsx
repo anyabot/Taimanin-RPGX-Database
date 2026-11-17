@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Breadcrumbs, LoadState } from "@altterisk/game-hub";
+import {
+  Breadcrumbs, LoadState, SceneControls, SceneFrame, SceneTextBox, sceneTextSetting, useSceneStepper, useSceneTheater,
+  type SceneLine, type SceneStepper,
+} from "@altterisk/game-hub";
 import { saveBlob } from "@altterisk/game-hub/persist";
 import { flagSetting, tr, unitName, useAssets, useData, useLang, type StorySection, type Unit } from "../data";
 import { beats as toBeats, parseScript, type Actor, type Beat, type SceneDoc } from "../adv";
@@ -13,7 +16,9 @@ import { usePageMeta } from "../usePageMeta";
 
 const MUTED = flagSetting("taimanin.scene.muted", false);
 const SPINE = flagSetting("taimanin.scene.spine", true);
-const PRELOAD = flagSetting("taimanin.scene.preload", true);
+// Text mode: every line in the page up front (page translators reach them all),
+// or only the current line (for translators that handle new text themselves).
+const ALL_LINES = sceneTextSetting("taimanin.scene.preload");
 const PICTURES = flagSetting("taimanin.scene.pictures", false);
 
 /** Beats with something to look at: a CG, an animation or an actor, not a
@@ -106,19 +111,19 @@ interface Shown { bg: string | null; ev: string | null; actors: { slot: string; 
 
 function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: SceneArt; beats: Beat[]; next: string | null; transcript: string }) {
   const navigate = useNavigate();
-  const [i, setI] = useState(0);
+  // The hub stepper holds the beat. Its own timer and keys stay off: auto here
+  // waits for the voice, and picture mode steps from picture to picture.
+  const stepper = useSceneStepper({ count: beats.length, ready: false, keys: false });
+  const { at: i, go, auto, setAuto } = stepper;
   const prev = useRef(-1);
   const [shown, setShown] = useState<Shown>({ bg: null, ev: null, actors: [] });
   const [busy, setBusy] = useState(false);
   const [missing, setMissing] = useState<string[]>([]);
   const [hideText, setHideText] = useState(false);
   const [animate, setAnimate] = SPINE.use();
-  // Text mode: every line in the page up front (page translators reach them all),
-  // or only the current line (for translators that handle new text themselves).
-  const [preload, setPreload] = PRELOAD.use();
+  const [allLines, setAllLines] = ALL_LINES.use();
   // Picture mode: no text or voice, and stepping goes from picture to picture.
   const [pictures, setPictures] = PICTURES.use();
-  const [auto, setAuto] = useState(false);
   const [muted, setMuted] = MUTED.use();
   const [fx, setFx] = useState({ flash: 0, quake: 0 });
   // the animated CG's current frame, while one is showing
@@ -138,32 +143,8 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   const stepped = useRef(false);
   const voice = useRef<HTMLAudioElement | null>(null);
   const bgm = useRef<{ name: string; el: HTMLAudioElement } | null>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<HTMLDivElement>(null);
-  // Theater: the browser's fullscreen where an element can have it, else a
-  // fixed full-window overlay (iPhone Safari has no element fullscreen).
-  const [theater, setTheater] = useState(false);
-  const toggleTheater = () => {
-    const el = playerRef.current;
-    if (!el) return;
-    if (theater) {
-      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      setTheater(false);
-      return;
-    }
-    setTheater(true);
-    if (el.requestFullscreen) {
-      el.requestFullscreen({ navigationUI: "hide" }).then(() => {
-        // Phones: prefer landscape while fullscreen (Android allows it, iOS ignores it).
-        (screen.orientation as any)?.lock?.("landscape").catch(() => {});
-      }, () => {});
-    }
-  };
-  useEffect(() => {
-    const onChange = () => { if (!document.fullscreenElement) setTheater(false); };
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
+  const [theater, toggleTheater] = useSceneTheater(playerRef);
   useEffect(() => {
     if (!theater) return;
     document.documentElement.classList.add("scn-theater-open");
@@ -183,7 +164,6 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
     if (pictures && !hasPicture(b) && hasPicture(beats[shots[0]])) go(shots.find((k) => k > i) ?? shots[shots.length - 1]);
   }, [pictures]);
 
-  const go = (n: number) => setI(Math.max(0, Math.min(beats.length - 1, n)));
   const forward = () => {
     if (pictures) {
       if (shot < shots.length - 1) go(shots[shot + 1]);
@@ -193,6 +173,10 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   };
   const back = () => go(pictures ? shots[Math.max(0, shot - 1)] : i - 1);
   const atEnd = pictures ? shot >= shots.length - 1 : i >= beats.length - 1;
+  // what the hub's button bar steps through: beats, or pictures in picture mode
+  const bar: SceneStepper = pictures
+    ? { ...stepper, at: shot, go: (n) => go(shots[n]), next: forward, back, atEnd }
+    : { ...stepper, next: forward, back, atEnd };
 
   // Layers: keep the previous picture until the new one has decoded.
   useEffect(() => {
@@ -267,7 +251,7 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
     if (pictures) { voice.current?.pause(); voice.current = null; }
   }, [pictures]);
 
-  // Auto: next beat when the voice ends, or after a pause scaled to the text
+  // Auto (the hub bar's Auto button): next beat when the voice ends, or after a pause scaled to the text
   // (a fixed pause per picture in picture mode).
   useEffect(() => {
     if (!auto || loaded.i !== i) return;
@@ -282,86 +266,64 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.altKey || e.ctrlKey || e.metaKey) return;
-      if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") { e.preventDefault(); forward(); }
+      const t = e.target;
+      if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t instanceof HTMLSelectElement
+        || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "Enter") {
+        // Space / Enter on a focused button press that button instead
+        if (t instanceof HTMLButtonElement && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        forward();
+      }
       else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
       else if (e.key === "Home") go(0);
       else if (e.key === "End") go(beats.length - 1);
       else if (e.key.toLowerCase() === "h") setHideText((v) => !v);
       else if (e.key.toLowerCase() === "p") setPictures((v) => !v);
       else if (e.key.toLowerCase() === "f") toggleTheater();
-      else if (e.key === "Escape" && theater && !document.fullscreenElement) setTheater(false);
+      else if (e.key === "Escape" && theater && !document.fullscreenElement) toggleTheater();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
 
   const textOn = b.textBox && !hideText && !pictures && !!(b.text || b.name);
-  // switching languages swaps every line, so the box is rebuilt (see below)
+  // switching languages swaps every line, so the box is rebuilt (keyed below)
   const english = beats.some((x) => x.en);
+  const lines = useMemo<(SceneLine | null)[]>(() => beats.map((x) => (x.text || x.name
+    ? { name: x.name || undefined, text: <RichLine text={x.text} />, lang: x.en ? "en" : undefined } : null)), [beats]);
   return (
     <div ref={playerRef} className={`scene-player${theater ? " theater" : ""}`}>
       {/* The frame holds the stage and the dialogue: over the picture on wide
           screens, under it on narrow ones (container query on .scene-player). */}
       <div className="scn-frame" onClick={forward} role="button" tabIndex={0} aria-label={pictures ? "Next picture" : "Next line"}>
-      <div ref={stageRef} className={`scn-stage${fx.quake ? ` quake-${fx.quake % 2}` : ""}`}>
-        {shown.bg && <img className="scn-bg" src={shown.bg} alt="" />}
-        {shown.actors.map((a) => <img key={a.slot} className={`scn-actor x-${a.x}`} src={a.url} alt="" />)}
-        {/* The 960x720 CG frame, pillarboxed over everything below it. */}
-        {shown.ev && <img className="scn-ev" src={shown.ev} alt="" />}
-        {fx.flash > 0 && <div key={fx.flash} className="scn-flash" />}
-        {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} snap={spineSnap} />}
-        {busy && <div className="scn-busy" aria-live="polite" translate="no">Loading…</div>}
+        <SceneFrame aspect="16 / 9" className={`scn-stage${fx.quake ? ` quake-${fx.quake % 2}` : ""}`}>
+          {shown.bg && <img className="scn-bg" src={shown.bg} alt="" />}
+          {shown.actors.map((a) => <img key={a.slot} className={`scn-actor x-${a.x}`} src={a.url} alt="" />)}
+          {/* The 960x720 CG frame, pillarboxed over everything below it. */}
+          {shown.ev && <img className="scn-ev" src={shown.ev} alt="" />}
+          {fx.flash > 0 && <div key={fx.flash} className="scn-flash" />}
+          {animate && <SpineLayer art={art} doc={doc} model={b.spine} animation={b.spineAnim} snap={spineSnap} />}
+          {busy && <div className="scn-busy" aria-live="polite" translate="no">Loading…</div>}
+        </SceneFrame>
+        {/* The hub's translator-safe box: all lines in the page up front, or
+            only the current one, per the Text button. */}
+        <SceneTextBox key={english ? "en" : "ja"} className="scn-text" lines={lines} at={i} allLines={allLines} hidden={!textOn} />
       </div>
-        {/* Preloaded: every line of the scene is in the box from the start,
-            stacked and transparent but for the current one, and never
-            re-rendered: page translators (Chrome, Edge) translate them all up
-            front and swap the text nodes for their own, so stepping only changes
-            which line shows. Lines inserted one at a time were often left
-            untranslated by Chrome.
-            Per line: only the current line, keyed so each is a fresh element
-            (an in-place update of a node a translator replaced would never show). */}
-        <div key={`${preload ? "all" : "one"}-${english ? "en" : "ja"}`} className={`scn-text${textOn ? "" : " off"}`} lang="ja">
-          {preload ? beats.map((x, k) => (x.text || x.name) && (
-            <div key={k} className={`scn-say${k === i ? " on" : ""}`} aria-hidden={k !== i} lang={x.en ? "en" : undefined}>
-              {x.name && <div className="scn-name">{x.name}</div>}
-              <div className="scn-line"><RichLine text={x.text} /></div>
-            </div>
-          )) : textOn && (
-            <div key={i} className="scn-say on" lang={b.en ? "en" : undefined}>
-              {b.name && <div className="scn-name">{b.name}</div>}
-              <div className="scn-line"><RichLine text={b.text} /></div>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="scn-controls" translate="no">
-        <button className="hub-btn" onClick={back} disabled={pictures ? shot <= 0 : i === 0}
-          aria-label={pictures ? "Previous picture" : "Previous line"}>‹</button>
-        {pictures
-          ? <input type="range" min={0} max={shots.length - 1} value={shot} onChange={(e) => go(shots[Number(e.target.value)])}
-            aria-label="Picture in scene" />
-          : <input type="range" min={0} max={beats.length - 1} value={i} onChange={(e) => go(Number(e.target.value))}
-            aria-label="Position in scene" />}
-        <button className="hub-btn" onClick={forward} disabled={atEnd && !next} aria-label={pictures ? "Next picture" : "Next line"}>›</button>
-        <span className="scn-count muted">{pictures ? `Picture ${shot + 1} / ${shots.length}` : `${i + 1} / ${beats.length}`}</span>
-        <button className="hub-btn" aria-pressed={auto} onClick={() => setAuto((v) => !v)}>{auto ? "Auto ■" : "Auto ▶"}</button>
+      <SceneControls stepper={bar} count={pictures ? shots.length : beats.length} nextDisabled={atEnd && !next} slider
+        allLines={allLines} onAllLines={setAllLines} theater={theater} onTheater={toggleTheater} className="scn-controls"
+        labels={pictures ? { back: "‹ Picture", next: "Picture ›", position: "Picture in scene" } : { back: "‹ Back", next: "Next ›" }}>
         <button className="hub-btn" aria-pressed={muted} onClick={() => setMuted((v) => !v)}>{muted ? "Sound off" : "Sound on"}</button>
         <button className="hub-btn" aria-pressed={pictures} onClick={() => setPictures((v) => !v)}
           title="Pictures only: no text or voice, and each step goes to the next picture (P)">Picture mode</button>
         {!pictures && <button className="hub-btn" aria-pressed={hideText} onClick={() => setHideText((v) => !v)}>{hideText ? "Show text" : "Hide text"}</button>}
-        <button className="hub-btn" aria-pressed={theater} onClick={toggleTheater}
-          title="Fill the screen with the scene (Esc to leave)">{theater ? "Exit theater" : "Theater"}</button>
-        <button className="hub-btn" aria-pressed={preload} onClick={() => setPreload((v) => !v)}
-          title="Which works best depends on the translator. All lines: the whole scene's text is in the page up front (Chrome's built-in translation). Per line: only the current line (some translator extensions)">
-          {preload ? "Text: all lines" : "Text: per line"}</button>
         <button className="hub-btn" onClick={savePicture} disabled={busy || saving}
           title="Save the picture on screen as a PNG (the CG with its overlays, or the animation's current frame)">{saving ? "Saving…" : "Save picture"}</button>
         {Object.keys(doc.spine).length > 0 && (
           <button className="hub-btn" aria-pressed={animate} onClick={() => setAnimate((v) => !v)}
             title="Play the animated CGs, or show the still images instead">{animate ? "Animation on" : "Animation off"}</button>
         )}
-      </div>
+      </SceneControls>
       {missing.length > 0 && <p className="muted small scn-missing" translate="no">Not available for this line: {missing.join(", ")}</p>}
       <p className="muted small scn-help">Click the picture, or press → / Space, to advance; ← goes back; H hides the text; P for picture mode; F for theater.
         {english ? " Dialogue is the English translation credited above the player." : <> Dialogue is the game's Japanese text (your browser's page translation works on it; if lines stay untranslated,
