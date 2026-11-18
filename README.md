@@ -58,6 +58,7 @@ From the exporter toolkit's folder, one command runs every step in order:
 
 The steps, in that order:
 
+    wiki_origins.py       unit origins from the wikiru banner history
     catalog_snapshot.py   public/data/bundles.json
     tables.py             units (skills, ailment roll counts), runes, banners, growth, icons, UI art
     cards.py              Arena cards
