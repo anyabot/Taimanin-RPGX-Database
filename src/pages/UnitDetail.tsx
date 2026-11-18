@@ -506,6 +506,8 @@ function ScenesTab({ unit }: { unit: Unit }) {
   return (
     <Panel title="Scenes" note={GAME_CDN ? "Played in the browser from the game's own files; each scene loads when opened."
       : "Transcripts of the game's scripts, in English where translated."}>
+      {!GAME_CDN && <p className="muted small">The scene player used to load art and voice from the game's servers. That is no
+        longer possible, so it has been removed; the transcripts below remain. Contact the dev if you need help.</p>}
       <ol className="scene-list">
         {unit.scenes.map((group, g) => group.map((sid, k) => (
           <li key={sid}>
