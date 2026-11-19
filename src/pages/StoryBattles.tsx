@@ -31,7 +31,11 @@ export default function StoryBattles() {
 
   return (
     <div className="battles-page">
-      <Breadcrumbs items={[
+      <Breadcrumbs items={found && !found.g.parts.length ? [
+        { label: "Events", href: "/events" },
+        { label: title, href: `/events/${found.g.id}` },
+        { label: "Battles" },
+      ] : [
         { label: "Story", href: `/story${found ? `?section=${found.sec.key}` : ""}` },
         { label: title, href: found ? `/story?section=${found.sec.key}&open=${found.g.id}` : undefined },
         { label: "Battles" },

@@ -69,7 +69,7 @@ export default function EventList() {
   return (
     <div className="events-page">
       <h1>Events</h1>
-      <p className="muted">Story, raid and map events with their banners, rewards and battles. Events in the current
+      <p className="muted">Story, raid, map and mini events with their banners, rewards and battles. Events in the current
         client also list their bonus units, reward shop and box gacha.</p>
       <div className="events-tools">
         <SearchBox value={q} onChange={(v) => url.setText("q", v)} placeholder="Event name or number" />
@@ -153,7 +153,7 @@ export function EventPage() {
         <p className="muted small">The current client only keeps rewards, bonus units and shops for the events it is running;
           this one's are gone from it.</p>
       )}
-      <Panel title={`Story (${e.g.parts.length})`}>
+      {e.g.parts.length > 0 && <Panel title={`Story (${e.g.parts.length})`}>
         <ol className="story-parts">
           {e.g.parts.map((p) => (
             <li key={p.id}>
@@ -171,7 +171,7 @@ export function EventPage() {
             </li>
           ))}
         </ol>
-      </Panel>
+      </Panel>}
     </div>
   );
 }

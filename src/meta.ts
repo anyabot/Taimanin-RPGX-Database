@@ -14,7 +14,7 @@ export const SITE_NAME = "Taimanin RPGX Database";
 
 export const RARITY = ["", "N", "R", "HR", "SR", "UR", "LR"];
 /** Story-index sections that are events; specials only when the client dates them. */
-export const EVENT_KINDS: Record<string, string> = { event: "Story event", raid: "Raid event", map: "Map event", special: "Special event" };
+export const EVENT_KINDS: Record<string, string> = { event: "Story event", raid: "Raid event", map: "Map event", special: "Special event", mini: "Mini event" };
 
 export const DEFAULT_META: PageMeta = {
   title: "",
@@ -105,7 +105,7 @@ export function eventMeta(g: StoryGroup, kind: string): PageMeta {
     title: `${eventName(g, kind)} – ${EVENT_KINDS[kind]}`,
     description: clip(sentence(
       `${EVENT_KINDS[kind]} ${g.num} in Taimanin RPGX${p?.start ? `, ${p.start}${p.end ? ` to ${p.end}` : ""}` : ""}.`,
-      `Story (${plural(g.parts.length, "part")})${g.battles ? ", battles, enemies and bosses" : ""}, rewards and shops.`,
+      `${g.parts.length ? `Story (${plural(g.parts.length, "part")})` : "Quests"}${g.battles ? ", battles, enemies and bosses" : ""}, rewards and shops.`,
     )),
   };
 }

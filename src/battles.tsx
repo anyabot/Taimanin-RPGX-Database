@@ -161,7 +161,7 @@ export function EventInfo({ ev }: { ev: BattleEvent }) {
           <p className="muted small">Each bonus unit in the team adds the listed % of its own Luck.</p>
         </div>
       )}
-      {ev.shop && ev.shop.length > 0 && <RewardShop rows={ev.shop} />}
+      {ev.shop && ev.shop.length > 0 && <RewardShop rows={ev.shop} currency={ev.currency} />}
       {ev.gacha && <BoxGacha gacha={ev.gacha} />}
       {ev.laps && ev.laps.length > 0 && (
         <details>
@@ -175,10 +175,17 @@ export function EventInfo({ ev }: { ev: BattleEvent }) {
 
 type ShopRow = NonNullable<BattleEvent["shop"]>[number];
 
-/** The event's point shop. The shop lists some rewards in several slots, each with
- *  its own price and limit; those are shown as one reward. A negative limit is no
- *  limit (UIExchangeCheckPopup.IsBuyCheck skips the check). */
-function RewardShop({ rows }: { rows: ShopRow[] }) {
+/** The event's point shop, or a mini event's exchange shop (paid in an item). The
+ *  shop lists some rewards in several slots, each with its own price and limit;
+ *  those are shown as one reward. A negative limit is no limit
+ *  (UIExchangeCheckPopup.IsBuyCheck skips the check). */
+function RewardShop({ rows, currency }: { rows: ShopRow[]; currency?: QuestDrop[] }) {
+  const lang = useLang();
+  const unit = (r?: ShopRow) => {
+    const c = currency?.find((x) => x.id === r?.pay) ?? currency?.[0];
+    return c ? (tr(c.name, lang) || c.id) : "pt";
+  };
+  const single = !rows.some((r) => r.pay);
   const byKey = new Map<string, ShopRow[]>();
   for (const r of rows) {
     const k = `${r.type}:${r.id}:${r.num}`;
@@ -186,15 +193,15 @@ function RewardShop({ rows }: { rows: ShopRow[] }) {
   }
   const groups = [...byKey.values()];
   const total = rows.reduce((n, r) => n + (r.max > 0 ? r.cost * r.max : 0), 0);
-  const tier = (r: ShopRow) => `${r.cost.toLocaleString()} pt ${r.max < 0 ? "· no limit" : `×${r.max.toLocaleString()}`}`;
+  const tier = (r: ShopRow) => `${r.cost.toLocaleString()} ${unit(r)} ${r.max < 0 ? "· no limit" : `×${r.max.toLocaleString()}`}`;
   return (
     <div>
-      <h4>Reward shop ({groups.length})</h4>
+      <h4>{currency?.length ? "Exchange shop" : "Reward shop"} ({groups.length})</h4>
       <ul className="drop-list shop-list">{groups.map((g, i) => (
         <DropLine key={i} d={g[0]} note={<>{g.map((r, j) => <span key={j}>{tier(r)}</span>)}</>} />
       ))}</ul>
-      <p className="muted small">Price per exchange × how many times it can be exchanged. Everything with a limit
-        costs {total.toLocaleString()} pt in all.</p>
+      <p className="muted small">Price per exchange × how many times it can be exchanged.
+        {single && <> Everything with a limit costs {total.toLocaleString()} {unit()} in all.</>}</p>
     </div>
   );
 }

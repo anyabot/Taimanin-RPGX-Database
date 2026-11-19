@@ -15,7 +15,9 @@ const KIND_NOUN: Record<string, string> = {
 /** Main story chapters and event stories, played in the scene player. */
 export default function StoryList() {
   usePageMeta(LIST_META["/story"]);
-  const { data: index, loading, error } = useData<StorySection[]>("stories/index");
+  const { data: all, loading, error } = useData<StorySection[]>("stories/index");
+  // mini events have no story, only battles and a shop: they are on the Events page
+  const index = useMemo(() => all?.filter((s) => s.groups.some((g) => g.parts.length)), [all]);
   const lang = useLang();
   const [params, setParams] = useSearchParams();
   const url = listState(searchParamsAdapter(params, setParams));

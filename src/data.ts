@@ -240,10 +240,13 @@ export interface BattleQuest {
 export interface LuckTier { luck: [number, number]; contribution?: [number, number]; drops: QuestDrop[] }
 /** A running event's extras (battles.py events()). */
 export interface BattleEvent {
-  kind: "story" | "raid" | "marble"; start: string | null; end: string | null; exchangeEnd?: string | null;
+  kind: "story" | "raid" | "marble" | "mini"; start: string | null; end: string | null; exchangeEnd?: string | null;
   /** bonus units: luckRate as listed (the unit adds luckRate % of its own Luck) */
   bonus: (QuestDrop & { luckRate: number; start: string | null; end: string | null })[];
-  shop?: (QuestDrop & { cost: number; max: number })[];
+  /** pay: the shop row's currency when the shop takes more than one (an item id from currency) */
+  shop?: (QuestDrop & { cost: number; max: number; pay?: string })[];
+  /** exchange shops (mini events): what the shop is paid in; point shops have none */
+  currency?: QuestDrop[];
   gacha?: { start: string | null; end: string | null; boxes: { box: number; items: (QuestDrop & { max: number; main?: boolean })[] }[] };
   laps?: (QuestDrop & { lap: number })[];
 }
