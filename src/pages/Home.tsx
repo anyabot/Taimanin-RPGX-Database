@@ -32,7 +32,7 @@ export default function Home() {
   const units = new Map((unitList ?? []).map((u) => [u.id, u]));
   const live = (events ?? []).filter((e) => eventPhase(e) !== "ended")
     .sort((a, b) => (a.g.period?.end ?? "").localeCompare(b.g.period?.end ?? ""));
-  const gachas = (banners ?? []).filter((b) => bannerPhase(b) !== "ended")
+  const gachas = (banners ?? []).filter((b) => bannerPhase(b) === "running")  // upcoming ones stay on /banners
     .sort((a, b) => (a.end ?? "").localeCompare(b.end ?? ""));
 
   return (
