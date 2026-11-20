@@ -14,7 +14,9 @@ import { SpineStage, spineRuntime } from "../spine";
 import { sceneMeta, storyPartMeta } from "../meta";
 import { usePageMeta } from "../usePageMeta";
 
-const MUTED = flagSetting("taimanin.scene.muted", false);
+// voice and sound effects (the old all-sound key), and music, each on its own
+const VOICE_OFF = flagSetting("taimanin.scene.muted", false);
+const BGM_OFF = flagSetting("taimanin.scene.bgmOff", false);
 const SPINE = flagSetting("taimanin.scene.spine", true);
 // Text mode: every line in the page up front (page translators reach them all),
 // or only the current line (for translators that handle new text themselves).
@@ -124,7 +126,8 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   const [allLines, setAllLines] = ALL_LINES.use();
   // Picture mode: no text or voice, and stepping goes from picture to picture.
   const [pictures, setPictures] = PICTURES.use();
-  const [muted, setMuted] = MUTED.use();
+  const [voiceOff, setVoiceOff] = VOICE_OFF.use();
+  const [bgmOff, setBgmOff] = BGM_OFF.use();
   const [fx, setFx] = useState({ flash: 0, quake: 0 });
   // the animated CG's current frame, while one is showing
   const spineSnap = useRef<(() => HTMLCanvasElement) | null>(null);
@@ -185,7 +188,7 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
     const lost: string[] = [];
     const soft = <T,>(p: Promise<T>, what: string) => p.catch((e) => { console.warn(what, e); lost.push(what); return null; });
     // the voice is downloaded before the beat is shown, so both start together
-    const line = b.voice && !muted && !pictures ? soft(art.voice(b.voice), `voice ${b.voice}`) : Promise.resolve(null);
+    const line = b.voice && !voiceOff && !pictures ? soft(art.voice(b.voice), `voice ${b.voice}`) : Promise.resolve(null);
     Promise.all([
       b.bg ? soft(art.bg(b.bg), `background ${b.bg}`) : null,
       b.ev && doc.ev[b.ev] ? soft(art.ev(b.ev), `CG ${b.ev}`) : null,
@@ -218,18 +221,18 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
   useEffect(() => {
     if (loaded.i !== i || !stepped.current) return;
     stepped.current = false;
-    if (b.voice && !muted && !pictures && loaded.voiceUrl) {
+    if (b.voice && !voiceOff && !pictures && loaded.voiceUrl) {
       const a = new Audio(loaded.voiceUrl);
       voice.current = a;
       a.play().catch(() => {});
     }
-    if (!muted) for (const s of b.se) art.seClip(s).then((url) => { const a = new Audio(url); a.volume = 0.6; a.play().catch(() => {}); }, () => {});
+    if (!voiceOff) for (const s of b.se) art.seClip(s).then((url) => { const a = new Audio(url); a.volume = 0.6; a.play().catch(() => {}); }, () => {});
     if (b.flash || b.quake) setFx((f) => ({ flash: f.flash + (b.flash ? 1 : 0), quake: f.quake + (b.quake ? 1 : 0) }));
   }, [loaded, i]);
 
   // Music follows the beat in either direction.
   useEffect(() => {
-    const want = muted ? null : b.bgm;
+    const want = bgmOff ? null : b.bgm;
     if (bgm.current?.name === want) return;
     bgm.current?.el.pause();
     bgm.current = null;
@@ -244,7 +247,7 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
       el.play().catch(() => {});
     }, (e) => console.warn("bgm", want, e));
     return () => { live = false; };
-  }, [b.bgm, muted, art]);
+  }, [b.bgm, bgmOff, art]);
 
   useEffect(() => () => { voice.current?.pause(); bgm.current?.el.pause(); }, []);
   useEffect(() => {
@@ -260,7 +263,7 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
     const t = setTimeout(forward, wait);
     const v = voice.current;
     const onEnd = () => { clearTimeout(t); setTimeout(forward, 700); };
-    if (v && !muted) { clearTimeout(t); v.addEventListener("ended", onEnd); v.addEventListener("error", onEnd); }
+    if (v && !voiceOff) { clearTimeout(t); v.addEventListener("ended", onEnd); v.addEventListener("error", onEnd); }
     return () => { clearTimeout(t); v?.removeEventListener("ended", onEnd); v?.removeEventListener("error", onEnd); };
   }, [auto, loaded, i, pictures]);
 
@@ -313,7 +316,10 @@ function Stage({ doc, art, beats, next, transcript }: { doc: SceneDoc; art: Scen
       <SceneControls stepper={bar} count={pictures ? shots.length : beats.length} nextDisabled={atEnd && !next} slider
         allLines={allLines} onAllLines={setAllLines} theater={theater} onTheater={toggleTheater} className="scn-controls"
         labels={pictures ? { back: "‹ Picture", next: "Picture ›", position: "Picture in scene" } : { back: "‹ Back", next: "Next ›" }}>
-        <button className="hub-btn" aria-pressed={muted} onClick={() => setMuted((v) => !v)}>{muted ? "Sound off" : "Sound on"}</button>
+        <button className="hub-btn" aria-pressed={!voiceOff} onClick={() => setVoiceOff((v) => !v)}
+          title="Voices and sound effects">{voiceOff ? "Voice off" : "Voice on"}</button>
+        <button className="hub-btn" aria-pressed={!bgmOff} onClick={() => setBgmOff((v) => !v)}
+          title="Background music">{bgmOff ? "BGM off" : "BGM on"}</button>
         <button className="hub-btn" aria-pressed={pictures} onClick={() => setPictures((v) => !v)}
           title="Pictures only: no text or voice, and each step goes to the next picture (P)">Picture mode</button>
         {!pictures && <button className="hub-btn" aria-pressed={hideText} onClick={() => setHideText((v) => !v)}>{hideText ? "Show text" : "Hide text"}</button>}
