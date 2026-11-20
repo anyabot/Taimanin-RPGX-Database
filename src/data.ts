@@ -342,9 +342,9 @@ export function tr(t: Text | null | undefined, l: Lang = langSetting.get()): str
   if (!t) return "";
   return (l === "en" && t.en) || t.ja;
 }
-/** English and Japanese together ("Indomitable 不屈"); just the Japanese where there is no English. */
+/** English and Japanese together ("Might 不屈"); just the Japanese where there is no English. */
 export const both = (t: Text | null | undefined) => (!t ? "" : t.en && t.en !== t.ja ? `${t.en} ${t.ja}` : t.ja);
-/** A rune set's family, English and Japanese (the English is unofficial, see tables.py RUNE_FAMILY_EN). */
+/** A rune set's family, English and Japanese (official English release names where it had them, see tables.py RUNE_FAMILY_EN). */
 export const familyLabel = (s: Pick<RuneSet, "family" | "familyName">) => both(s.familyName ?? { ja: s.family });
 // ---- English scene text (public/data/tl, tools/web_export/translations.py)
 /** Per Japanese beat of the script: [name, text], or 0 where the translation has no line. */
