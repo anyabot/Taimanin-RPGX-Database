@@ -294,3 +294,6 @@
 .team-suggest-get p { margin: 0 0 4px; }
 .team-suggest-get ol { margin: 0 0 4px; padding-left: 18px; }
 .team-suggest-get ul { margin: 2px 0; padding-left: 16px; }
+.team-content-tabs { margin: 12px 0 0; }
+.team-content { margin-top: 0; border-top: 3px solid var(--hub-accent); }
+.team-content .team-suggest-list { margin-top: 8px; }

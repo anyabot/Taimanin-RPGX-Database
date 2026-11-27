@@ -25,9 +25,9 @@ function roleLabel(m: Member) {
 
 type Content = "ap" | "bp";
 const CONTENT: Record<Content, { label: string; about: string; support: string }> = {
-  ap: { label: "AP content", about: "Story and other quests that cost AP: the only content that gives Rank EXP, and the support unit fights with all her skills.",
+  ap: { label: "AP content team", about: "Story and other quests that cost AP: the only content that gives Rank EXP, and the support unit fights with all her skills.",
     support: "Borrow her from the support list (filter by Superhuman to find her quickly). She fights with all her skills and equipment." },
-  bp: { label: "BP content", about: "Raids and other content that costs BP: no Rank EXP, and only the support unit's leader skill works.",
+  bp: { label: "BP content team", about: "Raids and other content that costs BP: no Rank EXP, and only the support unit's leader skill works.",
     support: "Often on the support list. In BP content only her leader skill works." },
 };
 
@@ -128,12 +128,14 @@ export default function TeamSuggest({ index, onUse }: { index: UnitIndexEntry[];
         const name = (id: string) => (units.get(id) ? unitName(units.get(id)!, lang) : id);
         const sup = units.get(plan.support);
         return <>
-          <div className="team-bar" role="group" aria-label="Content">
+          <div className="hub-tabs team-content-tabs" role="tablist" aria-label="Content">
             {(["ap", "bp"] as Content[]).map((c) => (
-              <button key={c} type="button" className="hub-btn" aria-pressed={content === c} onClick={() => setContent(c)}>{CONTENT[c].label}</button>
+              <button key={c} type="button" role="tab" id={`team-content-${c}`} aria-controls="team-content-panel" aria-selected={content === c}
+                className="hub-tab" onClick={() => setContent(c)}>{CONTENT[c].label}</button>
             ))}
           </div>
-          <p className="small">{CONTENT[content].about}</p>
+          <div role="tabpanel" id="team-content-panel" aria-labelledby={`team-content-${content}`}>
+          <Panel title={CONTENT[content].label} className={`team-content team-content--${content}`} note={CONTENT[content].about}>
           {plan.note && <p className="small muted">{plan.note}</p>}
           {plan.replaced && <p className="small">Takes the place of the BP team's {ROLE[plan.replaced.role]} <strong>{name(plan.replaced.id)}</strong> to lead.</p>}
           <div className="team-suggest-list">
@@ -187,6 +189,8 @@ export default function TeamSuggest({ index, onUse }: { index: UnitIndexEntry[];
           <div className="team-bar">
             <button type="button" className="hub-btn" onClick={() => onUse(suggestedSlots(plan, content))}>Open in the builder</button>
             <span className="small muted">Replaces the team in the Build tab, leader and support included.</span>
+          </div>
+          </Panel>
           </div>
         </>;
       })()}
