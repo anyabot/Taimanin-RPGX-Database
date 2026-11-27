@@ -484,7 +484,7 @@ export default function TeamBuilder() {
     }
   };
   const applySuggestion = (list: SuggestedSlot[]) => {
-    setTeam({ title: "Suggested team", slots: SLOTS.map((_, i) => list[i] ? { ...emptySlot(), unit: list[i].unit, note: list[i].note, macro: list[i].macro } : emptySlot()) });
+    setTeam({ title: "Suggested team", slots: SLOTS.map((_, i) => list[i]?.unit ? { ...emptySlot(), unit: list[i].unit, note: list[i].note, macro: list[i].macro } : emptySlot()) });
     setSelected(0);
     setTab("build");
   };

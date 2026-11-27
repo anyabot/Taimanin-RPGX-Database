@@ -21,11 +21,11 @@ describe("suggestTeam", () => {
     const r = suggestTeam([u("sp1", 500, 90), u("sp2"), u("sp3"), u("buf"), u("dps", 2000), u("low", 100), u("weak"), u("regen")], rows);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    const roles = Object.fromEntries(r.members.map((m) => [m.id, m.role]));
+    const roles = Object.fromEntries(r.bp.members.map((m) => [m.id, m.role]));
     expect(roles).toEqual({ sp1: "sp", sp2: "sp", sp3: "sp", buf: "buffer", dps: "dps" });
-    expect(r.members.find((m) => m.id === "sp1")?.firstSp).toBe(true);
-    expect(r.members.find((m) => m.id === "sp2")?.only?.k).toBe("SP restore");
-    expect(r.members.find((m) => m.id === "buf")?.extra.map((x) => `${x.c}|${x.k}`)).toEqual(["debuff|DEF"]);
+    expect(r.bp.members.find((m) => m.id === "sp1")?.firstSp).toBe(true);
+    expect(r.bp.members.find((m) => m.id === "sp2")?.only?.k).toBe("SP restore");
+    expect(r.bp.members.find((m) => m.id === "buf")?.extra.map((x) => `${x.c}|${x.k}`)).toEqual(["debuff|DEF"]);
   });
   it("says not enough without SP units", () => {
     const r = suggestTeam([u("sp1"), u("buf"), u("dps"), u("weak"), u("regen")], rows);
@@ -39,18 +39,18 @@ describe("suggestTeam", () => {
   it("takes 1 SP unit + an HPoT unit when that's all there is", () => {
     const more = [...rows, row("hot", "recovery", "HP regen", 25, 1, "skill1", "all", { t: 3 }), row("buf", "stat", "ATK", 50, 1)];
     const r = suggestTeam([u("sp1"), u("buf"), u("hot"), u("dps", 2000), u("low", 100)], more);
-    expect(r.ok && Object.fromEntries(r.members.map((m) => [m.id, m.role]))).toEqual({ sp1: "sp", buf: "buffer", hot: "healer", dps: "dps", low: "dps" });
+    expect(r.ok && Object.fromEntries(r.bp.members.map((m) => [m.id, m.role]))).toEqual({ sp1: "sp", buf: "buffer", hot: "healer", dps: "dps", low: "dps" });
   });
   it("falls back to SPoT + HPoT with no SP unit", () => {
     const more = [row("regen", "recovery", "SP regen", 40, 0, "skill2", "all", { t: 3 }), row("hot", "recovery", "HP regen", 25, 1, "skill1", "all", { t: 3 }),
       row("buf", "stat", "ATK", 50, 1), row("buf", "stat", "DEF", 50, 1)];
     const r = suggestTeam([u("regen"), u("buf"), u("hot"), u("dps", 2000), u("low", 100)], more);
-    expect(r.ok && r.members.find((m) => m.id === "regen")?.role).toBe("spot");
+    expect(r.ok && r.bp.members.find((m) => m.id === "regen")?.role).toBe("spot");
   });
   it("prefers a 3-4 turn buff over a bigger 1-turn one", () => {
     const more = [...rows, row("short", "stat", "DEF", 200, 1, "skill2", "all", { t: 1 }), row("buf", "stat", "DEF", 60, 1, "skill2", "all", { t: 4 })];
     const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("buf"), u("short"), u("dps", 2000)], more.filter((x) => !(x.u === "buf" && x.t === 0 && x.k === "DEF")));
-    expect(r.ok && r.def.u).toBe("buf");
+    expect(r.ok && r.bp.def.u).toBe("buf");
   });
   it("raises an SP restore by the allies' SPD modifier", () => {
     const skills = [{ slot: "skill2" as const, effects: [{ text: "All allies: restore 60 SP", tag: "instant" },
@@ -68,7 +68,7 @@ describe("suggestTeam", () => {
   it("uses the free buffer only as the buffer, and says it isn't owned", () => {
     const more = [...rows.filter((x) => x.u !== "buf"), row("yuki", "stat", "ATK", 60, 1, "ultimate", "all", { t: 4 }), row("yuki", "stat", "DEF", 60, 1, "ultimate", "all", { t: 4 })];
     const r = suggestTeam([u("sp1"), u("sp2"), u("sp3"), u("dps", 2000), { ...u("yuki", 9999), free: true }], more);
-    expect(r.ok && r.members.find((m) => m.id === "yuki")?.role).toBe("buffer");
+    expect(r.ok && r.bp.members.find((m) => m.id === "yuki")?.role).toBe("buffer");
   });
   it("uses an element-only SP restore only for a 3-SP team of that element", () => {
     const dev = (id: string, atk = 1000) => u(id, atk, 70, "Devilish");
@@ -76,10 +76,10 @@ describe("suggestTeam", () => {
       row("b", "recovery", "SP restore", 80, 0), row("c", "recovery", "SP restore", 95, 0, "skill2", "element", { el: "Devilish" }),
       row("buf", "stat", "ATK", 50, 1), row("buf", "stat", "DEF", 50, 1)];
     const ok = suggestTeam([dev("a"), dev("b"), dev("c"), dev("buf"), dev("dps", 2000), u("nat", 5000)], more);
-    expect(ok.ok && ok.members.map((m) => m.id).sort()).toEqual(["a", "b", "buf", "c", "dps"]);
+    expect(ok.ok && ok.bp.members.map((m) => m.id).sort()).toEqual(["a", "b", "buf", "c", "dps"]);
     // only 2 other SP units: the element-only one is never used for a 2-SP team
     const two = suggestTeam([dev("a"), dev("c"), dev("buf"), dev("dps"), u("hot")], [...more, row("hot", "recovery", "HP regen", 25, 1, "skill1", "all", { t: 3 })]);
-    expect(two.ok && two.members.some((m) => m.id === "c" && m.role === "sp")).toBe(false);
+    expect(two.ok && two.bp.members.some((m) => m.id === "c" && m.role === "sp")).toBe(false);
   });
   it("counts a 4+ Taimanin SP restore only when the team has 4+ Taimanin", () => {
     const tai = (id: string, atk = 1000) => u(id, atk, 70, "Natural", ["Taimanin"]);
@@ -87,7 +87,7 @@ describe("suggestTeam", () => {
       row("b", "recovery", "SP restore", 80, 0), row("c", "recovery", "SP restore", 100, 0, "skill2", "all", { n: "4+ Taimanin allies" }),
       row("buf", "stat", "ATK", 50, 1), row("buf", "stat", "DEF", 50, 1)];
     const ok = suggestTeam([tai("a"), tai("b"), tai("c"), tai("buf"), u("dps", 2000)], more);
-    expect(ok.ok && ok.members.find((m) => m.id === "c")?.role).toBe("sp");
+    expect(ok.ok && ok.bp.members.find((m) => m.id === "c")?.role).toBe("sp");
     const no = suggestTeam([u("a"), tai("b"), tai("c"), tai("buf"), u("dps", 2000)], more);
     expect(no.ok).toBe(false);
   });
@@ -98,6 +98,48 @@ describe("suggestTeam", () => {
     const r = suggestTeam(all, data("buffs.json"));
     expect(Date.now() - t).toBeLessThan(5000);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.members).toHaveLength(5);
+    if (r.ok) expect(r.bp.members).toHaveLength(5);
+    // everyone owned: the AP leader has the highest Rank EXP leader skill (Bride Rinko, +35%)
+    if (r.ok) expect(r.ap.members[0].leader && r.ap.leaderWhy[0].v).toBe(35);
+  });
+  describe("leader and support (rule 5)", () => {
+    const base = [...rows, row("sp1", "stat", "Max HP", 10, 1, "leader"), row("buf", "stat", "DEF", 25, 1, "leader"), row("buf", "stat", "Max HP", 5, 1, "leader"),
+      row("dps", "stat", "ATK", 30, 1, "leader")];
+    const box = [u("sp1", 500, 90), u("sp2"), u("sp3"), u("buf"), u("dps", 2000), u("dps2", 1500)];
+    it("BP: the member with the most Max HP + DEF leads; the support is Ragnarok", () => {
+      const r = suggestTeam(box, base);
+      expect(r.ok && r.bp.members[0]).toMatchObject({ id: "buf", leader: true });
+      expect(r.ok && r.bp.leaderWhy.map((x) => x.k).sort()).toEqual(["DEF", "Max HP"]);
+      expect(r.ok && r.bp.support).toBe("00745");
+    });
+    it("BP: falls back to the best ATK leader", () => {
+      const r = suggestTeam(box, [...rows, row("dps", "stat", "ATK", 30, 1, "leader")]);
+      expect(r.ok && r.bp.members[0].id).toBe("dps");
+      expect(r.ok && r.bp.note).toMatch(/ATK/);
+    });
+    it("AP: the top Rank EXP unit leads, in place of the weakest DPS; the support is Bride Rinko", () => {
+      const more = [...base, row("exp", "utility", "Player EXP", 25, 1, "leader"), row("exp2", "utility", "Player EXP", 10, 1, "leader")];
+      const r = suggestTeam([...box, u("exp", 100), u("exp2", 3000)], more);
+      expect(r.ok && r.ap.members[0]).toMatchObject({ id: "exp", leader: true, role: "exp" });
+      expect(r.ok && r.ap.replaced?.role).toBe("dps");
+      expect(r.ok && r.ap.members.map((m) => m.id)).not.toContain(r.ok && r.ap.replaced?.id);
+      expect(r.ok && r.ap.support).toBe("01051");
+      // the BP team is unchanged
+      expect(r.ok && r.bp.members.some((m) => m.id === "exp")).toBe(false);
+    });
+    it("AP: a member with the Rank EXP leader skill just leads", () => {
+      const r = suggestTeam(box, [...base, row("sp2", "utility", "Player EXP", 15, 1, "leader")]);
+      expect(r.ok && r.ap.members[0].id).toBe("sp2");
+      expect(r.ok && r.ap.replaced).toBeUndefined();
+    });
+    it("AP: doesn't swap out the only buffer when that loses the team's buff", () => {
+      // 3 SP + buffer + 1 DPS slot: the EXP unit (Science) breaks nothing in the DPS slot,
+      // but a Natural-only DEF buff would stop applying, so it can't join
+      const nat = [...rows.filter((x) => x.u !== "buf"), row("buf", "stat", "DEF", 60, 1, "skill2", "element", { el: "Natural" }),
+        row("exp", "utility", "Player EXP", 25, 1, "leader")];
+      const r = suggestTeam([...box, u("exp", 100, 70, "Science")], nat);
+      expect(r.ok && r.ap.members.some((m) => m.id === "exp")).toBe(false);
+      expect(r.ok && r.ap.note).toMatch(/can't join/);
+    });
   });
 });

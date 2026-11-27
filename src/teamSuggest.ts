@@ -31,7 +31,12 @@ export interface Candidate {
 /** The only truly free unit: Yukikaze 【Lightning Taimanin】, all allies ATK/DEF +60% (rule 3's fallback). */
 export const FREE_BUFFER = "00068";
 
-export type Role = "sp" | "spot" | "buffer" | "healer" | "dps";
+/** AP content's support: Bride Rinko 【花嫁御寮】, leader skill Rank EXP +35% (the highest), Superhuman */
+export const AP_SUPPORT = "01051";
+/** BP content's support: the first Ragnarok, usually on the support list */
+export const BP_SUPPORT = "00745";
+
+export type Role = "sp" | "spot" | "buffer" | "healer" | "dps" | "exp";
 
 export interface Member {
   id: string;
@@ -44,10 +49,26 @@ export interface Member {
   only?: BuffRow;
   /** rule 6: the SP unit that moves first */
   firstSp?: boolean;
+  /** rule 5: the team leader */
+  leader?: boolean;
+}
+
+/** One team for one kind of content (rule 5). Members are leader first. */
+export interface Plan {
+  members: Member[];
+  atk: BuffRow; def: BuffRow; heal: BuffRow;
+  /** the leader-skill effects that made the leader */
+  leaderWhy: BuffRow[];
+  support: string;
+  supportWhy: BuffRow[];
+  /** AP: the BP team's member the Rank EXP leader took the place of */
+  replaced?: Member;
+  /** why the leader isn't picked by the usual rule */
+  note?: string;
 }
 
 export type Suggestion =
-  | { ok: true; members: Member[]; atk: BuffRow; def: BuffRow; heal: BuffRow }
+  | { ok: true; ap: Plan; bp: Plan }
   | { ok: false; reason: string };
 
 export const RULES = `1. SP: pick up to 3 units that each restore 70+ SP (or 20%+ SP) to the WHOLE team
@@ -73,7 +94,17 @@ export const RULES = `1. SP: pick up to 3 units that each restore 70+ SP (or 20%
 
 4. DPS: the free slots go to the highest-ATK units left (max level)
 
-5. LEADER: ignore for now
+5. LEADER and SUPPORT: two teams, one for each kind of content
+   AP content (costs AP: story, quests):
+   - the only content that gives Rank EXP, and the support unit fights with all her skills
+   - support: Bride Rinko 【Bride's Residence】 (Rank EXP +35%; filter the support list by Superhuman)
+   - leader: your unit with the highest Rank EXP leader skill. Not in the team -> she takes the
+     place of the lowest-ATK DPS (or the buffer), as long as the team keeps its buffs, heal and SP
+   BP content (costs BP: raids):
+   - no Rank EXP, and only the support unit's leader skill works
+   - support: Ragnarok (the first one, often on the support list)
+   - leader: the member whose leader skill gives the team the most Max HP + DEF (else ATK)
+   - leader skills don't count for rules 1-4
 
 6. SCRIPT:
    - SP units 2 and 3: only cast their SP skill
@@ -91,7 +122,7 @@ const SP_POOL = 16;
 const SAFE_NOTE = [/^Before attacking$/, /^\(trait buff\)$/, /^for \d+ turns?$/, /^Extra action \(end of turn\)$/,
   /^all allies \+[\d.]+%$/, /^with 1 \w+ ally, \+[\d.]+% for each more/, /^Without [^;]+$/];
 const reliable = (r: BuffRow) => !r.n || r.n.split("; ").every((part) => SAFE_NOTE.some((re) => re.test(part)));
-/** Skill effects only (rule 5: no leader) that always work */
+/** Skill effects only (leader skills don't count for rules 1-4) that always work */
 const isSkill = (r: BuffRow) => r.s !== "leader" && reliable(r);
 /** "4+ Taimanin allies": a team-make-up condition on a whole-team SP restore */
 const teamCond = (r: BuffRow) => { const m = /^(\d+)\+ (.+) allies$/.exec(r.n ?? ""); return m ? { n: Number(m[1]), of: m[2] } : null; };
@@ -117,6 +148,9 @@ const hpot = (r: BuffRow) => isSkill(r) && r.c === "recovery" && r.k === "HP reg
 const statBuff = (k: "ATK" | "DEF") => (r: BuffRow) => isSkill(r) && r.c === "stat" && r.k === k && r.p === 1 && (r.sc === "all" || r.sc === "element" || r.sc === "trait");
 const atkBuff = statBuff("ATK");
 const defBuff = statBuff("DEF");
+const leaderFx = (r: BuffRow) => r.s === "leader" && reliable(r);
+const expRow = (r: BuffRow) => leaderFx(r) && r.c === "utility" && r.k === "Player EXP" && r.sc === "all";
+const leaderStat = (k: string) => (r: BuffRow) => leaderFx(r) && r.c === "stat" && r.k === k && r.p === 1;
 const spot = (r: BuffRow) => isSkill(r) && r.c === "recovery" && r.k === "SP regen" && r.sc === "all";
 /** a 3-4 turn (or rest-of-battle) effect beats a 1-turn one, whatever the values */
 const rank = (r: BuffRow) => (r.t >= 3 || r.t < 0 ? 10_000 : 0) + r.v;
@@ -226,35 +260,84 @@ export function suggestTeam(owned: Candidate[], rows: BuffRow[]): Suggestion {
   }
   if (!top) return { ok: false, reason: `Not enough units yet: ${lastFail}` };
 
-  // 6. the script
   const { team, roles } = top;
-  const spUnits = team.filter((u) => roles.get(u.id) === "sp").sort((a, b) => b.spd - a.spd);
-  const first = spUnits[0]?.id;
-  const have = new Set(["stat|ATK", "stat|DEF"]);
-  const members: Member[] = team.map((u) => {
-    const role = roles.get(u.id)!;
-    const why = role === "sp" ? [spRow(u), ...fx(u.id).filter((r) => teamHeal(r))].filter(Boolean) as BuffRow[]
-      : role === "spot" ? [spotRow(u)]
-      : role === "healer" ? fx(u.id).filter(hpot)
-      : role === "buffer" ? fx(u.id).filter((r) => ((atkBuff(r) || defBuff(r)) && applies(r, team)) || hpot(r))
-      : [];
-    return { id: u.id, role, why: dedupe(why), extra: [], only: role === "sp" && u.id !== first ? spRow(u) : undefined, firstSp: u.id === first || undefined };
-  });
-  // the units that can cast more than one skill: DPS, buffer(s), the first SP unit
-  for (const m of members) {
-    if (m.only) continue;
-    const extra: BuffRow[] = [];
-    for (const r of fx(m.id).filter(isSkill).sort((a, b) => b.v - a.v)) {
-      const ally = r.c === "stat" && applies(r, team);
-      const foe = r.c === "debuff" && (r.sc === "enemies" || r.sc === "enemy");
-      const key = `${r.c}|${r.k}`;
-      if ((ally || foe) && !have.has(key)) { have.add(key); extra.push(r); }
+  const leaderRows = (id: string) => fx(id).filter((r) => r.s === "leader");
+
+  /** a finished team: its buffs, heal and SP still hold, plus the script (rule 6) */
+  const make = (team: Candidate[], roles: Map<string, Role>, leader: string) => {
+    const spUnits = team.filter((u) => roles.get(u.id) === "sp").sort((a, b) => b.spd - a.spd);
+    if (!spUnits.map(spRow).filter(spRestricted).every((r) => spWorks(r, team))) return null;
+    const rowsOf = (pred: (r: BuffRow) => boolean) => team.flatMap((u) => fx(u.id).filter(pred));
+    const atk = best(rowsOf(atkBuff), team);
+    const def = best(rowsOf(defBuff), team);
+    const heal = (spUnits.length >= 3 ? spUnits.flatMap((u) => fx(u.id).filter(teamHeal))[0] : undefined) ?? best(rowsOf(hpot), team);
+    if (!atk || !def || !heal) return null;
+    const first = spUnits[0]?.id;
+    const have = new Set(["stat|ATK", "stat|DEF"]);
+    const members: Member[] = team.map((u) => {
+      const role = roles.get(u.id)!;
+      const why = role === "sp" ? [spRow(u), ...fx(u.id).filter((r) => teamHeal(r))].filter(Boolean) as BuffRow[]
+        : role === "spot" ? [spotRow(u)]
+        : role === "healer" ? fx(u.id).filter(hpot)
+        : role === "buffer" ? fx(u.id).filter((r) => ((atkBuff(r) || defBuff(r)) && applies(r, team)) || hpot(r))
+        : [];
+      return { id: u.id, role, why: dedupe(why), extra: [], only: role === "sp" && u.id !== first ? spRow(u) : undefined,
+        firstSp: u.id === first || undefined, leader: u.id === leader || undefined };
+    });
+    // the units that can cast more than one skill: DPS, buffer(s), the Rank EXP leader, the first SP unit
+    for (const m of members) {
+      if (m.only) continue;
+      const extra: BuffRow[] = [];
+      for (const r of fx(m.id).filter(isSkill).sort((a, b) => b.v - a.v)) {
+        const ally = r.c === "stat" && applies(r, team);
+        const foe = r.c === "debuff" && (r.sc === "enemies" || r.sc === "enemy");
+        const key = `${r.c}|${r.k}`;
+        if ((ally || foe) && !have.has(key)) { have.add(key); extra.push(r); }
+      }
+      m.extra = extra;
     }
-    m.extra = extra;
+    const order: Role[] = ["sp", "spot", "buffer", "healer", "exp", "dps"];
+    members.sort((a, b) => Number(!!b.leader) - Number(!!a.leader) || order.indexOf(a.role) - order.indexOf(b.role) || Number(!!b.firstSp) - Number(!!a.firstSp));
+    return { members, atk, def, heal };
+  };
+
+  // BP: the member whose leader skill gives the team the most Max HP + DEF, else the most ATK
+  const lead = (u: Candidate, keys: string[]) => keys.map((k) => best(fx(u.id).filter(leaderStat(k)), team)).filter(Boolean) as BuffRow[];
+  const sum = (l: BuffRow[]) => l.reduce((s, r) => s + r.v, 0);
+  const survive = (u: Candidate) => sum(lead(u, ["Max HP", "DEF"]));
+  const output = (u: Candidate) => sum(lead(u, ["ATK"]));
+  const tough = [...team].sort((a, b) => survive(b) - survive(a) || output(b) - output(a))[0];
+  const toughWhy = survive(tough) > 0 ? lead(tough, ["Max HP", "DEF"]) : lead(tough, ["ATK"]);
+  // nobody's leader skill helps: the first SP unit leads, as before
+  const bpLeader = toughWhy.length ? tough.id : (team.find((u) => roles.get(u.id) === "sp" || roles.get(u.id) === "spot") ?? team[0]).id;
+  const bpTeam = make(team, roles, bpLeader)!;
+  const bp: Plan = { ...bpTeam, leaderWhy: toughWhy, support: BP_SUPPORT, supportWhy: leaderRows(BP_SUPPORT),
+    note: !toughWhy.length ? "No member's leader skill raises the team's Max HP, DEF or ATK."
+      : survive(tough) > 0 ? undefined : "No member's leader skill raises the team's Max HP or DEF: the best ATK one leads." };
+
+  // AP: the owned unit with the highest Rank EXP leader skill (a member first on a tie)
+  const exp = (u: Candidate) => Math.max(0, ...fx(u.id).filter(expRow).map((r) => r.v));
+  const inTeam = (u: Candidate) => team.some((m) => m.id === u.id);
+  const expUnits = mine.filter((u) => exp(u) > 0).sort((a, b) => exp(b) - exp(a) || Number(inTeam(b)) - Number(inTeam(a)) || b.atk - a.atk);
+  const apBase = { support: AP_SUPPORT, supportWhy: leaderRows(AP_SUPPORT).filter(expRow) };
+  let ap: Plan | undefined;
+  for (const e of expUnits) {
+    const leaderWhy = fx(e.id).filter(expRow);
+    if (inTeam(e)) { ap = { ...make(team, roles, e.id)!, leaderWhy, ...apBase }; break; }
+    // take the place of the weakest DPS, then of the buffer
+    const out = [...team.filter((u) => roles.get(u.id) === "dps").sort((a, b) => a.atk - b.atk), ...team.filter((u) => roles.get(u.id) === "buffer")];
+    for (const o of out) {
+      const t2 = team.map((u) => (u.id === o.id ? e : u));
+      const r2 = new Map(roles); r2.delete(o.id); r2.set(e.id, "exp");
+      const made = make(t2, r2, e.id);
+      if (made) { ap = { ...made, leaderWhy, ...apBase, replaced: bpTeam.members.find((m) => m.id === o.id) }; break; }
+    }
+    if (ap) break;
   }
-  const order: Role[] = ["sp", "spot", "buffer", "healer", "dps"];
-  members.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role) || Number(!!b.firstSp) - Number(!!a.firstSp));
-  return { ok: true, members, atk: top.atk, def: top.def, heal: top.heal };
+  if (!ap) ap = { ...bpTeam, leaderWhy: bp.leaderWhy, ...apBase,
+    note: expUnits.length ? "Your Rank EXP leaders can't join without the team losing its buffs, heal or SP: same leader as the BP team."
+      : "None of your units has a Rank EXP leader skill: same leader as the BP team." };
+  return { ok: true, ap, bp };
 }
 
 /** One row per effect kind: the strongest. */

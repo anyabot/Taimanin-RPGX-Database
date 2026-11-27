@@ -6,9 +6,9 @@ import { FallbackImage, LoadState, Panel } from "@altterisk/game-hub";
 import { useOwned } from "../collection";
 import { iconUrl, isUpcoming, loader, tr, unitName, useData, useLang, type Unit, type UnitIndexEntry } from "../data";
 import { ElementIcon, RarityIcon } from "../components";
-import { FREE_BUFFER, RULES, boostedSpRows, suggestTeam, type BuffRow, type Candidate, type Member, type Role } from "../teamSuggest";
+import { FREE_BUFFER, RULES, boostedSpRows, suggestTeam, type BuffRow, type Candidate, type Member, type Plan, type Role } from "../teamSuggest";
 
-const ROLE: Record<Role, string> = { sp: "SP", spot: "SP over time", buffer: "Buffer", healer: "Healer", dps: "DPS" };
+const ROLE: Record<Role, string> = { sp: "SP", spot: "SP over time", buffer: "Buffer", healer: "Healer", dps: "DPS", exp: "Rank EXP" };
 const SKILL: Record<BuffRow["s"], string> = { attack: "Attack", skill1: "S1", skill2: "S2", ultimate: "Ougi", leader: "Leader" };
 /** the team builder's auto-skill action for a skill slot */
 const ACTION: Record<BuffRow["s"], number> = { attack: 1, skill1: 2, skill2: 3, ultimate: 4, leader: 0 };
@@ -19,9 +19,17 @@ export interface SuggestedSlot { unit: string; note: string; macro: { action: nu
 const fx = (r: BuffRow) => `${SKILL[r.s]}: ${r.x}`;
 
 function roleLabel(m: Member) {
-  if (m.role === "sp") return m.firstSp ? "SP 1 (moves first)" : "SP";
-  return ROLE[m.role];
+  const role = m.role === "sp" ? (m.firstSp ? "SP 1 (moves first)" : "SP") : ROLE[m.role];
+  return m.leader ? `Leader · ${role}` : role;
 }
+
+type Content = "ap" | "bp";
+const CONTENT: Record<Content, { label: string; about: string; support: string }> = {
+  ap: { label: "AP content", about: "Story and other quests that cost AP: the only content that gives Rank EXP, and the support unit fights with all her skills.",
+    support: "Borrow her from the support list (filter by Superhuman to find her quickly). She fights with all her skills and equipment." },
+  bp: { label: "BP content", about: "Raids and other content that costs BP: no Rank EXP, and only the support unit's leader skill works.",
+    support: "Often on the support list. In BP content only her leader skill works." },
+};
 
 /** The slot note: what to cast (rule 6). */
 function scriptNote(m: Member) {
@@ -30,8 +38,11 @@ function scriptNote(m: Member) {
   return casts.length ? `${ROLE[m.role]}. Cast ${casts.join(", ")}` : ROLE[m.role];
 }
 
-export function suggestedSlots(members: Member[]): SuggestedSlot[] {
-  return members.map((m) => ({ unit: m.id, note: scriptNote(m), macro: m.only ? [{ action: ACTION[m.only.s] }] : [] }));
+/** Leader first, then the members, the support last (the builder's 6 slots). */
+export function suggestedSlots(plan: Plan, content: Content): SuggestedSlot[] {
+  const slots: SuggestedSlot[] = plan.members.map((m) => ({ unit: m.id, note: scriptNote(m), macro: m.only ? [{ action: ACTION[m.only.s] }] : [] }));
+  while (slots.length < 5) slots.push({ unit: "", note: "", macro: [] });
+  return [...slots, { unit: plan.support, note: content === "ap" ? "Support: fights with all her skills" : "Support: only her leader skill works", macro: [] }];
 }
 
 /** How to get the free Yukikaze 【Lightning Taimanin】 (00068), from the event,
@@ -82,6 +93,7 @@ export default function TeamSuggest({ index, onUse }: { index: UnitIndexEntry[];
     })).then((l) => { if (live) setBoosted(l.flat()); });
     return () => { live = false; };
   }, [rows, owned, units]);
+  const [content, setContent] = useState<Content>("ap");
   const result = useMemo(() => {
     if (!rows || !owned.ids.size) return null;
     const cand = (u: UnitIndexEntry, free?: boolean): Candidate =>
@@ -111,43 +123,73 @@ export default function TeamSuggest({ index, onUse }: { index: UnitIndexEntry[];
     <div className="team-suggest">
       <p className="small muted">From your {owned.ids.size} owned units. A starting point by simple rules, not the best team for every fight.</p>
       {result && !result.ok && <Panel title="Not enough units yet"><p>{result.reason}</p></Panel>}
-      {result?.ok && <>
-        <div className="team-suggest-list">
-          {result.members.map((m) => {
-            const u = units.get(m.id);
-            return (
-              <div key={m.id} className={`team-suggest-row role-${m.role}`}>
-                <FallbackImage srcs={[iconUrl(m.id)]} alt="" width={64} height={64} />
-                <div className="team-suggest-body">
-                  <div className="team-suggest-head">
-                    <span className="team-suggest-role">{roleLabel(m)}</span>
-                    <Link to={`/units/${m.id}?tab=skills`}>{u ? unitName(u, lang) : m.id}</Link>
-                    {u && <span className="muted small">{tr(u.title, lang)}</span>}
-                    {u && <RarityIcon rarity={u.rarity} height={12} />}
-                    {u && <ElementIcon element={u.element} size={14} />}
-                    {m.role === "dps" && u && <span className="small muted">ATK {u.stats.atk}</span>}
+      {result?.ok && (() => {
+        const plan = result[content];
+        const name = (id: string) => (units.get(id) ? unitName(units.get(id)!, lang) : id);
+        const sup = units.get(plan.support);
+        return <>
+          <div className="team-bar" role="group" aria-label="Content">
+            {(["ap", "bp"] as Content[]).map((c) => (
+              <button key={c} type="button" className="hub-btn" aria-pressed={content === c} onClick={() => setContent(c)}>{CONTENT[c].label}</button>
+            ))}
+          </div>
+          <p className="small">{CONTENT[content].about}</p>
+          {plan.note && <p className="small muted">{plan.note}</p>}
+          {plan.replaced && <p className="small">Takes the place of the BP team's {ROLE[plan.replaced.role]} <strong>{name(plan.replaced.id)}</strong> to lead.</p>}
+          <div className="team-suggest-list">
+            {plan.members.map((m) => {
+              const u = units.get(m.id);
+              return (
+                <div key={m.id} className={`team-suggest-row role-${m.role}`}>
+                  <FallbackImage srcs={[iconUrl(m.id)]} alt="" width={64} height={64} />
+                  <div className="team-suggest-body">
+                    <div className="team-suggest-head">
+                      <span className="team-suggest-role">{roleLabel(m)}</span>
+                      <Link to={`/units/${m.id}?tab=skills`}>{u ? unitName(u, lang) : m.id}</Link>
+                      {u && <span className="muted small">{tr(u.title, lang)}</span>}
+                      {u && <RarityIcon rarity={u.rarity} height={12} />}
+                      {u && <ElementIcon element={u.element} size={14} />}
+                      {(m.role === "dps" || m.role === "exp") && u && <span className="small muted">ATK {u.stats.atk}</span>}
+                    </div>
+                    {!owned.has(m.id) && <FreeUnitGuide />}
+                    <ul className="team-suggest-fx small">
+                      {m.leader && plan.leaderWhy.map((r, i) => <li key={`l${i}`}>{fx(r)}</li>)}
+                      {m.why.map((r, i) => <li key={`w${i}`}>{fx(r)}{r.n && <span className="muted"> ({r.n})</span>}</li>)}
+                      {m.only && <li className="team-suggest-script">Script: only cast {SKILL[m.only.s]}</li>}
+                      {m.extra.length > 0 && <li className="team-suggest-script">Script: also cast {m.extra.map(fx).join("; ")}</li>}
+                    </ul>
                   </div>
-                  {!owned.has(m.id) && <FreeUnitGuide />}
-                  <ul className="team-suggest-fx small">
-                    {m.why.map((r, i) => <li key={`w${i}`}>{fx(r)}{r.n && <span className="muted"> ({r.n})</span>}</li>)}
-                    {m.only && <li className="team-suggest-script">Script: only cast {SKILL[m.only.s]}</li>}
-                    {m.extra.length > 0 && <li className="team-suggest-script">Script: also cast {m.extra.map(fx).join("; ")}</li>}
-                  </ul>
                 </div>
+              );
+            })}
+            <div className="team-suggest-row role-support">
+              <FallbackImage srcs={[iconUrl(plan.support)]} alt="" width={64} height={64} />
+              <div className="team-suggest-body">
+                <div className="team-suggest-head">
+                  <span className="team-suggest-role">Support</span>
+                  <Link to={`/units/${plan.support}?tab=skills`}>{sup ? unitName(sup, lang) : plan.support}</Link>
+                  {sup && <span className="muted small">{tr(sup.title, lang)}</span>}
+                  {sup && <RarityIcon rarity={sup.rarity} height={12} />}
+                  {sup && <ElementIcon element={sup.element} size={14} />}
+                </div>
+                <p className="small muted">{CONTENT[content].support}</p>
+                <ul className="team-suggest-fx small">
+                  {plan.supportWhy.map((r, i) => <li key={i}>{fx(r)}</li>)}
+                </ul>
               </div>
-            );
-          })}
-        </div>
-        <p className="small">
-          Team ATK buff: <strong>{fx(result.atk)}</strong> ({units.get(result.atk.u) ? unitName(units.get(result.atk.u)!, lang) : result.atk.u})<br />
-          Team DEF buff: <strong>{fx(result.def)}</strong> ({units.get(result.def.u) ? unitName(units.get(result.def.u)!, lang) : result.def.u})<br />
-          Team heal: <strong>{fx(result.heal)}</strong> ({units.get(result.heal.u) ? unitName(units.get(result.heal.u)!, lang) : result.heal.u})
-        </p>
-        <div className="team-bar">
-          <button type="button" className="hub-btn" onClick={() => onUse(suggestedSlots(result.members))}>Open in the builder</button>
-          <span className="small muted">Replaces the team in the Build tab. The leader isn't chosen by the rules; swap as you like.</span>
-        </div>
-      </>}
+            </div>
+          </div>
+          <p className="small">
+            Team ATK buff: <strong>{fx(plan.atk)}</strong> ({name(plan.atk.u)})<br />
+            Team DEF buff: <strong>{fx(plan.def)}</strong> ({name(plan.def.u)})<br />
+            Team heal: <strong>{fx(plan.heal)}</strong> ({name(plan.heal.u)})
+          </p>
+          <div className="team-bar">
+            <button type="button" className="hub-btn" onClick={() => onUse(suggestedSlots(plan, content))}>Open in the builder</button>
+            <span className="small muted">Replaces the team in the Build tab, leader and support included.</span>
+          </div>
+        </>;
+      })()}
       {rules}
     </div>
   );
